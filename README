@@ -1,0 +1,28 @@
+Gestalt Common Lisp Web Framework
+
+What is it?
+
+It is a framework for complex Web applications development in Common Lisp.
+
+Why is it named Gestalt?
+
+Gestalt is a german word that doesn't have an exact English translation. It means form or shape. It refers to a concept of 'wholeness'. Common Lisp could be considered a Gestalt: it is not its features taken separately but together what makes it such a great tool to work with. This framework is my intent to achieve something similar in the web development area.
+
+What are its design principles?
+
+It's been said that art is unity in multiplicity. I think software could take that as a design principle. It should be possible to solve a problem in multiple ways through the solution that adapts better and at the same time achieve unity by means of high level abstractions.
+
+How could that be achieved?
+
+Stratified design: possibility to solve a problem in different ways. For example, program de control flow of the application using a page-centric design, or as a component tree, or a combination of both. Besides, provide the possibility to generate HTML or XUL by means of strings concatenation, or a domain specific language, or using higher level of abstractions such us widgets with dataflow support.
+Integrating state-of-the art designs such as component tree and delimited continuations for control flow.
+Extend it with dataflow semantics and syntax for the model, the components and view updates.
+More composability through memory transactions.
+First-class composable declarative templates.
+A better way of doing Javascript.
+
+How mature is it?
+
+This is vaporware at the moment, but some of the design desitions have already been tested in another framework (PHP Web builder). I decided PHP is a very limited platform and language for what I wanted to do so I decided to switch to Common Lisp that fits a lot better.
+
+Project author and mantainer: Mariano Montone
