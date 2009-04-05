@@ -104,28 +104,28 @@
 (defmacro tree (form)
   (build-tree form))
 
-;; How to program without taste, style or talent:
 (defun consume-attributes (form)
-  (let (attribute
-	(attributes '())
-	(form-stream form)
-	(turn :attribute-or-body))
-    (loop
-       while form-stream
-       do 
-	 (if (equalp turn :attribute-or-body)
-	     (cond
-	       ((keywordp (car form-stream))
-		(setf attribute (symbol-name (car form-stream)))
-		(setf turn :value)
-		(setf form-stream (cdr form-stream)))
-	       (t
-		(return-from consume-attributes (values attributes form-stream))))
-	     ;; turn is :value
-	     (let ((attr-and-value (cons attribute (process-operation (car form-stream)))))
-	       (pushnew attr-and-value attributes)
-	       (setf turn :attribute-or-body)
-	       (setf form-stream (cdr form-stream)))))
-    (if (equalp turn :value)
-	(error "Attribute value missing in ~A for ~A" form attribute)
-	(values attributes form-stream))))
+  "Consumes the attributes in form. Applies process-operation to the values.
+   Returns: the attributes and the corresonding values in cons pairs, and the rest of the form"
+  (labels
+      ((read-attribute (form cont)
+	 (if (not (null form))
+	   (if (keywordp (car form))
+	     ;; There's an attribute
+	     (let ((attribute (symbol-name (car form))))
+	       (funcall cont (cdr form)
+			(lambda (value form)
+			  (multiple-value-bind (attrs formcdr) (read-attribute form cont)			   
+			      (values (cons (cons attribute value) attrs) formcdr)))
+			(lambda ()
+			  (error "Attribute value missing in ~A for ~A" form attribute))))
+	     ;; No attribute, return the body
+	     (values nil form))
+	   ;; Else, there are no attributes; we assume the end of the
+	   ;; attributes list
+	   (values nil form)))
+       (read-value (form cont error-cont)
+	 (when (null form)
+	   (funcall error-cont))
+	 (funcall cont (process-operation (car form)) (cdr form))))
+    (read-attribute form #'read-value)))
