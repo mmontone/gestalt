@@ -13,10 +13,12 @@
     :maintainer "Mariano Montone <marianomontone@gmail.com>"
     :licence "Public Domain"
     :components
-    ((:file "package")
-     (:file "conditions")
-     (:file "dispatcher")
-     (:file "start"))
+    ((:module src
+	      :components
+	      ((:file "package")
+	       (:file "conditions")
+	       (:file "dispatcher")
+	       (:file "start"))))
     :depends-on
     (:hunchentoot
      :log5
