@@ -108,14 +108,14 @@
   "Consumes the attributes in form. Applies process-operation to the values.
    Returns: the attributes and the corresonding values in cons pairs, and the rest of the form"
   (labels
-      ((read-attribute (form cont)
+      ((read-attribute (form)
 	 (if (not (null form))
 	   (if (keywordp (car form))
 	     ;; There's an attribute
 	     (let ((attribute (symbol-name (car form))))
-	       (funcall cont (cdr form)
+	       (read-value (cdr form)
 			(lambda (value form)
-			  (multiple-value-bind (attrs formcdr) (read-attribute form cont)			   
+			  (multiple-value-bind (attrs formcdr) (read-attribute form)			   
 			      (values (cons (cons attribute value) attrs) formcdr)))
 			(lambda ()
 			  (error "Attribute value missing in ~A for ~A" form attribute))))
@@ -128,4 +128,4 @@
 	 (when (null form)
 	   (funcall error-cont))
 	 (funcall cont (process-operation (car form)) (cdr form))))
-    (read-attribute form #'read-value)))
+    (read-attribute form)))
