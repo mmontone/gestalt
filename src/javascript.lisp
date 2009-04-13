@@ -300,4 +300,16 @@ Example:
 
 But this design looks more difficult to achieve.
 
+
+
+Some comments on event handlers attaching and events firing:
+* An event's firing may imply an AJAX request, but it may be innecesary if there's no event handler attached in the server. So, first,
+  the AJAX request should be made when there are event handlers attached in the server. Second, the event handler attaching in the server,
+  generates javascript, so that attaching should be made in a javascript rendering context. That means, the events attaching can only
+  be made on the initialize method of the component, or in a callback context.
+
+
+
+
+
 |#

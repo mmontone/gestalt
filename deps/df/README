@@ -1,0 +1,7 @@
+More comments: add to the README maybe.
+
+Human beings have three dimensions. The somatic, the psychic and the espiritual. Each of them is "superior" than the former, in that order. At the same time, some times there's not a clear distinction between them, as there are complex interactions. The "superior" dimensions, cancel and at the same time incorporate the once below.
+
+This principle could be applied for software. That is translated to a somewhat "coupled stratified design".
+
+In the dataflow world, callbacks (weak lambdas) are the inferior. The dataflow syntax is superior. But dataflow syntax should somehow "include" the weak lambdas. As a consecuence, weak lambdas, or even, simple lambdas, could be used in the same places that the full dataflow syntax is used.
