@@ -308,8 +308,24 @@ Some comments on event handlers attaching and events firing:
   generates javascript, so that attaching should be made in a javascript rendering context. That means, the events attaching can only
   be made on the initialize method of the component, or in a callback context.
 
+Some comments on javascript generation and integration:
 
+* Javascript should be handled in a compositional way. That means, each component depends on js-libraries that are loaded on demand, and besides, may generate its own javascript code.
+* There are tricky issues when generating server calling code inside a loop. Example:
 
-
-
+(defcomponent mygmap (gmap)
+  ()
+  (:metaclass js-component)
+  (:initialize-map (self)
+		   ;; The following is code that modifies the mymap server object state and generate javascript
+		   ;; to modify the actual component in the client, at the same time.
+		   (loop for i from 1 to 10
+			do (let
+			       ((marker (make-instance 'gmarker :lat (random :between (west (bounds self))
+									                                     :and (east (bounds self)))))))
+			(on-click marker (lambda (event)
+					   (alert (format nil "Clicked on ~A" marker))
+					   (self.show-info-window :message
+								  (server (let ((msg (message-for-marker marker)))
+									    (as-html msg)))))))))
 |#
