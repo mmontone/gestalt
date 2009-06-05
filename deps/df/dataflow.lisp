@@ -34,16 +34,14 @@
 
 (defvar *debug* t "Turn off to disable debugging macros. Note you'll have to recompile your code in order for this to be effective")
 
-(defvar *track* nil "Turn on if you want to track the dataflow")
-
 (defmacro defdbgmacro (name args &rest body)
   `(defmacro ,name ,args
      (when *debug*
 	 ,@body)))
 
-(defdbgmacro trk (datum &rest args)
-  `(when *track*
-     (format t ,datum ,@args)))
+(defdbgmacro dbg (&body body)
+  `(progn
+     ,@body))
 
 (defmacro wlambda (args &rest body)
   (let*
@@ -165,12 +163,15 @@
    (code)))
 
 (defclass dfvaluecell (dfcell)
-  ((value :accessor value :initarg :value)
-   (test :accessor test :initarg :test :initform #'eq)))
+  ((name :accessor name :initarg :name)
+   (value :accessor value :initarg :value)
+   (test :accessor test :initarg :test :initform #'eq))
+  (:metaclass required-slots-class))
 
 (defmethod print-object ((dfcell dfvaluecell) stream)
   (print-unreadable-object (dfcell stream :type t :identity t)
-    (format stream "value: ~A test: ~A"
+    (format stream "~A value: ~A test: ~A"
+	    (name dfcell)
 	    (if (slot-boundp dfcell 'value)
 		(value dfcell)
 		"#unbound")
@@ -230,7 +231,7 @@
 	 (new-body (if externals
 		       (cdr body)
 		       body)))
-    `(let* ((,dffcell (make-instance 'dfvaluecell))
+    `(let* ((,dffcell (make-instance 'dfvaluecell :name (symbol-name ,dffcell)))
 	    (,listener-f
 	    (dflambda (,event ,triggerer ,new-value)
 		      (declare (external ,@(cons dffcell externals)))
@@ -413,3 +414,12 @@ en los wlambda creados. Para desacoplar el algoritmo habria que transformar el c
 	 ,(loop for slot in slots
 	       collect `(,slot ,(gethash slot slots-gensyms)))
        ,@body))))
+
+(make-let df-vars (lambda (var-name var-value)
+		    `(make-instance 'dfvaluecell
+				    :name ,(symbol-name var-name)
+				    :value ,var-value)))
+(make-using df-vars (lambda (binding)
+		      `(value ,binding)))
+
+(make-with df-vars)

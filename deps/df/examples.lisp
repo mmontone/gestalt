@@ -1,13 +1,13 @@
-(in-package :df.test)
+(in-package :df.ex)
 
-(def-suite df-tests
-    :description "Dataflow tests")
-
-(in-suite df-tests)
-
-
-#|
-Tests:
+(wlambda (button)
+	 (declare (ignore button))
+	 (declare (external those))
+	 (setf (color button) 'black)
+	 (set-color this 'red)
+	 (setf (color that) 'blue)
+	 (print (message this))
+	 (print those))
 
 (setf *track* t)
 
@@ -52,12 +52,8 @@ Tests:
 (setf (value (slot-value *ba* 'money)) 2)
 (setf (value (slot-value *ba* 'money)) 10)
 
-|#
 
-;; Example with the new MOP glue
-
-#|
-Tests:
+;; Example with MOP glue
 
 (setf *track* t)
 
@@ -90,6 +86,4 @@ Tests:
 (format t "Money:~A~%" (slot-value *ba* 'money))
 
 (with-slots (money) *ba*
-  (setf money 3))
-	       
-|#
+  (setf money 3)) 
