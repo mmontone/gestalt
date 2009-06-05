@@ -186,6 +186,8 @@
 
 ;; Test:
 
+#|
+
 (defclass person ()
   ((name :initarg :name :initform (error "Provide the name"))
    (lastname :initarg :lastname :initform (error "Provide the lastname"))
@@ -221,3 +223,4 @@
 
 ;; It doesn't deep copy lists though (person friends are not copied), although it should not be too difficult to implement
 
+|#

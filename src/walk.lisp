@@ -1045,7 +1045,7 @@
                                              body
                                              (register-walk-env env :block block-name block))))))
 
-(define-condition return-from-unknown-block (error)
+(define-condition return-from-unknown-block (serious-condition)
   ((block-name :accessor block-name :initarg :block-name))
   (:report (lambda (condition stream)
              (format stream "Unable to return from block named ~S." (block-name condition)))))
