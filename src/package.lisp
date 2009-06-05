@@ -2,6 +2,7 @@
   (:nicknames :gst)
   (:use
    :cl
+   :anaphora
    :gstutils
    ;:rucksack
    ;:dataflow

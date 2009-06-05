@@ -16,6 +16,12 @@
   ((:file "package")
    (:file "gstutils")
    (:file "copy-obj")
+   (:file "required-slots-class")
+   (:file "references")
+   (:file "test")
    )
-  :depends-on (:hunchentoot)
-  )
+  :serial t
+  :depends-on (:anaphora
+	       :hunchentoot
+	       :log5
+	       :fiveam))

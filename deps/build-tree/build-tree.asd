@@ -15,4 +15,5 @@
     :components
     ((:file "package")
      (:file "build-tree")
-     (:file "test")))
+     (:file "test"))
+    :serial t)

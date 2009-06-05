@@ -18,15 +18,19 @@
 	      ((:file "package")
 	       (:file "conditions")
 	       (:file "dispatcher")
-	       (:file "start"))))
+	       (:file "start"))
+	      :serial t
+	      ))
+    :serial t
     :depends-on
-    (:hunchentoot
+    (:anaphora
+     :hunchentoot
      :log5
+     :fiveam
      :cl-who
      :parenscript
      :cl-cont
      :contextl
      :gstutils
      :dataflow
-     :build-tree
-     ))
+     :build-tree))

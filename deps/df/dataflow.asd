@@ -17,5 +17,6 @@
     ((:file "package")
      (:file "dataflow")
      (:file "test"))
-    :depends-on (:gstutils :log5))
+    :serial t
+    :depends-on (:gstutils :log5 :fiveam))
   

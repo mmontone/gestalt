@@ -18,4 +18,9 @@
 
 (defpackage dataflow.test
   (:nicknames :df.test)
+  (:use :cl :dataflow :fiveam)
+  (:shadowing-import-from :fiveam #:test))
+
+(defpackage dataflow.examples
+  (:nicknames :df.ex)
   (:use :cl :dataflow))

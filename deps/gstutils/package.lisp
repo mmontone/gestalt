@@ -1,5 +1,5 @@
 (defpackage :gstutils
-  (:use :cl)
+  (:use :cl :anaphora :sb-mop :log5 :sb-ext)
   (:export
    #:defalias
    #:make-weakref #:make-wref #:mk-wref
@@ -10,4 +10,21 @@
    #:list-free-vars-non-external
    #:replace-all
    #:xmlize
-   #:always-with))
+   #:always-with
+   
+   ;; required-slots-class
+   #:required-slots-class
+
+   ;; make-lib
+   #:make-let
+   #:make-using
+   #:make-with
+
+   ;; references
+   #:with-refs
+   #:ref
+   #:refp
+   ))
+
+(defpackage gstutils.test
+  (:use :cl :gstutils :fiveam))
