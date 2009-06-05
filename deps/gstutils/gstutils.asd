@@ -15,6 +15,7 @@
     :components
   ((:file "package")
    (:file "gstutils")
+   (:file "make-lib")
    (:file "copy-obj")
    (:file "required-slots-class")
    (:file "references")
