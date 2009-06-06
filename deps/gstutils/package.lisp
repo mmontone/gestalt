@@ -1,5 +1,7 @@
 (defpackage :gstutils
   (:use :cl :anaphora :sb-mop :log5 :sb-ext)
+  (:shadow :name)
+  (:import-from :arnesi :with-unique-names :let1)
   (:export
    #:defalias
    #:make-weakref #:make-wref #:mk-wref
@@ -23,8 +25,7 @@
    ;; references
    #:with-refs
    #:ref
-   #:refp
-   ))
+   #:refp))
 
 (defpackage gstutils.test
   (:use :cl :gstutils :fiveam))

@@ -48,136 +48,197 @@ TODO: make this portable. Uses sb-int:parse-lambda-list at the moment"
      (list rest)))))
 
 
-(defun replace-freevars (lexenv form replace-fn &optional (skip-form nil))
+(defun dynamic-variable-symbol-p (symbol)
+  "Returns if the symbol refers to a dynamic variable.
+   Comment: that's not really true, we are just cheking for syntactic issues (look for the asterisks). We have no way to decide statically (at macroexpansion time)"
+  (flet
+      ((string-starts-with (character string)
+	 (equalp character
+		 (aref string 0)))
+       (string-ends-with (character string)
+	 (equalp character
+		 (aref string (- (length string) 1)))))
+  (and (symbolp symbol)
+       (string-starts-with #\* (symbol-name symbol))
+       (string-ends-with #\* (symbol-name symbol)))))
+
+
+(define-condition replacement-not-found-error (serious-condition)
+  ())
+
+(defvar *replacements* (make-hash-table :test #'equalp)
+  "Replacement functions")
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defmacro def-replacement ((pattern &rest pattern-args) &rest body)
+    (with-unique-names (tag form replace-fn lexenv)
+      `(setf (gethash ',pattern *replacements*)
+	     (lambda (,form ,replace-fn ,lexenv)
+	       (declare (ignorable ,lexenv ,replace-fn))
+	       (flet ((replace-fvars (form lexenv)
+			(replace-freevars form ,replace-fn lexenv)))
+		 (destructuring-bind (,tag ,@pattern-args) ,form
+		   (declare (ignore ,tag))
+		   (symbol-macrolet ((lexenv ,lexenv))
+		     ,@body))))))))
+
+(defun get-replacement (symbol)
+  (multiple-value-bind (replacement foundp)
+      (gethash symbol *replacements*)
+    (if (not foundp)
+	(error 'replacement-not-found-error "Replacement for ~A not found. Define one with def-replacement" symbol)
+	replacement)))
+
+;; Tests
+(handler-case (progn
+		(get-replacement 'let)
+		(assert nil))
+  (replacement-not-found-error () t))
+(def-replacement (let bindings body))
+(get-replacement 'let)
+
+
+
+(defun replace-freevars (form replace-fn &optional (lexenv nil))
   "Takes a form and a replace function and applies it to the form's free variables and replace them by the function's result. It takes a lexical environment; a list of local variable names.
 Returns a new form with the replacements applied.
   Takes into account lambda, let, let*, labels, flet, symbol-macrolet.
-Ignores bindings in block, return-from, go, quote, throw.
-TODO: skip-form doesn't seem to be used and lexenv should be portable.
-Change the signature to:
-(defun replace-freevars (form replace-fn &optional (lexenv nil) (skip-forms nil)))
-TODO: rewrite with a pattern matching style/library (i.e. cl-match or fare-matcher) and use some unit test library to test
-"
-  
-  (when (or (keywordp form)
-	  (constantp form))
-    (return-from replace-freevars form))
-  (if (symbolp form)
-      ;; May be a free variable
-      (if (member form lexenv)
-	  ;; Lexical-variable
-	  form
-	  ;; Free-var
-	  (funcall replace-fn form))
-      ;; It's not a var
-      (progn
-	(when (and (not (null skip-form)) (equal (cadr form) skip-form))
-	  (return-from replace-freevars form))
-	(case (car form)
-	  (lambda (let ((args (list-lambda-list-vars (cadr form)))
-		   (body (cddr form)))
-	       (cons (car form)
-		   (cons
-		    (cadr form)
-		    (mapcar (lambda (body-form)
-			      (replace-freevars (append args lexenv)
-				     body-form
-				     replace-fn))
-			    body)))))
-	(let (let* ((new-lexenv '())
-		    (bindings (mapcar (lambda (binding)
-					(let ((new-binding (list (car binding)
-								 (replace-freevars lexenv
-										   (cadr binding)
-										   replace-fn))))
-					  (push (car binding) new-lexenv)
-					new-binding))
-				      (cadr form))))
-	       (cons (car form)
-		     (cons
-		      bindings
-		      (mapcar (lambda (body-form)
-				(replace-freevars (append new-lexenv lexenv)
-						 body-form
-						 replace-fn))
-			      (cddr form))))))
-	(let* (let*
-		  ((new-lexenv lexenv)
-		   (bindings (mapcar (lambda (binding)
-				       (let ((new-binding
-					      (list (car binding)
-						    (replace-freevars new-lexenv
-								      (cadr binding)
-								      replace-fn))))
-					 (push (car binding) new-lexenv)
-					 new-binding))
-				     (cadr form))))
-		(cons (car form)
-		      (cons
-		       bindings
-		       (mapcar (lambda (body-form)
-				 (replace-freevars new-lexenv body-form replace-fn))
-			       (cddr form))))))
-	(flet (let* ((new-lexenv '())
-		    (bindings (mapcar (lambda (binding)
-					(let* ((local-lexenv (append lexenv
-								     (list-lambda-list-vars (cadr binding))))
-					       (new-binding (cons (car binding)
-								 (cons (cadr binding)
-								       (mapcar (lambda (body-form)
-										 (replace-freevars
-										  local-lexenv
-										  body-form
-										  replace-fn))
-									       (cddr binding))))))
-					  (push (car binding) new-lexenv)
-					  new-binding))
-				      (cadr form))))
-		(cons (car form)
-		      (cons
-		       bindings
-		       (mapcar (lambda (body-form)
-				 (replace-freevars (append new-lexenv lexenv)
-						   body-form
-						   replace-fn))
-			       (cddr form))))))
-	  (labels (let* ((new-lexenv '())
-			 (bindings (mapcar (lambda (binding)
-					   (let* ((local-lexenv (append lexenv
-									(list-lambda-list-vars (cadr binding))
-									(list (car binding)))))
-					     (push (car binding) new-lexenv)
-					     (cons (car binding)
-						   (cons (cadr binding)
-							 (mapcar (lambda (body-form)
-								   (replace-freevars
-								    (append local-lexenv new-lexenv)
-								    body-form
-								    replace-fn))
-								 (cddr binding))))))
-					   (cadr form))))
-		    (cons (car form)
-			  (cons
-			   bindings
-			   (mapcar (lambda (body-form)
-				     (replace-freevars (append lexenv new-lexenv)
-						       body-form replace-fn))
-				   (cddr form))))))
-	;; (symbol-macrolet) I assume symbol-macrolet gets processed previously
-	  (quote form)
-	  (return-from (list (car form) (cadr form)
-			     (replace-freevars lexenv (caddr form) replace-fn)))
-	  (declare form)
-	  (t (cons (car form) (mapcar (lambda (arg) (replace-freevars
-						lexenv
-						arg
-						replace-fn)) (cdr form))))))))
+  Ignores bindings in block, return-from, go, quote, throw"
+  (flet
+      ((process-list-form (form)
+	 (let ((replacement (get-replacement (car form))))
+	   (funcall replacement form replace-fn lexenv))))
+  (cond
+    ;; Constant or keyword
+    ((or (keywordp form)
+	 (constantp form))
+     form)
+    ;; A lexical variable
+    ((and (atom form) (member form lexenv))
+     form)
+    ;; A dynamic variable
+    ((and (atom form) (dynamic-variable-symbol-p form))
+     form)
+    ;; A free variable
+    ((atom form)
+     (funcall replace-fn form))
+    (t
+     (handler-case (process-list-form form)
+       (replacement-not-found-error ()
+	 (destructuring-bind
+	       (form-tag &rest form-body) form
+	 (cons form-tag (mapcar (lambda (body-form)
+				  (replace-freevars body-form
+						    replace-fn
+						    lexenv))
+				  form-body)))))))))
+
+"Lambda replacement"
+(def-replacement (lambda args &body body)
+    (let ((new-lexenv (append (list-lambda-list-vars args)
+			      lexenv)))
+      `(lambda ,args
+	 ,@(mapcar (lambda (body-form)
+		     (replace-fvars body-form
+				    new-lexenv))
+		   body))))
+
+"let replacement"
+(def-replacement (let bindings &rest body)
+    (let* ((bindings (loop for binding in bindings
+		      collect (destructuring-bind (binding-name binding-expr) binding
+				(list binding-name
+				      (replace-fvars binding-expr
+						     lexenv)))))
+	   (new-lexenv (append (mapcar #'car bindings) lexenv)))
+    `(let ,bindings
+       ,@(mapcar (lambda (body-form)
+		  (replace-fvars body-form
+				 new-lexenv))
+		     body))))
+
+"let* replacement"
+(def-replacement (let* bindings &rest body)
+  (let* ((new-lexenv lexenv)
+	 (bindings (loop for binding in bindings
+		      collect (destructuring-bind (binding-name binding-expr) binding
+				(aprog1
+				    (list binding-name
+					  (replace-fvars binding-expr
+							 new-lexenv))
+				  (push (car it) new-lexenv)
+				  it)))))
+    `(let* ,bindings
+       ,@(mapcar (lambda (body-form)
+		  (replace-fvars body-form
+				 new-lexenv))
+		body))))
+
+
+"flet replacement"
+(def-replacement (flet bindings &rest body)
+    (let* ((new-lexenv '())
+	   (bindings (loop for binding in bindings
+			collect
+			  (destructuring-bind
+				(f-name f-args &rest f-body) binding
+			    (let* ((local-lexenv (append lexenv
+							 (list-lambda-list-vars f-args)))
+				   (new-binding `(,f-name ,f-args
+							  ,@(mapcar (lambda (body-form)
+								    (replace-fvars body-form
+										   local-lexenv))
+								  f-body))))
+			      (push f-name new-lexenv)
+			      new-binding)))))
+      (let ((lexenv (append new-lexenv lexenv)))
+	`(flet ,bindings
+	   ,@(mapcar (lambda (body-form)
+		       (replace-fvars body-form
+				      new-lexenv))
+		     body)))))
+
+"labels replacement"
+(def-replacement (labels bindings &rest body)
+    (let* ((new-lexenv '())
+	   (bindings (loop for binding in bindings
+			collect
+			  (destructuring-bind
+				(f-name f-args &rest f-body) binding
+			    (let* ((local-lexenv (append new-lexenv
+							 (list-lambda-list-vars f-args)
+							 (list f-name)))
+				   (new-binding `(,f-name ,f-args
+							  ,@(mapcar (lambda (body-form)
+								    (replace-fvars body-form
+										   local-lexenv))
+								f-body))))
+			      (push f-name new-lexenv)
+			      new-binding)))))
+      (let ((new-lexenv (append new-lexenv lexenv)))
+	`(labels ,bindings
+	   ,@(mapcar (lambda (body-form)
+		       (replace-fvars body-form
+				      new-lexenv))
+		  body)))))
+
+;; quote
+(def-replacement (quote form)
+    `(quote ,form))
+
+;; return-from
+(def-replacement (return-from name &optional expr)
+    `(return-from ,name
+       ,(replace-fvars expr lexenv)))
+
+;; declare
+(def-replacement (declare form)
+  `(declare ,form))
 
 (defun list-free-vars (body)
   "Takes a forma and returns its free variables without taking into account the lexical enviroment the body is in.
 TODO: change the signature to
-(defun list-free-vars (body &optional (lexenv nil)))
-"
+(defun list-free-vars (body &optional (lexenv nil)))"
   (let 
       ((freevars (make-hash-table :test #'equal))
        (freevars-list '()))
