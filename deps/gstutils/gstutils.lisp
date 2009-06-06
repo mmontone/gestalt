@@ -1,15 +1,14 @@
 (in-package :gstutils)
 
-(defmacro defalias (fname &rest aliases)
-  (let ((setf-args '()))
-    
-    `(progn
-       (setf
-	,@(loop for alias in aliases
-	     do (setf setf-args (nconc setf-args (list `(symbol-function ',alias) `(function ,fname))))
-	     finally (return setf-args)))
-       ',aliases)))
-    
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defmacro defalias (fname &rest aliases)
+    (let ((setf-args '()))
+      `(progn
+	 (setf
+	  ,@(loop for alias in aliases
+	       do (setf setf-args (nconc setf-args (list `(symbol-function ',alias) `(function ,fname))))
+	       finally (return setf-args)))
+	 ',aliases))))
 
 ;; Portable weak-refs
 
