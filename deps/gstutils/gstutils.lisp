@@ -88,21 +88,10 @@ TODO: make this portable. Uses sb-int:parse-lambda-list at the moment"
 	(error 'replacement-not-found-error "Replacement for ~A not found. Define one with def-replacement" symbol)
 	replacement)))
 
-;; Tests
-(handler-case (progn
-		(get-replacement 'let)
-		(assert nil))
-  (replacement-not-found-error () t))
-(def-replacement (let bindings body))
-(get-replacement 'let)
-
-
-
 (defun replace-freevars (form replace-fn &optional (lexenv nil))
-  "Takes a form and a replace function and applies it to the form's free variables and replace them by the function's result. It takes a lexical environment; a list of local variable names.
-Returns a new form with the replacements applied.
-  Takes into account lambda, let, let*, labels, flet, symbol-macrolet.
-  Ignores bindings in block, return-from, go, quote, throw"
+  "Takes a form and a replace function and applies it to the form's free variables
+   and replace them by the function's result. It takes a lexical environment; a list of local variable names.
+   Returns a new form with the replacements applied."
   (flet
       ((process-list-form (form)
 	 (let ((replacement (get-replacement (car form))))
@@ -234,16 +223,14 @@ Returns a new form with the replacements applied.
 (def-replacement (declare form)
   `(declare ,form))
 
-(defun list-free-vars (body)
-  "Takes a forma and returns its free variables without taking into account the lexical enviroment the body is in.
-TODO: change the signature to
-(defun list-free-vars (body &optional (lexenv nil)))"
+(defun list-free-vars (body &optional (lexenv nil))
+  "Takes a form and returns its free variables without
+   taking into account the lexical enviroment the body is in"
   (let 
-      ((freevars (make-hash-table :test #'equal))
+      ((freevars (make-hash-table :test #'equalp))
        (freevars-list '()))
     (mapcar (lambda (body-form)
-	      (replace-freevars '()
-				body-form
+	      (replace-freevars body-form
 				(lambda (freevar)
 				  (multiple-value-bind (previous-lexvar found)
 				      (gethash freevar freevars)
@@ -255,8 +242,9 @@ TODO: change the signature to
 	       (declare (ignore value))
 	       (push freevar freevars-list))
 	     freevars)
-    freevars-list))
-
+    (remove-if (lambda (freevar)
+		 (member freevar lexenv))
+	       freevars-list)))
 
 (defun list-free-vars-non-external (body)
   "Lists the free vars that were not declared external

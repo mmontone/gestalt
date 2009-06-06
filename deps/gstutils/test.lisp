@@ -11,6 +11,14 @@
   (is (not (gstutils::dynamic-variable-symbol-p '*hola)))
   (is (not (gstutils::dynamic-variable-symbol-p 'hola*))))
 
+(test list-free-vars
+  (is (not (set-exclusive-or (list-free-vars '((print x) (print y))) '(x y))))
+  (is (not (set-exclusive-or (list-free-vars '((print x) (print y) (let ((z 3)) z))) '(x y))))
+  (is (not (set-exclusive-or (list-free-vars '((print x) (print y) z)) '(x y z))))
+
+  ;; in presence of a lexical environment
+  (is (not (set-exclusive-or (list-free-vars '((print x) (print y)) '(x)) '(y)))))
+
 (test replace-free-vars-test
 
   (is (equalp
