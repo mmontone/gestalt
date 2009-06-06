@@ -79,6 +79,9 @@
 (defun make-keyword (name)
   (values (intern (string-upcase name) "KEYWORD")))
 
+(define-condition required-slot-error (serious-condition)
+  ())
+
 (defmethod shared-initialize :after ((obj required-slots-object) slot-names &rest initargs)
   "Initialize the dataflow slots of the object"
   (loop for slot-definition in (class-slots (class-of obj))
@@ -87,39 +90,7 @@
 		  (not (getf initargs (make-keyword (slot-definition-name slot-definition)))))
 	 ;; The slot is required but the user didn't pass an initarg
 	 ;; Trigger the error string
-	 (error (error-msg slot-definition)))))
-
-
-;; Examples (evaluate the following)
-
-#|
-
-(defclass person ()
-  ((name :initarg :name :required t)
-   (lastname :initarg :lastname :required t :error-msg "Please give me a lastname!!")
-   (phone :initarg :phone :initform "" :required nil)
-   (address :initarg :address :initform ""))
-  (:metaclass required-slots-class)
-  (:documentation "The class definition to test required slots"))
-
-(defmethod print-object ((person person) stream)
-  (print-unreadable-object (person stream :type t :identity t)
-    (format stream "name: ~A lastname: ~A phone: ~A address: ~A"
-	    (slot-value person 'name)
-	    (slot-value person 'lastname)
-	    (slot-value person 'phone)
-	    (slot-value person 'address))))
-
-
-
-
-(make-instance 'person)
-(make-instance 'person :name "Mariano")
-(make-instance 'person :lastname "Montone")
-(make-instance 'person :name "Mariano" :lastname "Montone")
-(make-instance 'person :address "Mi casa")
-
-|#
+	 (error 'required-slot-error (error-msg slot-definition)))))
 
 ;; Some other designs:
 ;; 1) If the user doesn't provide an initform, then the slot is required. If he provides it, then it's not.

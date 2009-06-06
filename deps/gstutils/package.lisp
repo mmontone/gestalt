@@ -16,6 +16,7 @@
    
    ;; required-slots-class
    #:required-slots-class
+   #:required-slot-error
 
    ;; make-lib
    #:make-let

@@ -88,15 +88,27 @@
        
   )
 
-#| Example:
-(wlambda (button)
-	 (declare (ignore button))
-	 (declare (external those))
-	 (setf (color button) 'black)
-	 (set-color this 'red)
-	 (setf (color that) 'blue)
-	 (print (message this))
-	 (print those))
+;; required-slots-class tests
 
-|#
+(defclass person ()
+  ((name :initarg :name :required t)
+   (lastname :initarg :lastname :required t :error-msg "Please give me a lastname!!")
+   (phone :initarg :phone :initform "" :required nil)
+   (address :initarg :address :initform ""))
+  (:metaclass required-slots-class)
+  (:documentation "The class definition to test required slots"))
 
+(defmethod print-object ((person person) stream)
+  (print-unreadable-object (person stream :type t :identity t)
+    (format stream "name: ~A lastname: ~A phone: ~A address: ~A"
+	    (slot-value person 'name)
+	    (slot-value person 'lastname)
+	    (slot-value person 'phone)
+	    (slot-value person 'address))))
+
+(test required-slots-class-test
+  (signals required-slot-error (make-instance 'person))
+  (signals required-slot-error (make-instance 'person :name "Mariano"))
+  (signals required-slot-error (make-instance 'person :lastname "Montone"))
+  (finishes (make-instance 'person :name "Mariano" :lastname "Montone"))
+  (signals required-slot-error (make-instance 'person :address "Mi casa")))
