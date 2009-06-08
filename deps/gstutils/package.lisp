@@ -10,6 +10,7 @@
    #:replace-freevars
    #:list-free-vars
    #:list-free-vars-non-external
+   #:prune-externals
    #:replace-all
    #:xmlize
    #:always-with

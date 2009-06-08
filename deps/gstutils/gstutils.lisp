@@ -246,7 +246,7 @@ TODO: make this portable. Uses sb-int:parse-lambda-list at the moment"
 		 (member freevar lexenv))
 	       freevars-list)))
 
-(defun list-free-vars-non-external (body)
+(defun list-free-vars-non-external (body &optional (lexenv nil))
   "Lists the free vars that were not declared external
 through (declare (external ...))"
   (let 
@@ -259,8 +259,7 @@ through (declare (external ...))"
 	      (cdadr maybe-declare)
 	      '()))))
     (mapcar (lambda (body-form)
-	      (replace-freevars '()
-				body-form
+	      (replace-freevars body-form
 				(lambda (freevar)
 				  (when (not (member freevar external-vars))
 				    (multiple-value-bind (previous-lexvar found)
@@ -273,7 +272,9 @@ through (declare (external ...))"
 	       (declare (ignore value))
 	       (push freevar freevars-list))
 	     freevars)
-    freevars-list))
+    (remove-if (lambda (freevar)
+		 (member freevar lexenv))
+	       freevars-list)))
 
 (defun prune-externals (code)
   (let ((externals '())
@@ -289,8 +290,7 @@ through (declare (external ...))"
 	     (setf code (cdr code))
 	     (if (equal (declaration maybe-declaration) "EXTERNAL")
 	       (setf externals (append (cdadr maybe-declaration) externals))
-	       (push maybe-declaration non-external-declarations)
-	       ))))
+	       (push maybe-declaration non-external-declarations)))))
     (values code non-external-declarations externals)))
 
 (defun replace-all (string part replacement &key (test #'char=))

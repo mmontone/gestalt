@@ -52,8 +52,7 @@
 	(prune-externals body)
       (let
 	  ((new-body (mapcar (lambda (body-form)
-			       (replace-freevars (list-lambda-list-vars args)
-						 body-form
+			       (replace-freevars body-form
 						 (lambda (freevar)
 						   (if (not (member freevar external-vars))
 						       (multiple-value-bind (previous-lexvar found)
@@ -63,7 +62,8 @@
 							     (let ((gen-lexvar (gensym (string freevar))))
 							       (setf (gethash freevar freevars) gen-lexvar)
 							       gen-lexvar)))
-						       freevar))))
+						       freevar))
+						 (list-lambda-list-vars args)))
 			     body)))
               (let ((freevars-list '()))
 		(maphash (lambda (freevar gen-lexvar)
@@ -102,8 +102,7 @@
 	(prune-externals body)
       (let 
 	  ((new-body (mapcar (lambda (body-form)
-			  (replace-freevars (list-lambda-list-vars args)
-					    body-form
+			  (replace-freevars body-form
 					    (lambda (freevar)
 					      (if (not (member freevar external-vars))
 						  (multiple-value-bind (previous-lexvar found)
@@ -119,8 +118,8 @@
 							     (value ,gen-lexvar)
 							     ))))
 						  ;; else
-						  freevar
-					))))
+						  freevar))
+					    (list-lambda-list-vars args)))
 			body)))
 	(let ((freevars-list '()))
 	  (maphash (lambda (freevar gen-lexvar)
