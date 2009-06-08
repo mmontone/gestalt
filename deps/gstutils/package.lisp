@@ -26,6 +26,9 @@
 
    ;; references
    #:with-refs
+   #:let-refs
+   #:using-refs
+   #:value
    #:ref
    #:refp))
 

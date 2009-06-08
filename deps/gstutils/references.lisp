@@ -45,25 +45,3 @@
   `(defun ,name ,args
      (using-refs ,args
        ,@body)))
-
-#|
-
-Test:
-
-(with-refs ((x nil) (y 33))
-	    (setf x 34)
-	    (list x y))
-
-(let
-    ((x (make-instance 'ref :name "X" :value 22)))
-  (using-refs (x)
-    (setf x 44))
-  x)
-
-(defun change-x-ref (x)
-  (setf (value x) 22))
-
-(rdefun change-ref (x)
-  (setf x 33))
-
-|#

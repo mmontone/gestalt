@@ -112,3 +112,21 @@
   (signals required-slot-error (make-instance 'person :lastname "Montone"))
   (finishes (make-instance 'person :name "Mariano" :lastname "Montone"))
   (signals required-slot-error (make-instance 'person :address "Mi casa")))
+
+;; references tests
+(test references-test
+  (is (with-refs ((x nil) (y 33))
+	(setf x 34)
+	(list x y))
+      '(34 33))
+
+  (let ((expr (let
+		  ((x (make-instance 'ref :name "X" :value 22)))
+		(using-refs (x)
+		  (setf x 44))
+		x)))
+    (is (value expr) 44))
+  
+  (let-refs ((x 33))
+	    (is (typep x 'ref))
+	    (is (value x) 33)))

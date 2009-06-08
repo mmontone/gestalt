@@ -4,11 +4,6 @@
 (in-package :gstutils)
 
 
-;; (defmacro defunstm (name args &rest body)
-;;   `(progn
-;;      (setf (gethash ',name *stmfuns*) t)
-;;      (defun ,name ,args (stm ,@body))))
-
 (defmacro make-let (name make-binding)
   "This macro creates let style macros.
    Let style macros are supposed to introduce new, fresh, bindings.
@@ -47,11 +42,8 @@
 	 `(let
 	      ,(loop for var in vars
 		  for var-binding = (gensym (funcall ,name-binding (symbol-name var)))
-	     collect (list
-		      (progn
-		       (push (cons var var-binding) bindings)
-		       var-binding)
-		      var))
+		  collect (list var-binding var)
+		  and do (push (cons var var-binding) bindings))
        (symbol-macrolet
 	   ,(loop for binding in bindings
 		  collect (list (car binding)
