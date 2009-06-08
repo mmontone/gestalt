@@ -78,9 +78,3 @@
 	   (,using-macro
 	    ,(mapcar #'car bindings)
 	    ,@body))))))
-
-"TODO: rewrite functions above with (loop for
-                                         collect
-                                          and do ..) syntax"
-
-"TODO: write a free-variables macro maker (see stm and df macros)"
