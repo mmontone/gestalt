@@ -1,11 +1,11 @@
 (defpackage :gstutils
-  (:use :cl :anaphora :sb-mop :log5 :sb-ext)
+  (:use :cl :anaphora :sb-mop :log5)
   (:shadow :name)
   (:import-from :arnesi :with-unique-names :let1)
+  (:import-from :contextl :singleton-class :find-singleton)
   (:export
    #:defalias
-   #:make-weakref #:make-wref #:mk-wref
-   #:weakref-value #:wref-value
+   #:compose
    #:list-lambda-list-vars
    #:replace-freevars
    #:list-free-vars
@@ -18,7 +18,7 @@
    ;; required-slots-class
    #:required-slots-class
    #:required-slot-error
-
+   
    ;; make-lib
    #:make-let
    #:make-using

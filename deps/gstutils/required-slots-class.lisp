@@ -54,14 +54,10 @@
 (defmethod error-msg ((slot-definition slot-definition))
   nil)
 
-;; The above code is not tested at all!!
-;; Now, I would like to be able to combine several metaclasses somehow.
-;; example: (defclass getalt-model-class (required-slots-class persistent-object-class))
-;; But I don't think that will work so easily!!
-
-;; required-slots-class test
-
 (defmethod validate-superclass ((class required-slots-class) (superclass standard-class))
+  t)
+
+(defmethod validate-superclass ((class standard-class) (superclass required-slots-class))
   t)
 
 (defmethod shared-initialize :around ((class required-slots-class) slot-names &rest args &key direct-superclasses)
@@ -80,7 +76,11 @@
   (values (intern (string-upcase name) "KEYWORD")))
 
 (define-condition required-slot-error (serious-condition)
-  ())
+  ((error-msg :initarg :error-msg :reader error-msg)))
+
+(defmethod print-object ((required-slot-error required-slot-error) stream)
+  (print-unreadable-object (required-slot-error stream :type t :identity t)
+    (format stream "~A" (error-msg required-slot-error))))
 
 (defmethod shared-initialize :after ((obj required-slots-object) slot-names &rest initargs)
   "Initialize the dataflow slots of the object"
@@ -90,7 +90,7 @@
 		  (not (getf initargs (make-keyword (slot-definition-name slot-definition)))))
 	 ;; The slot is required but the user didn't pass an initarg
 	 ;; Trigger the error string
-	 (error 'required-slot-error (error-msg slot-definition)))))
+	 (error 'required-slot-error :error-msg (error-msg slot-definition)))))
 
 ;; Some other designs:
 ;; 1) If the user doesn't provide an initform, then the slot is required. If he provides it, then it's not.

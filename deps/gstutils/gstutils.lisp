@@ -10,20 +10,12 @@
 	       finally (return setf-args)))
 	 ',aliases))))
 
-;; Portable weak-refs
-
-(defun make-weakref (object)
-  #+sbcl(make-weak-pointer object)
-  #-sbcl(error "make-weakref not implemented on this lisp"))
-
-(defalias make-weakref make-wref mk-wref)
-
-(defun weakref-value (weakref)
-  #+sbcl(weak-pointer-value weakref)
-  #-sbcl(error "weakref-value not implemented on this lisp"))
-
-(defalias weakref-value wref-value)
-
+(defun compose (&rest functions)
+  (lambda (x)
+    (loop for f in (reverse functions)
+	 with res = x
+	 do (setf res (funcall f res))
+	 finally (return res))))
 
 ;; Free variables manipulation
 ;; See dataflow package for examples

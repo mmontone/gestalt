@@ -33,4 +33,5 @@
      :contextl
      :gstutils
      :dataflow
-     :build-tree))
+     :build-tree
+     :code-walker))

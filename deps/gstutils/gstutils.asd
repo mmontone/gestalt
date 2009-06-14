@@ -19,10 +19,11 @@
    (:file "copy-obj")
    (:file "required-slots-class")
    (:file "references")
-   (:file "test")
-   )
+   (:file "test"))
   :serial t
   :depends-on (:anaphora
 	       :hunchentoot
+	       :contextl  ;; for singleton-class
 	       :log5
-	       :fiveam))
+	       :fiveam
+	       :trivial-garbage))

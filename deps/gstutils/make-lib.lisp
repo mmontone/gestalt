@@ -43,7 +43,7 @@
 	      ,(loop for var in vars
 		  for var-binding = (gensym (funcall ,name-binding (symbol-name var)))
 		  collect (list var-binding var)
-		  and do (push (cons var var-binding) bindings))
+		  do (push (cons var var-binding) bindings))
        (symbol-macrolet
 	   ,(loop for binding in bindings
 		  collect (list (car binding)
