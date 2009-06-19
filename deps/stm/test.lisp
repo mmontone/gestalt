@@ -1,13 +1,150 @@
 ;; These are the stm tests
 
-(let-stm-vars ((x 33))
-	 (print-hola)
-	 )
+(in-package :stm.test)
 
-(using-stm-vars (x y)
-  (print x))
+(def-suite stm-suite
+    :description "Software Transactional Memory test suite")
 
-(with-stm-vars ((x 34) (y 44))
+(in-suite stm-suite)
+
+(test no-transaction-error-test
+  ;; We modify stm vars outside a transaction. That should raise a no-transaction-error
+  (signals no-transaction-error
+    (with-refs
+	((x 32)
+	 (y 27))
+      (with-stm-vars ((x x)
+		      (y y))
+	(setf x 34)))))
+
+(test successful-commit-test
+  (let ((result
+	 (let-refs
+	  ((x 23)
+	   (y 45))
+	  (with-stm-vars ((x x) (y y))
+	    (atomically
+	      (setf x 34)
+	      (setf y 44)))
+	  (list x y))))
+    (is (= (value (car result)) 34))
+    (is (= (value (cadr result)) 44))))
+
+(test optimistic-semantics-test
+  (let-refs
+   ((x 23)
+    (y 45))
+   (with-stm-vars ((x x)
+		   (y y))
+     (atomically
+       (setf x 34)
+       (setf y 44)
+       (is (= x 34))
+       (is (= y 44))))))
+
+(test rollback-test
+  (let ((result
+	 (let-refs
+	  ((x 23)
+	   (y 45))
+	  (with-bindings-as-stm-vars (x y)
+	    (begin-stm-transaction)
+	    (format t "Edition started~%")
+	    (setf x 20)
+	    (setf y 44)
+	    (format t "x and y changed to ~A and ~A~%" x y)
+	    (rollback-stm-transaction))
+	  (using-refs (x y)
+	    (format t "Edition cancelled~%")
+	    (format t "x and y values are ~A and ~A~%" x y)
+	    (list x y)))))
+    (is (equalp result '(23 45)))))
+
+;; Restarts
+(define-condition some-condition (serious-condition)
+  ())
+
+(defun some-function ()
+  (with-simple-restart (continue "Continue the transaction")
+    (error 'some-condition)))
+
+(defun transactional-function (x y &optional tries)
+  (with-stm-vars
+      ((x x)
+       (y y))
+    (atomically
+      (when tries
+	(using-refs (tries)
+	  (incf tries)))
+      (setf x 33)
+      (setf y 23)
+      (some-function)))
+  (using-refs (x y)
+    (list x y)))
+
+(test retry-transaction-test
+  (let-refs
+   ((x 22)
+    (y 27)
+    (tries 0))
+   (block try
+     (handler-bind 
+       ((some-condition (lambda (c)
+			  (declare (ignore c))
+			  (using-refs (tries)
+			    (if (= tries 2)
+				(return-from try)
+				(invoke-restart 'retry-transaction))))))
+       (transactional-function x y tries)))
+   ;; Check that we made 2 retries and the transaction was rolled-back
+   (using-refs (x y tries)
+     (is (= x 22))
+     (is (= y 27))
+     (is (= tries 2)))))
+
+(let-refs
+   ((x 22)
+    (y 27)
+    (tries 0))
+   (block try
+     (handler-bind 
+       ((some-condition (lambda (c)
+			  (declare (ignore c))
+			  (using-refs (tries)
+			    (if (= tries 2)
+				(return-from try)
+				(invoke-restart 'retry-transaction))))))
+       (transactional-function x y tries)))
+   ;; Check that we made 2 retries and the transaction was rolled-back
+   (using-refs (x y tries)
+     (list x y tries)))
+
+(test continue-transaction-test
+  (let-refs
+     ((x 22)
+      (y 27))
+     (let ((result
+	    (handler-bind ((some-condition(lambda (c)
+					    (declare (ignore c))
+					    (continue))))
+	      (transactional-function x y))))
+       (is (equalp result '(33 23))))))
+
+(test abort-transaction-test
+  (let-refs
+     ((x 22)
+      (y 27))
+     (let ((result
+	    (handler-bind 
+	      ((some-condition (lambda (c)
+				 (declare (ignore c))
+				 (invoke-restart 'abort-transaction))))
+	      (transactional-function x y))))
+       (is (equalp result '(22 27))))))
+
+
+#|
+(with-stm-vars ((x x-ref) (y y-ref))
   (print x))
 
 (defunstm stmtest (y)
@@ -19,7 +156,7 @@
    (print x))
  (setf x 34)
  (stmtest w)
- )
+ (hola x))
 
 
 Some examples we need to make work:
@@ -27,54 +164,8 @@ Some examples we need to make work:
 with-stm-vars should check the types of its arguments.
 They should be either stm-vars or refs. If they are refs, then it creates stm-vars from them (wraps them). Then it binds the stm-vars through symbol-macrolet. If arguments are not stm-vars or refs, we throw a typing error.
 
-(let-refs
-    ((x 23)
-     (y 45))
-  (with-stm-vars (x y)
-    (stm
-     (atomically
-      (setf x 23)
-      (setf y 44))))
-  (list x y))
 
-(let
-    ((x 23)
-     (y 45))
-  (with-stm-vars (x y)
-    (stm
-     (atomically
-      (setf x 23)
-      (setf y 44))))
-  (list x y)) ;; We won't see the commited values
 
-		 
-(let
-    ((x 23)
-     (y 45))
-  (with-stm-vars (x y)
-    (stm
-     (atomically
-      (setf x 23)
-      (setf y 44)))
-    (list x y))) ;; We see the commited values
-
-;; Rollbacks
-
-(let-refs
-    ((x 23)
-     (y 45))
-  (with-stm-vars (x y)
-    (stm
-     (begin-transaction)
-     (format t "Edition started~%")
-     (setf x 23)
-     (setf y 44)
-     (format t "x and y changed to ~A and ~A~%" x y)
-     (roll-back)
-     (format t "Edition cancelled~%")
-     (format "x and y values are ~A and ~A~%" x y)
-     ))
-  (list x y))
 
 ;; Dataflow integration
 
@@ -125,3 +216,22 @@ They should be either stm-vars or refs. If they are refs, then it creates stm-va
 	      (if (equal what-to-do 'a)
 		  (commit)
 		  (rollback)))))))
+
+
+;; A conflict and versioning test:
+
+(defun proc1 (stm-var)
+  (flet (proc2 ()
+	       (proc2 stm-var))
+    (using-stm-var (stm-var)
+		   (atomically
+		    (setf stm-var 22)
+		    (proc2)
+		    (setf stm-var 40)))))
+
+(defun proc2 (stm-var)
+  (using-stm-var (stm-var)
+	(atomically
+	 (setf stm-var 33))))
+
+|#

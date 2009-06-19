@@ -34,4 +34,5 @@
      :gstutils
      :dataflow
      :build-tree
-     :code-walker))
+     :code-walker
+     :stm))
