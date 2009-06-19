@@ -86,4 +86,4 @@
 (format t "Money:~A~%" (slot-value *ba* 'money))
 
 (with-slots (money) *ba*
-  (setf money 3)) 
+  (setf money 3))

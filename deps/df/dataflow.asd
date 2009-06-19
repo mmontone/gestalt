@@ -18,5 +18,8 @@
      (:file "dataflow")
      (:file "test"))
     :serial t
-    :depends-on (:gstutils :log5 :fiveam))
+    :depends-on (:gstutils
+		 :log5
+		 :fiveam
+		 :trivial-garbage))
   

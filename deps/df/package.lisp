@@ -1,6 +1,10 @@
 (defpackage dataflow
   (:nicknames :df)
-  (:use :common-lisp :gstutils :sb-ext :sb-mop :log5)
+  (:use :common-lisp
+	:gstutils
+	:sb-mop
+	:log5
+	:trivial-garbage)
   (:export
    #:wlambda
    #:dfcell

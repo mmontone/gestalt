@@ -34,6 +34,12 @@
 
 (defvar *debug* t "Turn off to disable debugging macros. Note you'll have to recompile your code in order for this to be effective")
 
+(defun weak-pointer-value* (weak-pointer)
+  (let ((target (weak-pointer-value weak-pointer)))
+    (if target
+	(values target t)
+	(values nil nil))))
+
 (defmacro defdbgmacro (name args &rest body)
   `(defmacro ,name ,args
      (when *debug*
@@ -73,7 +79,7 @@
 				 (let* ((freevar (car fv))
 					(sym (gensym (string freevar))))
 				   (setf (gethash freevar table) sym)
-				   (list sym `(make-weakref ,freevar))))
+				   (list sym `(make-weak-pointer ,freevar))))
 			       freevars-list)  
 		   (lambda ,args
 		     ,@non-external-declarations
@@ -87,7 +93,7 @@
 						    (target (gensym "TARGET"))
 						    (found (gensym "FOUND")))
 						`(multiple-value-bind (,target ,found)
-						     (weakref-value ,(gethash freevar table))
+						     (weak-pointer-value* ,(gethash freevar table))
 						   (setf ,weakref ,target)
 						   ,found)))
 					    freevars-list))
@@ -129,7 +135,7 @@
 			   (let* ((freevar (car fv))
 				  (sym (gensym (string freevar))))
 			     (setf (gethash freevar table) sym)
-			     (list sym `(make-weakref ,freevar))))
+			     (list sym `(make-weak-pointer ,freevar))))
 			 freevars-list)
 	     (lambda ,args
 	       ,@non-external-declarations
@@ -143,7 +149,7 @@
 					       (target (gensym "TARGET"))
 					       (found (gensym "FOUND")))
 					  `(multiple-value-bind (,target ,found)
-					       (weakref-value ,(gethash freevar table))
+					       (weak-pointer-value ,(gethash freevar table))
 					     (if ,found
 						 (progn
 						   (setf ,weakref ,target)
@@ -230,7 +236,7 @@
 	 (new-body (if externals
 		       (cdr body)
 		       body)))
-    `(let* ((,dffcell (make-instance 'dfvaluecell :name (symbol-name ,dffcell)))
+    `(let* ((,dffcell (make-instance 'dfvaluecell :name ,(symbol-name dffcell)))
 	    (,listener-f
 	    (dflambda (,event ,triggerer ,new-value)
 		      (declare (external ,@(cons dffcell externals)))
