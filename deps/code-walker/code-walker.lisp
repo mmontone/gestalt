@@ -17,7 +17,7 @@
 	 :accessor name
 	 :required t
 	 :documentation "The walker's name")
-   (cases :initform '()
+   (cases :initform '()  ;; TODO:  Use a generic-hash-table instead, with :test #'typep on the cases patterns?? 
 	  :accessor code-walker-cases
 	  :documentation "The cases the walker handles")
    (parent :initform nil

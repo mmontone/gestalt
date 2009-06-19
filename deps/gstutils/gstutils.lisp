@@ -10,12 +10,6 @@
 	       finally (return setf-args)))
 	 ',aliases))))
 
-(defun compose (&rest functions)
-  (lambda (x)
-    (loop for f in (reverse functions)
-	 with res = x
-	 do (setf res (funcall f res))
-	 finally (return res))))
 
 ;; Free variables manipulation
 ;; See dataflow package for examples

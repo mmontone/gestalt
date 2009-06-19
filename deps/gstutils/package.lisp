@@ -5,7 +5,6 @@
   (:import-from :contextl :singleton-class :find-singleton)
   (:export
    #:defalias
-   #:compose
    #:list-lambda-list-vars
    #:replace-freevars
    #:list-free-vars
