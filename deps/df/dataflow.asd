@@ -15,7 +15,9 @@
     :description "A Common Lisp dataflow extension"
     :components
     ((:file "package")
+     (:file "logging")
      (:file "dataflow")
+     (:file "mop")
      (:file "test"))
     :serial t
     :depends-on (:gstutils
