@@ -113,6 +113,35 @@
   (finishes (make-instance 'person :name "Mariano" :lastname "Montone"))
   (signals required-slot-error (make-instance 'person :address "Mi casa")))
 
+;; test class reinitialization
+
+(test required-slots-class-reinitialization-test
+  (defclass other-person ()
+    ((name :initarg :name :required t)
+     (lastname :initarg :lastname :required t :error-msg "Please give me a lastname!!")
+   (phone :initarg :phone :initform "" :required nil)
+     (address :initarg :address :initform ""))
+    (:metaclass required-slots-class)
+    (:documentation "The class definition to test required slots"))
+
+  (defclass other-person ()
+    ((name :initarg :name :required t)
+     (lastname :initarg :lastname)
+     (phone :initarg :phone :initform "")
+     (address :initarg :address :initform "" :required t)
+     (hair-color :initarg :hair-color :required t :error-msg "Supply the hair color"))
+    (:metaclass required-slots-class)
+    (:documentation "The class definition to test required slots"))
+
+
+  (signals required-slot-error (make-instance 'other-person))
+  (signals required-slot-error (make-instance 'other-person :name "Mariano"))
+  (signals required-slot-error (make-instance 'other-person :lastname "Montone"))
+  (finishes (make-instance 'other-person :name "Mariano" :hair-color 'red :address "34 Street"))
+  (signals required-slot-error (make-instance 'other-person :address "Mi casa")))
+
+
+
 ;; references tests
 (test references-test
   (is (with-refs ((x nil) (y 33))

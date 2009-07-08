@@ -83,7 +83,7 @@
     (format stream "~A" (error-msg required-slot-error))))
 
 (defmethod shared-initialize :after ((obj required-slots-object) slot-names &rest initargs)
-  "Initialize the dataflow slots of the object"
+  "Initialize the slots of the object"
   (loop for slot-definition in (class-slots (class-of obj))
 	do
        (when (and (required-slot-p slot-definition)
