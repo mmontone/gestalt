@@ -102,23 +102,6 @@
      (is (= y 27))
      (is (= tries 2)))))
 
-(let-refs
-   ((x 22)
-    (y 27)
-    (tries 0))
-   (block try
-     (handler-bind 
-       ((some-condition (lambda (c)
-			  (declare (ignore c))
-			  (using-refs (tries)
-			    (if (= tries 2)
-				(return-from try)
-				(invoke-restart 'retry-transaction))))))
-       (transactional-function x y tries)))
-   ;; Check that we made 2 retries and the transaction was rolled-back
-   (using-refs (x y tries)
-     (list x y tries)))
-
 (test continue-transaction-test
   (let-refs
      ((x 22)
@@ -142,6 +125,20 @@
 	      (transactional-function x y))))
        (is (equalp result '(22 27))))))
 
+(test atomic-block-unwinding-test
+  (let-refs
+   ((x 22)
+    (y 27))
+   (block nil
+     (with-stm-vars ((x x)
+		     (y y))
+       (atomically
+	 (setf x 34)
+	 (setf y 12)
+	 (return))))
+   (using-refs (x y)
+     (is (= x 22))
+     (is (= y 27)))))
 
 #|
 (with-stm-vars ((x x-ref) (y y-ref))
