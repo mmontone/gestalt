@@ -1,36 +1,5 @@
 (in-package :stm)
 
-(defvar *debug* t "Turn off to disable debugging macros. Note you'll have to recompile your code in order for this to be effective")
-
-(defmacro defdbgmacro (name args &rest body)
-  `(defmacro ,name ,args
-     (when *debug*
-	 ,@body)))
-
-(defdbgmacro trk (datum &rest args)
-  `(when *track*
-     (format t ,datum ,@args)))
-
-(defdbgmacro dbg (&body body)
-  `(progn
-     ,@body))
-
-(defcategory stm)
-(defcategory none)
-
-#|
-(start-sender 'stm
-  (stream-sender :location *error-output*)  
-  :category-spec '(stm)
-  :output-spec '(message))
-
-(start-sender 'none
-  (stream-sender :location *error-output*)  
-  :category-spec '(none)
-  :output-spec '(message))
-
-|#
-
 (defvar *stm-transaction* nil "The current stm transaction")
 
 
@@ -329,3 +298,13 @@ Ignores bindings in block, return-from, go, quote, throw"
   `(with-stm-vars ,(loop for binding in bindings
 			collect (list binding binding))
      ,@body))
+
+#|
+
+This implementation has a problem: there's no transaction isolation. The thing is it is difficult to implement isolation and support dataflow at the same time. We need to actually modify the variable referenced by the transactional variable to support dataflow, and at the same time, we cannot modify that variable if we want to support transaction isolation; that is contradictory. One solution would be to use dataflow cells augmented with transactional semantics (it there's and active transaction, then we get the value from it; if there's not, then we return the effective value of the cell). A much better solution in my opinion is to redefine #<standard-method value (stm-var)># and #<standard-method (setf value) (t stm-var)># with dynamically (contextl dynamic functions; experiment with layered methods to see what happens).
+
+Another option is to implement dataflow on top of the stm engine; dataflow cells should work on value model objects, though. That solves both the dataflow and transactions isolation problems.
+
+dfcell ---> stm-var ---> ref ---> var
+
+|#

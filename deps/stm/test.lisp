@@ -30,6 +30,7 @@
     (is (= (value (car result)) 34))
     (is (= (value (cadr result)) 44))))
 
+;; Optimistic semantics
 (test optimistic-semantics-test
   (let-refs
    ((x 23)
@@ -113,6 +114,7 @@
 	      (transactional-function x y))))
        (is (equalp result '(33 23))))))
 
+;; Atomicity test
 (test abort-transaction-test
   (let-refs
      ((x 22)
@@ -139,6 +141,11 @@
    (using-refs (x y)
      (is (= x 22))
      (is (= y 27)))))
+
+;; Transactions isolation test
+(test isolation-test
+      ;; TODO: build the test and the implementation. Fail at the moment.
+      (is nil))
 
 #|
 (with-stm-vars ((x x-ref) (y y-ref))

@@ -1,0 +1,8 @@
+STM for model objects. We need to track changes in order to have transactional editors on our objects.
+
+IMPORTANT: the stm module is not necesary if we use a proper object database for example like Rucksack.
+It has 'long' transations and optimistic semantics; we should add support for nested transactions and
+we are done.
+
+
+
