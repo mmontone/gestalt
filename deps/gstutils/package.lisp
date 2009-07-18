@@ -22,6 +22,7 @@
    #:make-let
    #:make-using
    #:make-with
+   #:make-as
 
    ;; references
    #:with-refs

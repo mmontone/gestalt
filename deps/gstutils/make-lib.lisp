@@ -78,3 +78,13 @@
 	   (,using-macro
 	    ,(mapcar #'car bindings)
 	    ,@body))))))
+
+(defmacro make-as (name)
+  (let ((macro-name (intern (concatenate 'string "AS-" (symbol-name name))))
+	(with-macro (intern (concatenate 'string "WITH-" (symbol-name name)))))
+    `(defmacro ,macro-name (bindings &rest body)
+       (let ((with-macro ',with-macro))
+       `(,with-macro
+	    ,(loop for binding in bindings
+		collect (list binding binding))
+	  ,@body)))))

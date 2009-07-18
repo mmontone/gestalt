@@ -216,3 +216,5 @@
 		      `(value ,binding)))
 
 (make-with df-vars)
+
+(make-as df-vars)
