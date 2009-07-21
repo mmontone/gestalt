@@ -226,5 +226,86 @@ For example, to declare the main component, we could have:
 
 Other example, is the semantics of call when adding child components.
 
+Context oriented programming
+----------------------------
 
-        
+Once dynamic language constructs are adapted, we can start to use context oriented features for our application.
+
+Example:
+
+(deflayer listing-layer () ())
+
+We can layer the controller behaviour:
+
+(def-layered-component :layer listing-layer person-viewer (viewer))
+
+(def-layered-method :layer listing-layer initialize ((viewer person-viewer))
+		    ...)
+
+After that we can do:
+
+(add-child
+ (with-active-layers (listing-layer)
+   (call (make-instance 'persons-component))))
+
+It is also possible, and may make sense, to make the template engine context aware:
+
+
+<template class="person-viewer"
+          layer="listing-layer">
+   ...
+</template>
+
+Application navigation and bookmarking:
+---------------------------------------
+
+The bookmarking problem is difficult to solve in the context of a complex Web application. In particular, it is not clear how to obtain a particular state of the application from a simple bookmarking string. Besides, there are some states of the application that cannot and should not be reached by bookmarking. That's the case of a user session navigation (content that is available to a logged user only) or a commercial transaction, for example. So, first, we must identify the parts of the application that are reachable by bookmarking. Second, we must provide a framework that allows us to do that as simply and naturally as possible.
+
+One approach to solve the problem, would be to map the application as a state transition machine, identify the navigational paths, and apply a tag to each one of them. But we've already seen that determine each of the states is not desirable in complex Web applications. So we'd better find a better approach.
+
+Discarding the state machine, there are at least two more possibilities to solve the problem:
+
+One would be to register the components calling chain. The advantages are: we can repeat the navigation chain to reach any state. The disadvantages are: the chain of components gets large depending of how much time the user has been navigating. That is to say, how many transitions the user caused. On the other hand, there's room for a lot of unnecesary applications transitions; a same state could have been reached with less transitions. This is because this solution is not mapping a multiple input (components transition) to a unique output (a declarative application state specification). [See the next section for a generalized explanation of this problem].
+
+The other option is to register pertinent navigation layers and component states to reach the desired state. Bookmarks have a declarative taste, like this.
+
+bookmark = layers=layer1:layer2+collection-navigator-1:offset=22:segment=22... etc
+
+Each component should define how to be restored given some parameters. Some components may be uninteresting to restore, once more, depending on the context.
+
+Pattern: Mapping multiple inputs to a single output
+---------------------------------------------------
+
+This is a pattern that arises in several contexts.
+
+Problem: executing multiple inputs is a waste, and some times produces incorrect behaviour (although the same functional output, repeating a same input multiple times may produce a difference in side effects).
+
+Examples:
+1) Dataflow. A some state change(s) may provoke several changes to a same cell. The problem is, the same output could have been achieved deferring the changes, analizing them and updating the cells only once. A clear example: when adding several elements to a collection. Whenever the collection changes, the change is propagated to the view, so that it gets updated. The problem is that if we add or remove several elements to a collection, the view is updated as many times as operations made on the collection. This is undesirable, because the application is doing unnecesary work. What we want is to execute the changes on the collection transactionally; the view gets updated once all the operations are done.
+
+2) Templates tree modification. Repeated changes on the same part of the tree, results in only one change, depending on the state of the previously rendered tree.
+
+3) Bookmarks generation. We could generate bookmarks rendering the component calling sequence. The problem is that although we can reach almost any navigationaly interesting application state doing this, we would be doing unnecesary work once more. The same state could be reach with less state transitions, probably. So the solution is to achieve a declarative bookmark specification somehow, from the components states and some navigational flow information (i.e. context layers), to achieve the same result.
+
+Solution: defer side effects and analize inputs consecuences and produce a "normalized" output, where the minimal of inputs is executed to produce the desired output.
+
+
+
+
+Modal dialogs
+-------------
+
+This about what it means to have modal dialogs, etc.
+
+(with (make-instance 'message-box :text "Some information")
+      (modally
+          (call it)))
+
+(defvar *modal-call* nil "If the affected call is to be made modally")
+
+(defmacro modally (&rest body)
+  `(let
+       ((*modal-call* t))
+     ,@body))
+
+The call operation should look at the *modal-call* variable and act upon it.
