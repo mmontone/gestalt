@@ -273,6 +273,26 @@ bookmark = layers=layer1:layer2+collection-navigator-1:offset=22:segment=22... e
 
 Each component should define how to be restored given some parameters. Some components may be uninteresting to restore, once more, depending on the context.
 
+Bookmarking configuration: we can have three ways of configuring a component.
+
+1) From the component itself (subclasses, mixins, class definition).
+(defcomponent collection-navigator ()
+
+  (:bookmarking (offset :accessor bm-offset) ;; bm-offset is used to extract the offset in bookmarking format. (setf bm-offset) is used to set the component offset from a bookmarking parameter)
+		(segment :accessor bm-segment))
+  (:bookmark :all))
+
+2) From the outside.
+(with (make-instance 'collection-navigator :on my-collection)
+      (disable-bookmarking-of 'segment it)
+      (call it))
+
+3) From the outside, dynamically. It may be useful if we don't want to bookmark certain embedded subcomponent nor any of its components.
+(with (make-instance 'my-complex-component)
+      (disabling-bookmarking
+       (call it)))
+
+
 Pattern: Mapping multiple inputs to a single output
 ---------------------------------------------------
 
