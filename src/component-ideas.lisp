@@ -329,3 +329,27 @@ This about what it means to have modal dialogs, etc.
      ,@body))
 
 The call operation should look at the *modal-call* variable and act upon it.
+
+Components threads semantics:
+-----------------------------
+
+Child threads are aborted if the parent is aborted. For example, if the user hits the logout button of the root component, all of the child components are aborted before aborting the root component.
+
+So, for example:
+
+(defapplication my-application ()
+  ())
+
+(defmethod/cc start-application ((app my-application))
+  ;; now, this is an example of how we can specify the root component of our application
+  (loop while t
+       do (let ((user (call (make-instance 'login-component))))
+	    (set-logged-user user)
+	    (call (make-instance 'main-component)) ; **
+	    (unlog-user))))
+
+** When the user hits the logout button of the main-component, the main-component child threads are aborted before proceeding. Note that aborting a child component may lead to some behaviour. For example, if the child component is an editor that is configured to ask for cancellation in case the user leaves the component. Then, trying to logout, will raise the cancelling exception and a dialog box asking for cancellation will appear; the user will not be able to logout without asking. Now, that's ok, but it would be interesting to think how we can control that. For example, we may want the editor to avoid asking the question in case we hit the logout button, but ask it otherwise. It's not clear how to achieve that with a "threading" semantics. Possible solution??: the logout button activates a layer. That layer should deactivate the abort-condition catch up that shows the dialog, and provide some that just proceeds with the editor abortion. Not trivial anyway...but interesting.
+
+Not that the components threads semantics is preemtive; the parent component may abort nested components.
+
+Implementation thought: we may implement dynamic environments manual setting using ContextL layers. Then, each component would hold its own dynamic layer (or environment). The user should be able to control whether he wants to restore some dynamic environments or not. In the logout case, we don't want to restore the aborted component (editor) dynamic environment; we want to treat signaled conditions differently (for example, avoiding a question dialog, and proceeding instead). If the user leaves, or hits cancel, then we *do* want to restore the components dynamic environment.
