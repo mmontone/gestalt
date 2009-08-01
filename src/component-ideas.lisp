@@ -352,4 +352,67 @@ So, for example:
 
 Not that the components threads semantics is preemtive; the parent component may abort nested components.
 
-Implementation thought: we may implement dynamic environments manual setting using ContextL layers. Then, each component would hold its own dynamic layer (or environment). The user should be able to control whether he wants to restore some dynamic environments or not. In the logout case, we don't want to restore the aborted component (editor) dynamic environment; we want to treat signaled conditions differently (for example, avoiding a question dialog, and proceeding instead). If the user leaves, or hits cancel, then we *do* want to restore the components dynamic environment.
+Implementation thought: we may implement dynamic environments manual setting using ContextL dynamic-environments manipulation library. Then, each component would hold its own dynamic layer (or environment). The user should be able to control whether he wants to restore some dynamic environments or not. In the logout case, we don't want to restore the aborted component (editor) dynamic environment; we want to treat signaled conditions differently (for example, avoiding a question dialog, and proceeding instead). If the user leaves, or hits cancel, then we *do* want to restore the components dynamic environment.
+
+Sketch:
+
+Suppose we have A as the parent of B. B calls C for performing some operation.
+
+(defmethod initialize-instance :after ((comp A) &rest initargs)
+  (add-child comp
+	...     
+   (call comp 'B)
+     ...
+   ))
+
+;; add-child should get translated to the following:
+(let ((env (dynamic-environment comp)))
+  (with-dynamic-environment env ;; the parent component dynamic-environment
+    (dynamic-wind     ;; This *should* compose the local environment with the above one
+     ...
+     (proceed
+      (let ((child (make-instance 'B)))
+	(setf (environment child) (capture-dynamic-environment))
+	(effectively-add-child child)))
+     ...)))
+
+(defaction accept-action ((comp B))
+  ...
+  (call 'C)
+  ...)
+
+; should be translated to something like:
+(let ((env (dynamic-environment comp)))
+  (with-dynamic-environment env ;; the parent component dynamic-environment
+    (dynamic-wind     ;; This *must* compose the local environment with the above one
+     ...
+     (proceed
+      (let ((calle (make-instance 'B)))
+	(setf (environment calle) (capture-dynamic-environment))
+	(effective-call calle)))
+     ...)))
+
+;; Note:
+;; First: the code before and after the call (...) is part of the dynamic winding (altough if we have continuations "there's no after code").
+;; Second: with-dynamic-environment pushes the reevaluated thunks to the stack so we get an augmented dynamic environment when we call capture-dynamic-environment. So, now we have component threads dynamic-environments. So, for example, component threads dynamic variables can be accesed like this:
+
+(defdynamic my-var 33)
+(defdynamic parent-var 22)
+
+;; Luego podemos acceder esa variable con (dynamic my-var) en el scope generado a través de la inyección de environments en los componentes:
+
+(defmethod initialize-instance :after ((comp A))
+  (add-child comp
+    (dynamic-let
+       ((parent-var 45))
+         (call 'B))))
+
+(defaction accept-action ((comp B))
+  (dynamic-let
+    ((my-var 55))
+      (call 'C)))
+
+(defmethod initialize-instance :after ()
+    (print (dynamic parent-var)) ;; This prints 45!! (component thread variable!)
+    (print (dynamic my-var))) ;; This prints 55
+
