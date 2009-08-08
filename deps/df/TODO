@@ -51,7 +51,6 @@ Other cases:
 We can treat other cases explicetly (no macro syntax support). For example, we can build our own aspect cells explicetly
 providing the setter and getter lambdas.
 
-
 General refactoring:
 -------------------
 
@@ -92,6 +91,55 @@ Example:
          do (multiple-value-bind (value evaluated-p) (evaluate dependent)
 	      (if evaluated-p
 	          (propagate event dependent)))))
+
+TODO: consider adding runtime type checking to dataflow syntax
+--------------------------------------------------
+
+For example,
+
+(let ((a (make-value-cell :value 23))
+      (b 33))
+  (df   
+    (+ a b)))
+    
+should macroexpand to:
+(let
+  ((a (make-value-cell :value 23))
+   (b 33))
+   (let ((arguments-gensym (loop
+                   for var-name in '(a b) ;; free-vars
+                   for var-value in (list a b) ;; free-vars
+                   when (typep var-value 'cell)
+		     collect (cons var-name var-value)))) 
+    (make-instance 'formula-cell	   
+       :arguments arguments-gensym
+       ;; we do dynamic-compilation: we don't which our arguments are until runtime (because we need the dynamic type of them)
+       ;; we take into account the type of the arguments only once, at creation time. once the function is compiled, we are done.
+       :formula (compile nil
+		   `(lambda ,arguments-gensym
+		         (symbol-macrolet
+		      ,(loop for (var-name . var-value) in ,arguments-gensym
+			      collect (list var-name var-value))
+			      (+ a b)))))))
+
+Now, we don't need declarations to know which of the free variables are cells and which are not
+
+All of the following expressions work as expected:
+
+(let ((a (make-value-cell :value 23))
+      (b 33))
+  (df   
+    (+ a b)))
+
+(let ((a (make-value-cell :value 23))
+      (b (make-value-cell :value 33)))
+  (df   
+    (+ a b)))
+
+(let ((a 23)
+      (b (make-value-cell :value 33)))
+  (df   
+    (+ a b)))
 
 Updating suspensions:
 --------------------
