@@ -15,12 +15,11 @@
 ;; See dataflow package for examples
 
 (defun list-lambda-list-vars (lambda-list)
-  "Lists the vars or a lambda function arguments.
-TODO: make this portable. Uses sb-int:parse-lambda-list at the moment"
+  "Lists the vars or a lambda function arguments"
   
   (multiple-value-bind (required optional restp rest keyp keys allowp auxp aux
 				 morep more-context more-count)
-      (sb-int:parse-lambda-list lambda-list)
+      (parse-ordinary-lambda-list lambda-list)
     (declare (ignore keyp allowp auxp aux morep more-context more-count))
   (append
    required

@@ -1,5 +1,5 @@
 (defpackage :gstutils
-  (:use :cl :anaphora :sb-mop :log5)
+  (:use :cl :anaphora :sb-mop :log5 :alexandria)
   (:shadow :name)
   (:import-from :arnesi :with-unique-names :let1)
   (:import-from :contextl :singleton-class :find-singleton)
