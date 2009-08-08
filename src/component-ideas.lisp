@@ -416,3 +416,137 @@ Suppose we have A as the parent of B. B calls C for performing some operation.
     (print (dynamic parent-var)) ;; This prints 45!! (component thread variable!)
     (print (dynamic my-var))) ;; This prints 55
 
+An example of thread semantics:
+------------------------------
+
+Queremos mostrar una lista y cada vez que hacemos click sobre uno de sus elementos, queremos abrir un editor en la parte de abajo de la pantalla:
+
+(defaction initialize ((comp main-component))
+  (add-child comp 'elements
+   (let ((list-component (make-instance 'collection-navigator :on *elements*)))
+     (on-click list-component
+	       (lambda (element)
+		 (add-child comp 'element-editor
+			    (with-transaction
+				(call (make-instance 'element-editor :on element)))))))))
+
+Entonces, cada vez que el usuario hace click en un elemento, se corre el thread para agregar el editor de elementos. Si hay un editor mostrandose, entonces se aborta el thread. La forma de abortar el thread es recuperando el contexto dinámico asociado a la continuación del thread y hacer un (signal 'abort-thread) (no se ejecuta la continuación) bajo ese contexto. En este ejemplo, se estaŕia ejecutando el unwind-protect de with-transaction. En otro caso, se podría interrumpir la cancelación del thread, y preguntar por la cancelación de la edición, por ejemplo así:
+
+(defaction initialize ((comp main-component))
+  (add-child comp 'elements
+   (let ((list-component (make-instance 'collection-navigator :on *elements*)))
+     (on-click list-component
+	       (lambda (element)
+		 (add-child comp 'element-editor
+			    (with-transaction
+				(handler-case 
+				    (call (make-instance 'element-editor :on element))
+				  (abort-thread (e)
+				    (when (call (make-instance 'message-box :text "Cancelar edición del elemento?"))
+				      (signal e))))))))))) ;; re-signal the condition  ;; we do nothing other wise (the component remains in place)
+
+Problema: cómo tratar a with-transaction bajo extensión dinámica??: No queremos ejecutar with-transaction cada vez; queremos reutilizar la transacción bindeada en rucksack:*transaction*!! We should redefine it something like:
+(defmacro with-transaction% (&rest body)
+  (with-gensyms (transaction)
+    `(with-transaction
+	 (let ((,transaction rucksack:*transaction*)) ; ,transaction should not be dynamically bound
+	 (component-dynamic-wind
+	  (let ((rucksack:*transaction* ,transaction))
+	    (proceed ,@body)))))))
+
+(defmacro record-vars (vars &rest body)
+  "Records dynamically bound variables in the compoenent dynamic-environment"
+  (with-gensyms (proceed)
+    (let ((gensyms (mapcar #'gensym vars)))
+      `(let
+	   ,(loop for var in vars
+	       for gensym in gensyms
+	       collect `(,gensym ,var))
+	 (component-dynamic-wind ,proceed
+         	 (let
+		     ,(loop for var in vars
+			 for gensym in gensyms
+			 collect `(,var ,gensym)))
+		 (,proceed ,@body))))))
+
+(defmacro with-transaction% (&rest body)
+  `(with-transaction
+       (record-vars (rucksack::*transaction*)
+		    ,@body)))
+
+(defmacro with-active-layers (&rest body)
+  `(with-active-layers
+       (record-vars (contextl::*active-context*)
+		    ,@body)))
+
+
+Dynamic extent and user login:
+------------------------------
+
+If we have dynamic-extent reexecution semantics, then we can add a check for the logged user in the continuation, like this:
+
+(defaction start ((app my-app))
+  (let (person)
+    (block login
+      (loop while t
+	 when person do (return)
+	 do (setf person (call (make-instance 'login-component)))))
+    ;; We begin the session: these ones should be executed once only!! (shouldnt be part of the dynamic-environment)
+    (proceed
+     (begin-session)
+     (set-logged-user person))
+    ;; We make a dynamic check
+    (if (current-session)
+	(call 'main-component)
+	;; else, we want the dialog to appear under the dynamic-extent
+	(effective-call 'message-dialog :text "You have to login to do that!"))))
+
+Maybe we should design our own operators to introduce dynamic-environments:
+
+(defmacro my-handler-case (expr cases)
+  (with-gensyms (new-env proceed)
+    `(with-dynamic-environment ((dynamic-environment (component)))
+       (let ((,new-env
+	      (dynamic-wind ,proceed
+			    (handler-case
+				(,proceed expr)
+			      ,cases))))
+	 (setf (dynamic-environment (component)) new-env)))))
+
+De esta forma, tenemos que todo se ejecuta una sola vez, solo determinadas partes. Además, deberíamos tener un component-dynamic-wind mejor:
+
+(defmacro component-dynamic-wind (&rest body)
+  `(with-dynamic-environment ((dynamic-environment (component)))
+     (let ((,new-env
+	    (dynamic-wind ,@body)))
+       (setf (dynamic-environment (component)) new-env))))
+
+Y así nos queda:
+
+(defmacro my-handler-case (expr cases)
+  (with-gensyms (proceed)
+    `(component-dynamic-wind ,proceed
+			     (handler-case
+				 (,proceed expr)
+			       ,cases))))
+
+  
+Y el login queda:
+
+(defaction start ((app my-app))
+  (let (person)
+    (loop while t
+       when person do (return)
+       do (setf person (call (make-instance 'login-component))))
+    ;; We begin the session: these ones should be executed once only!! (shouldnt be part of the dynamic-environment)
+    (begin-session)
+    (set-logged-user person)
+  ;; We make a dynamic check. This dynamic check affects all the components from the main-component ;)
+    (component-dynamic-wind
+     (if (current-session)
+	 (proceed (call 'main-component))
+	 ;; else, we want the dialog to appear under the dynamic-extent
+	 (call 'message-dialog :text "You have to login to do that!")))))
+
+		
+
