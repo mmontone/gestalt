@@ -1,5 +1,3 @@
-;; We should implement templates with XMLisp here!!
-
 (defclass xml-node-modifications-tracker (xml-node)
   ((to-flush :accessor to-flush)
    (registering :accessor registering :initform nil))
@@ -41,16 +39,19 @@
   (setf my-lex-var-gensym)
   )
 
-(defmethod append-child ((tracker xml-node-modifications-tracker) child)
-  (let ((append-chlid-mod))
-    (when (registering tracker)
-      (setf append-child-mod (make-instance 'append-child-xml-node-modification :target tracker :child child))
-      (setf (target (to-flush child)) append-child-mod))
-    (prog1
-	(call-next-method)
-      (when (registering tracker)
-	(add-child-modification (parent-position child) append-child-mod)))))
 
+(defmethod append-child ((tracker xml-node-modifications-tracker) child)
+  (if (registering tracker)
+      (let ((append-chlid-mod))
+	(setf append-child-mod (make-instance 'append-child-xml-node-modification :target tracker :child child))
+	(setf (target (to-flush child)) append-child-mod)
+	(prog1
+	    (call-next-method)
+	  (add-child-modification (parent-position child) append-child-mod)))
+      (call-next-method)))
+
+
+  
 (defmethod will-flush ((tracker xml-node-modifications-tracker))
   (not (is-null (to-flush tracker))))
 

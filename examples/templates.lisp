@@ -1,26 +1,62 @@
 (defpackage :gst.templates
-  (:use :cl :xml)
+  (:use :cl :xml :dlist :closer-mop :alexandria)
   (:export #:template
 	   #:style-sheets
 	   #:style-sheet
 	   #:libraries
 	   #:library
-	   #:a))
+	   #:a
+	   #:tag-name))
 
 (in-package :gst.templates)
 
 (defclass html-element (xml-serializer)
-   ()
+   ((node-id :initarg :id
+	     :accessor node-id
+	     :initform nil
+	     :documentation "A string that uniquely identifies the node in the tree")
+    (parent :initarg :parent
+	    :accessor parent
+	    :documentation "The node's parent")
+    (parent-link :initarg :parent-link
+		 :accessor parent-link
+		 :documentation "The node's link in parent's children (the dlist's dlink)"))
    (:documentation "mother of all HTML element classes"))
 
+(defmacro one-of (cases expr &key (test '#'eql))
+  (once-only (expr)
+    `(or
+      ,@(loop for case in cases
+	     collect `(funcall ,test ,case ,expr)))))
+
+;; (defmethod print-slots ((html-element html-element))
+;;   (remove-if (lambda (slot-definition)
+;; 	       (not (one-of ("parent-link" "parent")
+;; 			    (slot-definition-name slot-definition)
+;; 			    :test #'string-equal)))
+;; 	     (class-slots (class-of html-element))))
+
+(defmethod print-slot-with-name-p ((html-element html-element) name)
+  (not (one-of ("parent-link" "parent") name
+	       :test #'string-equal)))
+
+(defmethod tag-name ((html-element html-element))
+  (class-name (class-of html-element)))
+
 (defclass xml-container ()
-  ((contents :accessor contents
-	     :initform nil))
+  ((children :accessor children
+	     :initform (make-dlist)))
   (:documentation "An HTML element that contains other HTML elements. Use as a mixin"))
+
+(defmethod append-child ((xml-container xml-container) child)
+  (add-subobject xml-container child))
 
 (defmethod add-subobject ((xml-container xml-container)
 			  (html-element html-element))
-  (add-object-to-slot xml-container html-element 'contents))
+  (let ((parent-link (insert-tail (children xml-container)
+				  html-element)))
+    (setf (parent-link html-element) parent-link)
+    (setf (parent html-element) xml-container)))
 
 (defclass template (xml-container html-element)
    ((component-class
@@ -95,6 +131,14 @@
   ()
   (:documentation "An HTML paragraph"))
 
+(defmethod map-object ((dlist dlist) function)
+  (map-dlist function dlist))
+
+(defmethod xml-printable-as-subelement-p ((dlist dlist))
+  t)
+
+#|
+
 (swank:inspect-in-emacs
 <template component-class="person-editor"
           description="A template for a person-editor">
@@ -117,6 +161,7 @@
      </template>
    </div>  
 </template>)
+|#
 
 ;; (defmethod initialize-instance :after ((template template) &rest initargs)
 ;;   (declare (ignore initargs))
