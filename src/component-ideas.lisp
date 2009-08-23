@@ -443,7 +443,8 @@ Entonces, cada vez que el usuario hace click en un elemento, se corre el thread 
 				    (call (make-instance 'element-editor :on element))
 				  (abort-thread (e)
 				    (when (call (make-instance 'message-box :text "Cancelar edición del elemento?"))
-				      (signal e))))))))))) ;; re-signal the condition  ;; we do nothing other wise (the component remains in place)
+				      (signal e))))))))
+     (call list-component)))) ;; re-signal the condition  ;; we do nothing other wise (the component remains in place)
 
 Problema: cómo tratar a with-transaction bajo extensión dinámica??: No queremos ejecutar with-transaction cada vez; queremos reutilizar la transacción bindeada en rucksack:*transaction*!! We should redefine it something like:
 (defmacro with-transaction% (&rest body)
@@ -469,12 +470,12 @@ Problema: cómo tratar a with-transaction bajo extensión dinámica??: No querem
 			 collect `(,var ,gensym)))
 		 (,proceed ,@body))))))
 
-(defmacro with-transaction% (&rest body)
+(defmacro with-dtransaction (&rest body)
   `(with-transaction
        (record-vars (rucksack::*transaction*)
 		    ,@body)))
 
-(defmacro with-active-layers (&rest body)
+(defmacro with-dactive-layers (&rest body)
   `(with-active-layers
        (record-vars (contextl::*active-context*)
 		    ,@body)))
@@ -499,7 +500,7 @@ If we have dynamic-extent reexecution semantics, then we can add a check for the
     (if (current-session)
 	(call 'main-component)
 	;; else, we want the dialog to appear under the dynamic-extent
-	(effective-call 'message-dialog :text "You have to login to do that!"))))
+	(call-component 'message-dialog :text "You have to login to do that!"))))
 
 Maybe we should design our own operators to introduce dynamic-environments:
 
@@ -523,14 +524,13 @@ De esta forma, tenemos que todo se ejecuta una sola vez, solo determinadas parte
 
 Y así nos queda:
 
-(defmacro my-handler-case (expr cases)
+(defmacro dhandler-case (expr cases)
   (with-gensyms (proceed)
     `(component-dynamic-wind ,proceed
 			     (handler-case
 				 (,proceed expr)
 			       ,cases))))
 
-  
 Y el login queda:
 
 (defaction start ((app my-app))
@@ -547,6 +547,3 @@ Y el login queda:
 	 (proceed (call 'main-component))
 	 ;; else, we want the dialog to appear under the dynamic-extent
 	 (call 'message-dialog :text "You have to login to do that!")))))
-
-		
-

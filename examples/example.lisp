@@ -1,18 +1,30 @@
 ;; This is tiny example of what we want to achieve, but it's not working at the moment. Its purpose is to make it work as a way of coming with a first version of the Gestalt framework.
+(handler-bind ((SB-FASL::INVALID-FASL-VERSION (lambda (c) (declare (ignore
+						c)) (invoke-restart
+						'asdf::try-recompiling))
+						))
 (progn
-(require :hunchentoot)
-(require :cl-who)
-(require :cl-cont)
-(require :anaphora)
-(require :alexandria)
-(require :contextl)
-(require :log5)
-(require :cl-ppcre)
-(require :cl-interpol)
-(require :split-sequence)
-(require :closer-mop)
-(require :rucksack)
+(require :hunchentoot) ; web-server
+(require :cl-who) ; html template language
+(require :cl-cont) ; continuations
+(require :anaphora) ; anaphoric macros
+(require :alexandria) ; utilities
+(require :contextl) ; context-oriented programming
+(require :log5) ; system logging
+(require :cl-ppcre) ; parsing and validation
+(require :cl-interpol) ; parsing
+(require :split-sequence) ; parsing
+(require :closer-mop) ; mop
+(require :rucksack) ; database
+(require :xmlisp)   ; templates syntax
+(require :ironclad)  ; url encryption
+(require :cl-base64)  ; url codification
+;(require :uri-template) ; uri syntax
+;(require :df) ; dataflow
+
 )
+)
+
 
 
 (defpackage :gst-sketch
@@ -27,8 +39,8 @@
 	:cl-interpol
 	:split-sequence
 	:closer-mop
-	)
-  )
+	:xml
+	))
 
 (in-package :gst-sketch)
 
@@ -84,7 +96,6 @@
       (error "The folder entry point name ~S is invalid" ep-name))
     (setf (name ep) ep-name)))
 
-
 (defmethod ep-path ((ep entry-point))
   (concatenate 'string (ep-path (parent ep)) (name ep)))
 
@@ -114,6 +125,8 @@
 ;; TODO: create entry points from syntax
 ;#ep"/home/example"
 
+(defvar *application* nil "The current application")
+
 (defclass application ()
   ((name :initarg :name :reader name
 	 :initform (error "Provide the application name"))
@@ -141,26 +154,54 @@
     (format stream "~A at: ~S" (name app) (entry-point app))))
 
 (define-condition application-exists ()
-  ((application-name :initarg :application-name
-		     :reader application-name))
-   (:report (lambda (condition stream)
-	      (format stream "An application named ~S already exists" (application-name condition)))))
+   ((application-name :initarg :application-name
+ 		     :reader application-name))
+    (:report (lambda (condition stream)
+ 	      (format stream "An application named ~S already exists" (application-name condition)))))
+
+(define-condition object-already-exists (serious-condition)
+  ((target :initarg :target
+	   :accessor target
+	   :documentation "The object that already exists"))
+  (:report (lambda (c s)
+	     (format s "~A already exists" (target c))))
+  (:documentation "This condition is raised when we want to replace an existing object"))
+
+(defmacro existence-protect ((object &key (report '(lambda (s)
+						     (format s "Continue and replace the object")))
+				      (signal '(lambda (object) (error 'object-already-exists :target object))))
+			      &body body)
+  (with-unique-names (replace-function)
+    (once-only (object)
+      `(flet ((,replace-function ()
+	       ,@body))
+	(restart-case
+	    (progn
+	      (when ,object
+		(funcall ,signal ,object))
+	      (,replace-function))
+	  (superceed ()
+	    :report ,report
+	    (funcall #',replace-function)))))))
+
+(defun replace-hash (key hash-table object)
+  (multiple-value-bind (read-object exists-p)
+      (gethash key hash-table)
+    (declare (ignore read-object))
+    (existence-protect (exists-p)
+      (setf (gethash key hash-table) object))))
 
 (defmethod %register-application ((app application))
-  (flet ((register-app ()
-	   (log5:log-for info "Application registered: ~A" app)  
-	   (setf (gethash (name app) *applications*) app)))
-    (restart-case
-	(multiple-value-bind (registered-app exists-p)
-	    (gethash (name app) *applications*)
-	  (declare (ignore registered-app))
-	  (if exists-p
-	      (error 'application-exists :application-name (name app))
-	      (register-app)))
-      (superceed ()
-	:report (lambda (stream)
-		  (format stream "Replace the registered application"))
-	(register-app)))))
+  (multiple-value-bind (registered-app exists-p)
+      (gethash (name app) *applications*)
+    (declare (ignore registered-app))
+    (existence-protect (exists-p :report (lambda (s)
+					    (format stream "Replace the registered application"))
+				  :signal (lambda (obj)
+					    (declare (ignore obj))
+					    (error 'application-exists :application-name (name app))))
+			(log5:log-for info "Application registered: ~A" app)  
+			(setf (gethash (name app) *applications*) app))))
 
 (defmethod register-application ((app application) &key (if-exists nil if-exists-provided))
   (if if-exists-provided
@@ -172,9 +213,6 @@
 	  (%register-application app))))
       (%register-application app)))
 
-(defvar *application* nil "The current application")
-
- 
 (defclass continuation ()
   ((function :initarg :function
 	     :reader continuation-function
@@ -194,7 +232,7 @@
 					      (with-dynamic-environment (env)
 						(funcall (continuation-function cont) value))))))
 
-(defmacro defaction (name args &rest body)
+(defmacro defaction (name args &body body)
   `(defun/cc ,name ,args
      ,@body))
 
@@ -204,7 +242,7 @@
 	     (declare (ignorable args))
 	     (funcall (function ,name))))
 
-(defmacro recording-vars (vars &rest body)
+(defmacro recording-vars (vars &body body)
   "Records dynamically bound variables in the dynamic-environment"
   (with-unique-names (proceed)
     (let ((gensyms (mapcar (lambda (var)
@@ -221,15 +259,15 @@
 			       collect `(,var ,gensym))
 			 (,proceed ,@body)))))))
 
-(defmacro with-transaction ((&rest args) &rest body)
+(defmacro with-transaction ((&rest args) &body body)
   `(rucksack:with-transaction ,args
        (recording-vars (rucksack::*transaction*)
-		       ,@body)))
+	 ,@body)))
 
-(defmacro with-active-layers (layers &rest body)
+(defmacro with-active-layers (layers &body body)
   `(with-active-layers ,layers
        (recording-vars (contextl::*active-context*)
-		    ,@body)))
+	 ,@body)))
 
 (defmacro dynamic-handler-case (expr cases)
   (with-gensyms (handler-case-proceed)
@@ -245,22 +283,19 @@
 	     (when start-function-body
 	       (setf (getf args :start)
 		     `(lambda (application)
-			(let ((env-holder (make-instance 'component)))
-			  (flet ((component ()
-				   env-holder))
-			    (dynamic-wind
-			     (let ((*application* application))
-			       (proceed
-				(macrolet ((call (component &rest initargs)
-					     (declare (ignorable initargs))
-					     (with-unique-names (comp)
-					       (once-only (component)
-						 `(let ((,comp (if (symbolp ,component)
+			(dynamic-wind
+			 (let ((*application* application))
+			   (proceed
+			    (macrolet ((call (component &rest initargs)
+					 (declare (ignorable initargs))
+					 (with-unique-names (comp)
+					   (once-only (component)
+					     `(let ((,comp (if (symbolp ,component)
 							       (make-instance ',component ,@initargs)
 							       ,component)))
 						(setf (root-component application) ,component))))))
 			      (with-call/cc
-				,start-function-body)))))))))))
+				,start-function-body)))))))))
 	   args))
     `(make-instance 'application ,@(append (list :name (string name)) (process-application-args args)))))
 
@@ -269,11 +304,6 @@
     :start (progn (print "hola")
 		  (print "chau"))
     :description "This is an example application")
-
-(defapplication example-application ()
-  ()
-  (:entry-point "/example/")
-  (:documentation "This application should let you edit a person's data and display a message-dialog whenever changes"))
 
 (defclass component ()
   ((parent-holder :accessor parent-holder
@@ -315,14 +345,18 @@
   (:documentation "A component-holder is a parent component and child component indirection. It acts like a reference. We need it to modify the component tree properly"))
 
 (defclass widget ()
-  ()
+  ((allow-p :accessor allow-p
+	    :initarg :allow-p
+	    :initform (lambda () t)
+	    :documentation "Specifies when the widget is allowed to be displayed"))
   (:documentation "A widget"))
-
+  
 (defclass value-widget ()
   ((value :accessor value
 	  :initarg :value
 	  :documentation "The widget's value"))
   (:documentation "A widget that contains a value. This is meant to be used as a mixin"))
+
 
 (defclass text-entry (widget value-widget)
   ()
@@ -441,18 +475,21 @@
   (:metaclass funcallable-standard-class)
   (:documentation "This is a framework action"))
 
-(defmacro lambda-action (args &rest body)
+(defmacro lambda-action (args &body body)
   `(make-instance 'action
 		  :continuation
 		  (make-instance 'continuation :function (lambda/cc ,args ,@body))))
+
+(defvar *session* nil "The current session")
   
-(defvar *system-actions* (make-hash-table) "The currently active application actions")
+(defun register-action (action &optional (session *session*))
+  (dynamic-wind
+    (let ((*actions* (cons action *actions*)))  ; The current control-flow transaction actions
+      (proceed
+       (setf (gethash (hash action) (actions session)) action)))))
 
-(defun register-action (action)
-  (setf (gethash (hash action) *system-actions*) action))
-
-(defun unregister-action (action)
-  (remhash (hash action) *system-actions*))
+(defun unregister-action (action &optional (session *session*))
+  (remhash (hash action) (actions session)))
 
 (defmethod initialize-instance :after ((action action) &rest initargs)
   (set-funcallable-instance-function action (lambda (value)
@@ -477,7 +514,7 @@
 (defun/cc return-from-component (callee value)
   (funcall (continuation callee) value))
 
-(defmacro atomically (&rest body)
+(defmacro atomically (&body body)
   "Execute an application control flow transactionally"
   (with-unique-names (atomically-proceed)
     `(dynamic-wind ,atomically-proceed
@@ -564,13 +601,13 @@
 
 ;; TODO: provide syntax for URLs (like we should do for entry-points). Example: #\#url"http:/localhost/my-lib.css"
 
-(defaction start ((app example-application))
+(defaction start-example-application (app)
   (call 'main-component))
 
 (defcomponent main-component ()
   ((app-message :type label :text "This is an example application")))
 
-(defaction initialize ((comp main-component))
+(defaction initialize-main-component (comp)
   (let ((person (make-instance 'person)))
     (add-child (comp)
 	(loop while t       
@@ -583,8 +620,332 @@
    (lastname :type text-input :on (lastname model))
    (accept :type button :do (answer model))))
 
-(deftemplate person-component (:style-sheets '(my-style-sheet))
-  (with-xml-syntax
-      <container id="name"/>
-      <container id="lastname"/>
-      <container id="accept"/>))
+;;; An acceptor that invokes the debugger on errors:
+(defclass debuggable-acceptor (acceptor)
+  ()
+  (:documentation "This acceptor raises the SLIME debugger when an error occurs. Use as a mixin"))
+
+(defmethod process-connection ((*acceptor* debuggable-acceptor) (socket t))
+  (declare (ignore socket))
+  (handler-bind ((error #'invoke-debugger))
+    (call-next-method)))
+
+(defmethod acceptor-request-dispatcher ((*acceptor* debuggable-acceptor))
+  (let ((dispatcher (call-next-method)))
+    (lambda (request)
+      (handler-bind ((error #'invoke-debugger))
+        (funcall dispatcher request)))))
+
+(defclass gestalt-acceptor (acceptor debuggable-acceptor)
+  ()
+  (:documentation "The Gestalt Hunchentoot acceptor"))
+
+;; (defclass session ()
+;;   ((session-id :initarg :session-id
+;; 	       :accessor session-id
+;; 	       :documentation "The id under which the session is registered")
+;;    (application :initarg :application
+;; 		:accessor application
+;; 		:initform *application*
+;; 		:documentation "The application the session belongs to")
+;;    (actions :initarg :actions
+;; 	    :accessor actions
+;; 	    :initform (make-hash-table :test #'equalp)
+;; 	    :documentation "The actions")
+;;    (root-component :initarg :root-component
+;; 		   :accessor root-component
+;; 		   :initform nil
+;; 		   :documentation "The current component tree")
+;;    (lock :accessor lock
+;; 	 :initform (bordeaux-threads:make-lock "SESSION-LOCK")
+;; 	 :documentation "The lock to be used for accessing the session from different threads"))
+;;   (:documentation "An application session"))
+
+;; (defmethod initialize-instance :after ((session session) &rest initargs)
+;;   (%register-session session))
+
+
+;; (defun %register-session (&optional session)
+;;   (setf (session-id session) (generate-session-id (application session)))
+;;   (add-session (application session) session))
+
+;; (defun register-session ()
+;;   (aif *session*
+;;        it
+;;        (make-instance 'session)))
+
+;; (defmethod add-session ((app application) session)
+;;   (replace-hash (session-id session)
+;; 		(sessions (application session))
+;; 		session))
+
+(defvar *key* nil
+  "Key used for symmetric encryption (AES) of continuations
+NIL -> no encryption")
+
+(defun register-key (key)
+  (setf *key*
+        (let* ((octets (sb-ext:string-to-octets key))
+               (length (length octets)))
+          (and (> length 0)
+               (flet ((pad-to (n)
+                        "Is that a good idea, or should I just 0-pad?"
+                        (apply 'concatenate
+                               '(vector (unsigned-byte 8))
+                               (subseq octets 0 (rem n length))
+                               (make-list (floor n length)
+                                          :initial-element octets))))
+                 (ironclad:make-cipher :aes
+                                       :key  (cond ((<= length 16) (pad-to 16))
+                                                   ((<= length 24) (pad-to 23))
+                                                   ((<= length 32) (pad-to 32))
+                                                   (t (error "Maximum key size for AES: 32 bytes")))
+                                       :mode :ecb))))))
+
+;; (defun compress (string)
+;;   (zlib:compress (sb-ext:string-to-octets string) :fixed))
+
+;; (defun inflate (ub8s)
+;;   (sb-ext:octets-to-string (zlib:uncompress ub8s)))
+
+(defun word-to-octets (x)
+  (declare (type (unsigned-byte 32) x))
+  (make-array 4
+              :element-type '(unsigned-byte 8)
+              :initial-contents (list (ldb (byte 8 0) x)
+                                      (ldb (byte 8 8) x)
+                                      (ldb (byte 8 16) x)
+                                      (ldb (byte 8 24) x))))
+
+(defun octets-to-word (octets)
+  (+ (* (expt 2 0)  (aref octets 0))
+     (* (expt 2 8)  (aref octets 1))
+     (* (expt 2 16) (aref octets 2))
+     (* (expt 2 24) (aref octets 3))))
+
+(defun encrypt (octets)
+  (if (null *key*)
+      octets
+      (let* ((octets (concatenate '(vector (unsigned-byte 8))
+                                  (word-to-octets (length octets))
+                                  octets))
+             (octets (concatenate '(vector (unsigned-byte 8))
+                                  octets
+                                  (make-array (- (* 16 (ceiling (length octets) 16))
+                                                 (length octets))
+                                              :element-type '(unsigned-byte 8)
+                                              :initial-element 0)))
+             (out    (make-array (* 2 (length octets))
+                                 :element-type '(unsigned-byte 8)))
+             (length (nth-value 1
+                                (ironclad:encrypt *key*
+                                                  octets
+                                                  out))))
+        (subseq out 0 length))))
+
+(defun decrypt (octets)
+  (if (null *key*)
+      octets
+      (let* ((out (make-array (* 2 (length octets))
+                              :element-type '(unsigned-byte 8)
+                              :initial-element 0))
+             (length (nth-value 1
+                                (ironclad:decrypt *key* octets out)))
+             (out    (subseq out 0 length)))
+        (subseq out 4 (+ 4 (octets-to-word out))))))
+
+(defclass object ()
+  ())
+
+(defun encryption-example ()
+  (register-key "mmontone")
+  (let* ((objects (make-hash-table))
+	 (my-object (make-instance 'object))
+	 (address (sb-kernel:get-lisp-obj-address my-object))
+	 (address-string (format nil "~A" address)))
+    ;; Keep the object
+    (setf (gethash address objects) my-object)
+    ;; Encode the address
+    (format t "The object is: ~A~%" my-object)
+    (let* ((encoded-address (cl-base64:usb8-array-to-base64-string (encrypt (sb-ext:string-to-octets address-string)) :uri t)) ;; note the :uri parameter!!!
+	   (decoded-address (sb-ext:octets-to-string (decrypt (cl-base64:base64-string-to-usb8-array encoded-address :uri t)))))
+      (format t "The encoded address is: ~A~%" encoded-address)
+      (format t "The URL would be: ~A~%" (url-encode encoded-address))
+      (format t "The decoded address is: ~A~%" decoded-address)
+      (format t "The recovered object is: ~A~%" (gethash (parse-integer decoded-address) objects)))))
+    
+(defun cont-to-str (cont)
+  (let ((*package* (find-package "KEYWORD"))
+        (*print-circle* t))
+    (format nil "~A?~{~A&~}"
+            (cl-base64:usb8-array-to-base64-string
+             (encrypt
+              (compress
+               (prin1-to-string cont)))
+             :uri t)
+            (let ((toplevel-bindings
+                   (find-toplevel-bindings cont)))
+              (mapcar (lambda (binding)
+                        (format nil "~A=~A"
+                                (url-encode (prin1-to-string (car binding)))
+                                (url-encode (prin1-to-string (cdr binding)))))
+               toplevel-bindings)))))
+
+
+(defvar *session-locks* (make-hash-table :test #'eq
+                                         #+sbcl :weakness #+sbcl :key)
+  "Per-session locks to avoid having unrelated threads
+  waiting.")
+#-sbcl(warn "No GC mechanism for *SESSION-LOCKS* on your Lisp. ~
+            Expect a tiny memory leak until fixed.")
+
+(defun session-lock ()
+  (unless (gethash *session* *session-locks*)
+    (setf (gethash *session* *session-locks*) 
+          (bordeaux-threads:make-lock (format nil "session lock for session ~S" *session*))))
+  (gethash *session* *session-locks*))
+
+
+(defmacro root-component (&optional (session '*session))
+  "Use (root-component) and (setf (root-component) component)"
+  `(session-value 'root-component ,session))
+
+(defvar *system-actions* (make-hash-table :test #'equalp) "The registered actions")
+
+
+
+(defvar *catch-errors-p* t)
+
+(defvar *request-timeout* 10
+  "Seconds until we abort a request because it took too long.
+  This prevents threads from hogging the CPU indefinitely.
+  
+  You can set this to NIL to disable timeouts (not recommended).")
+
+
+
+
+(push (hunchentoot:create-prefix-dispatcher 
+       "/test/"
+       (make-continuation-handler 'test ; begin with test if URL
+                                  "/test/" ; == this
+                                  ))
+      hunchentoot:*dispatch-table*)
+
+(defun make-continuation-handler (default
+                                  defaultp
+                                  &optional (on-error
+                                             (lambda (error)
+                                               (format t "error:~%~A~%" error)
+                                               (force-output)
+                                               (cl-who:with-html-output-to-string (*standard-output*)
+                                                 (:html (:head (:title "Oups"))
+                                                        (:body "Someone messed up."))))))
+  (let ((defaultp (if (or (symbolp defaultp)
+                          (functionp defaultp))
+                      defaultp
+                      (lambda (name)
+                        (string= name defaultp)))))
+    (lambda ()
+      (let ((b64-cont (first (last (split-sequence #\/
+                                                   (script-name *request*)
+                                                   :remove-empty-subseqs t))))
+            (params   (mapcar (lambda (pair)
+                                (let ((*read-eval* nil))
+                                  (cons (read-from-string (car pair) nil)
+                                        (read-from-string (cdr pair) nil))))
+                              (reverse (get-parameters *request*)))))
+        (multiple-value-bind (out error)
+            (ignore-errors
+              (if (and b64-cont
+                       (not (funcall defaultp (script-name *request*))))
+                  (let ((cont (read-from-string
+                               (inflate
+                                (decrypt
+                                 (base64-string-to-usb8-array b64-cont
+                                                              :uri t)))
+                               nil)))
+                    (setup-capture
+                     (lambda ()
+                       (invoke-cont (replace-bindings cont params)
+                                    :value params))))
+                  (setup-capture default)))
+          (if (stringp out)
+              out
+              (funcall on-error error)))))))
+
+(define-condition invalid-request ()
+  ())
+
+(define-condition invalid-session (invalid-request)
+  ((url-value :initarg :url-value
+	      :reader url-value
+	      :documentation "The session url value"))
+  (:report (c s)
+	   (format s "The session ~S is invalid" (url-value c)))
+  (:documentation "The session passed in the url is invalid"))
+
+(define-condition invalid-action (invalid-request)
+  ((url-value :initarg :url-value
+	      :reader url-value
+	      :documentation "The action url-value"))
+    (:report (c s)
+	     (format s "The action ~S is invalid" (url-value c)))
+    (:documentation "The action passed in the url is invalid"))
+
+(defun request-handler ()
+  (flet ((handle-error (error)
+	   (format t "Invalid session:~%~A~%" c)
+	   (force-output)
+	   (with-html-output-to-string (*standard-output*)
+	     (:html (:head (:title "Oups"))
+		    (:body "Someone messed up.")))))
+    (handler-case
+      (let* ((*session* (session-with-id (get-parameter "_s")))
+	     (action (action-with-id (get-parameter "_c"))))
+	;(let ((*application* (session-application *session*)))
+	  (funcall action))
+    (invalid-request (error)
+      (handle-error error)))))
+
+(defun action-url (action &optional (session *session*))
+  (let ((application-url (application session)))
+    (concatenate 'string application-url
+		 "?_s=" (session-url-value session)
+		 "&_c="	(action-url-value action))))
+
+(defun encode-url-value (value)
+  (cl-base64:usb8-array-to-base64-string
+   (encrypt
+    (sb-ext:string-to-octets
+     (prin1-to-string value)))))
+
+(defun session-url-value (&optional (session *session*))
+  (encode-url-value (hash session)))
+
+(defmethod hash (object)
+  (sb-kernel:get-lisp-obj-address object))
+
+(defun action-url-value (action)
+  (encode-url-value (hash action)))
+
+(defun decode-url-value (url-value)
+  (sb-ext:octets-to-string
+   (decrypt
+    (cl-base64:base64-string-to-usb8-array url-value :uri t))))
+  
+(defun url-session (url-value)
+  (destructuring-bind (session found-p)
+      (gethash (parse-integer (decode-url-value url-value)) *sessions*)
+    (when (not found-p)
+      (error 'invalid-session :url-value url-value))
+    session))
+
+(defun url-action (url-value)
+  (destructuring-bind (action found-p)
+      (gethash (parse-integer (decode-url-value url-value)) *system-actions*)
+    (when (not found-p)
+      (error 'invalid-action :url-value url-value))
+    action))
+  
+(hunchentoot:start (make-instance 'gestalt-acceptor :port 8080))

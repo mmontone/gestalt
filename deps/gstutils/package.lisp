@@ -13,6 +13,8 @@
    #:replace-all
    #:xmlize
    #:always-with
+   #:lisp-object-address
+   #:one-of
    
    ;; required-slots-class
    #:required-slots-class
@@ -30,7 +32,13 @@
    #:using-refs
    #:value
    #:ref
-   #:refp))
+   #:refp
+
+   ;; copy-object
+   #:copy
+   #:shallow-copy
+   #:deep-copy))
+  
 
 (defpackage gstutils.test
   (:use :cl :gstutils :fiveam))

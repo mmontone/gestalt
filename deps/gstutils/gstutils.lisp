@@ -8,7 +8,13 @@
 	  ,@(loop for alias in aliases
 	       do (setf setf-args (nconc setf-args (list `(symbol-function ',alias) `(function ,fname))))
 	       finally (return setf-args)))
-	 ',aliases))))
+	 ',aliases)))
+
+  (defmacro one-of (cases expr &key (test '#'eql))
+    (once-only (expr)
+      `(or
+	,@(loop for case in cases
+	     collect `(funcall ,test ,case ,expr))))))
 
 
 ;; Free variables manipulation
@@ -31,6 +37,9 @@
    (when restp
      (list rest)))))
 
+(defun lisp-object-address (obj)
+  #+ccl (format nil "~x" (%address-of (make-instance 'standard-object)))
+  #+sbcl (kernel::lisp-object-address))
 
 (defun dynamic-variable-symbol-p (symbol)
   "Returns if the symbol refers to a dynamic variable.
@@ -294,6 +303,7 @@ is replaced with replacement."
             while pos)))
 
 (defun xmlize (str)
+  (error "use xmlisp xml:encode-xml-string")
   "Takes a string and converts it to be XML compatible"
   (setf str (replace-all str "\"" "\\\""))
   (setf str (replace-all str "\n" "\\n"))  ; Think it's wrong. Averiguar cual es carriage return en common lisp en los strings literales
