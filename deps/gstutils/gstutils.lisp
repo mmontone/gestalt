@@ -37,9 +37,9 @@
    (when restp
      (list rest)))))
 
-(defun lisp-object-address (obj)
-  #+ccl (format nil "~x" (%address-of (make-instance 'standard-object)))
-  #+sbcl (kernel::lisp-object-address))
+;; (defun lisp-object-addr (obj)
+;;   #+ccl (format nil "~x" (%address-of (make-instance 'standard-object)))
+;;   #+sbcl (sb-kernel::lisp-object-address obj))
 
 (defun dynamic-variable-symbol-p (symbol)
   "Returns if the symbol refers to a dynamic variable.

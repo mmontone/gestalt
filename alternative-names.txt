@@ -1,1 +1,0 @@
-Strata or Stratum. The purpose of the framework is to have a stratified design, so they may make more sense than Gestalt!!

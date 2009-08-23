@@ -1,7 +1,6 @@
 (defpackage :gstutils
   (:use :cl :anaphora :sb-mop :log5 :alexandria)
   (:shadow :name)
-  (:import-from :arnesi :with-unique-names :let1)
   (:import-from :contextl :singleton-class :find-singleton)
   (:export
    #:defalias
@@ -38,7 +37,22 @@
    #:copy
    #:shallow-copy
    #:deep-copy))
-  
+
+(defpackage dlist
+  (:use :cl)
+  (:export #:dlist
+	   #:make-dlist
+	   #:head
+	   #:tail
+	   #:insert-between
+	   #:insert-before
+	   #:insert-after
+	   #:insert-head
+	   #:insert-tail
+	   #:remove-link
+	   #:dlist-elements
+	   #:do-dlist
+	   #:map-dlist))
 
 (defpackage gstutils.test
   (:use :cl :gstutils :fiveam))

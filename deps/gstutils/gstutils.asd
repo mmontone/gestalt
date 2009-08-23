@@ -19,6 +19,7 @@
    (:file "copy-obj")
    (:file "required-slots-class")
    (:file "references")
+   (:file "dlist")
    (:file "test"))
   :serial t
   :depends-on (:anaphora
