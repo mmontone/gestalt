@@ -1,4 +1,4 @@
-(in-package :gstutils)
+(in-package :gst.util)
 
 (defclass required-slots-object ()
   ()

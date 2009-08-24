@@ -3,6 +3,9 @@
 (def-suite df-tests
     :description "Dataflow tests")
 
+(defun run-tests ()
+  (run 'df-tests))
+
 (in-suite df-tests)
 
 

@@ -57,7 +57,8 @@
         (setf (dlink-next before) after))
     (if (null after)
         (setf (dlist-tail dlist) before)
-        (setf (dlink-prev after) before))))
+        (setf (dlink-prev after) before)))
+  dlist)
  
 (defun dlist-elements (dlist)
   "Returns the elements of DLIST as a list"
@@ -77,19 +78,17 @@
 (defun map-dlist (function dlist)
   (mapcar function (dlist-elements dlist)))
 
-;; Example:
+(defun null-dlist (dlist)
+  (equalp (length-dlist dlist) 0))
 
-;; (let ((dlist (make-dlist)))
-;;   (insert-head dlist 1)
-;;   (insert-tail dlist 4)
-;;   (insert-after dlist (dlist-head dlist) 2)
-;;   (let* ((next-to-last (insert-before dlist (dlist-tail dlist) 3))
-;;          (bad-link (insert-before dlist next-to-last 42)))
-;;     (remove-link dlist bad-link))
-;;   (print (dlist-elements dlist)))
+(defun length-dlist (dlist)
+  (length (dlist-elements dlist)))
 
-;; (let ((dlist (make-dlist)))
-;;   (insert-head dlist 1)
-;;   (insert-tail dlist 4)
-;;   (insert-after dlist (dlist-head dlist) 2)
-;;   (map-dlist #'1+ dlist))
+(defun dlist-position (dlink dlist)
+  (loop with position = 0
+       for dlist-dlink = (dlist-head dlist) then (dlink-next dlist-dlink)
+       while (not (null dlist-dlink))
+       if (eql dlink dlist-dlink)
+         do (return-from dlist-position position)
+         else do (incf position))
+  nil)

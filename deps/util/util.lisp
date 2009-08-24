@@ -1,4 +1,4 @@
-(in-package :gstutils)
+(in-package :gst.util)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defmacro defalias (fname &rest aliases)

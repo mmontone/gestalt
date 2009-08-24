@@ -19,7 +19,7 @@
 ;;;
 ;;;_____________________________________________________________________________
 
-(in-package :gstutils)
+(in-package :gst.util)
 
 #+allegro
 (eval-when (:compile-toplevel :load-toplevel :execute)

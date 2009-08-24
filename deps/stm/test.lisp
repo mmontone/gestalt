@@ -5,6 +5,9 @@
 (def-suite stm-suite
     :description "Software Transactional Memory test suite")
 
+(defun run-tests ()
+  (run 'stm-suite))
+
 (in-suite stm-suite)
 
 (test no-transaction-error-test

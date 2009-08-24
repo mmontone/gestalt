@@ -1,4 +1,4 @@
-(in-package :gstutils)
+(in-package :gst.util)
 
 (defcategory ref)
 (defcategory none)

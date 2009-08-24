@@ -26,4 +26,5 @@
   (:use :cl
 	:stm
 	:gstutils
-	:fiveam))
+	:fiveam)
+  (:export #:run-tests))

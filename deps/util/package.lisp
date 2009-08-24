@@ -1,4 +1,4 @@
-(defpackage :gstutils
+(defpackage :gst.util
   (:use :cl :anaphora :sb-mop :log5 :alexandria)
   (:shadow :name)
   (:import-from :contextl :singleton-class :find-singleton)
@@ -10,9 +10,7 @@
    #:list-free-vars-non-external
    #:prune-externals
    #:replace-all
-   #:xmlize
    #:always-with
-   #:lisp-object-address
    #:one-of
    
    ;; required-slots-class
@@ -42,8 +40,8 @@
   (:use :cl)
   (:export #:dlist
 	   #:make-dlist
-	   #:head
-	   #:tail
+	   #:dlist-head
+	   #:dlist-tail
 	   #:insert-between
 	   #:insert-before
 	   #:insert-after
@@ -52,7 +50,27 @@
 	   #:remove-link
 	   #:dlist-elements
 	   #:do-dlist
-	   #:map-dlist))
+	   #:map-dlist
+	   #:length-dlist
+	   #:null-dlist
+	   #:dlist-position))
 
-(defpackage gstutils.test
-  (:use :cl :gstutils :fiveam))
+(defpackage :gst.encode
+  (:use :cl :ironclad :cl-base64 :babel :zlib)
+  (:export #:register-key
+	   #:compress
+	   #:inflate
+	   #:encrypt
+	   #:decrypt
+	   #:string-to-octets
+	   #:octets-to-string
+	   #:usb8-array-to-base64-string
+	   #:base64-string-to-usb8-array))
+
+(defpackage :dlist.test
+  (:use :cl :dlist :fiveam)
+  (:export #:run-tests))
+
+(defpackage gst.util.test
+  (:use :cl :gst.util :fiveam)
+  (:export #:run-tests))

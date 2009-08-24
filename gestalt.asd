@@ -24,11 +24,13 @@
     :serial t
     :depends-on
     (:anaphora
+     :alexandria
      :hunchentoot
      :log5
      :fiveam
      :cl-who
      :parenscript
+     :css-lite
      :cl-cont
      :contextl
      :gstutils

@@ -1,7 +1,7 @@
 ;; Macros for standard DSL creation
 ;; This is meant to work and be used by dataflow, transactional memory and references
 
-(in-package :gstutils)
+(in-package :gst.util)
 
 
 (defmacro make-let (name make-binding)

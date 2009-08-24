@@ -1,15 +1,18 @@
-(in-package :gstutils.test)
+(in-package :gst.util.test)
 
-(def-suite gstutils-suite
+(def-suite gst.util-suite
     :description "The Gestalt utils test suite")
 
-(in-suite gstutils-suite)
+(defun run-tests ()
+  (run 'gst.util-suite))
+
+(in-suite gst.util-suite)
 
 (test dynamic-variable-symbol-p
-  (is (not (gstutils::dynamic-variable-symbol-p 'hola)))
-  (is (gstutils::dynamic-variable-symbol-p '*hola*))
-  (is (not (gstutils::dynamic-variable-symbol-p '*hola)))
-  (is (not (gstutils::dynamic-variable-symbol-p 'hola*))))
+  (is (not (gst.util::dynamic-variable-symbol-p 'hola)))
+  (is (gst.util::dynamic-variable-symbol-p '*hola*))
+  (is (not (gst.util::dynamic-variable-symbol-p '*hola)))
+  (is (not (gst.util::dynamic-variable-symbol-p 'hola*))))
 
 (test list-free-vars
   (is (not (set-exclusive-or (list-free-vars '((print x) (print y))) '(x y))))
