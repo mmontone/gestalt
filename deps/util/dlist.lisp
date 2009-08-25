@@ -78,6 +78,12 @@
 (defun map-dlist (function dlist)
   (mapcar function (dlist-elements dlist)))
 
+(defun reduce-dlist (function dlist &key (initial-value nil ivp))
+  (if ivp
+    (reduce function (dlist-elements dlist)
+	    :initial-value initial-value)
+    (reduce function (dlist-elements dlist))))
+
 (defun null-dlist (dlist)
   (equalp (length-dlist dlist) 0))
 

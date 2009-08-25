@@ -51,12 +51,13 @@
 	   #:dlist-elements
 	   #:do-dlist
 	   #:map-dlist
+	   #:reduce-dlist
 	   #:length-dlist
 	   #:null-dlist
 	   #:dlist-position))
 
 (defpackage :gst.encode
-  (:use :cl :ironclad :cl-base64 :babel :zlib)
+  (:use :cl :cl-base64 :babel :zlib)
   (:export #:register-key
 	   #:compress
 	   #:inflate
