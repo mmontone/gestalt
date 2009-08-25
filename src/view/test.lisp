@@ -1,1 +1,92 @@
 (in-package :gst.view.test)
+
+(defclass tracked-node (tracked-xml-node xml-container)
+  ())
+
+(let ((node
+       (make-instance 'tracked-node))
+      (y (make-instance 'tracked-node)))
+  (append-child y (make-instance 'tracked-node))
+  (append-child node y)
+  (make-base-tree node)
+  (append-child y (make-instance 'tracked-node))
+  (append-child y (make-instance 'tracked-node))
+  (append-child node (make-instance 'tracked-node))
+  (extract-modifications node))
+
+(let ((node
+       (make-instance 'tracked-node))
+      (y (make-instance 'tracked-node)))
+  (make-base-tree node)
+  (append-child y (make-instance 'tracked-node))
+  (append-child y (make-instance 'tracked-node))
+  (append-child y (make-instance 'tracked-node))
+
+  (append-child node (make-instance 'tracked-node))
+  (append-child node y)
+  (remove-child node y)
+;  (remove-child node y)
+  (extract-modifications node))
+
+(let ((node
+       (make-instance 'tracked-node))
+      (y (make-instance 'tracked-node)))
+  (make-base-tree node)
+  (append-child y (make-instance 'tracked-node))
+  (append-child y (make-instance 'tracked-node))
+  (append-child y (make-instance 'tracked-node))
+
+  (append-child node (make-instance 'tracked-node))
+  (append-child node y)
+  (print (extract-modifications node :flush t))
+  (extract-modifications node))
+
+(let ((node
+       (make-instance 'tracked-node))
+      (y (make-instance 'tracked-node))
+      (z (make-instance 'tracked-node)))
+  ;(make-base-tree node)
+  (append-child y (make-instance 'tracked-node))
+  (append-child y (make-instance 'tracked-node))
+  (append-child y (make-instance 'tracked-node))
+  (append-child node (make-instance 'tracked-node))
+  (append-child node y)
+  (append-child z (make-instance 'tracked-node))
+  (append-child z (make-instance 'tracked-node))
+  (make-base-tree node)
+  (replace-child node y z)
+  (extract-modifications node))
+
+(defclass super-node (tracked-xml-node xml-container dom-xml-node)
+  ())
+
+(let ((node
+       (make-instance 'super-node))
+      (y (make-instance 'super-node))
+      (z (make-instance 'super-node)))
+  (append-child y (make-instance 'super-node))
+  (append-child y (make-instance 'super-node))
+  (append-child y (make-instance 'super-node))
+  (append-child node (make-instance 'super-node))
+  (append-child node y)
+  (append-child z (make-instance 'super-node))
+  (append-child z (make-instance 'super-node))
+  (make-base-tree node)
+  (replace-child node y z)
+  (extract-modifications node))
+
+
+(let ((node
+       (make-instance 'view-node :handler nil :controller nil))
+      (y (make-instance 'view-node :handler nil :controller nil))
+      (z (make-instance 'view-node :handler nil :controller nil)))
+  (append-child y (make-instance 'view-node :handler nil :controller nil))
+  (append-child y (make-instance 'view-node :handler nil :controller nil))
+  (append-child y (make-instance 'view-node :handler nil :controller nil))
+  (append-child node (make-instance 'view-node :handler nil :controller nil))
+  (append-child node y)
+  (append-child z (make-instance 'view-node :handler nil :controller nil))
+  (append-child z (make-instance 'view-node :handler nil :controller nil))
+  (make-base-tree node)
+  (replace-child node y z)
+  (extract-modifications node))

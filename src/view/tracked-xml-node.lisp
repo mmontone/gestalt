@@ -27,11 +27,14 @@ Algorithm:
 ;-------------------------
 
 (defclass tracked-xml-node ()
-  ((parent-modification :accessor parent-modification
+  ((base-tree-member-p :accessor base-tree-member-p
+		       :initform nil
+		  :documentation "Flag that tells whether the node belongs to the base tree or not")
+   (parent-modification :accessor parent-modification
 			:documentation "The modification made to the node's to add this node as a child")
    (modifications :accessor modifications
 		  :initform '()
-		  :documentation "Node modifications"))
+		  :documentation "Node modifications list. TODO?: hold modifications with a dlist??"))
   (:documentation "This class is meant to be used as a mixin (see xml-node definition). When *register-modifications* is active, changes to the node are registered in the modifications slot"))
 
 ;----------------------------------
@@ -89,6 +92,37 @@ Algorithm:
 ; Modifications related operations
 ;----------------------------------
 
+(defmethod print-object ((mod append-child-modification) stream)
+  (print-unreadable-object (mod stream :identity t)
+    (format stream "append ~A" (child mod))))
+
+(defmethod print-object ((mod replace-child-modification) stream)
+  (print-unreadable-object (mod stream :identity t)
+    (format stream "replace ~A by ~A" (child mod) (replacement mod))))
+
+(defmethod print-object ((mod remove-child-modification) stream)
+  (print-unreadable-object (mod stream :identity t)
+    (format stream "remove ~A" (child mod))))
+
+(defmethod print-object ((mod insert-child-modification) stream)
+  (print-unreadable-object (mod stream :type t :identity t)
+    (format stream "insert ~A ~A ~A"
+	    (child mod)
+	    (place mod)
+	    (reference-child mod))))
+
+(defun make-base-tree (tree &key (value t))
+  (labels ((%make-base-tree (tree)
+	   (setf (base-tree-member-p tree) value)
+	   (loop for child in (dlist-elements (children tree))
+	      do (%make-base-tree child))))
+    (%make-base-tree tree)
+    (flush-modifications tree :recurse t)))
+
+(defun remove-from-base-tree (node)
+  (flush-modifications node :recurse t)
+  (make-base-tree node :value nil))
+
 (defgeneric append-modification-p (modification)
   (:method ((mod t))
     (declare (ignore mod))
@@ -124,7 +158,19 @@ Algorithm:
 (defmethod modified-p ((node tracked-xml-node))
   (not (null (modifications node))))
 
-(defmethod flush-modifications ((node tracked-xml-node))
+(defun flush-modifications-down (node)
+  (labels ((flush-down (node)
+	     (flush-node-modifications node)
+	     (loop for child in (dlist-elements (children node))
+		  do (flush-down child))))
+    (flush-down node)))
+    
+(defun flush-modifications (node &key recurse)
+  (if recurse
+      (flush-modifications-down node)
+      (flush-node-modifications node)))
+
+(defmethod flush-node-modifications ((node tracked-xml-node))
   (setf (parent-modification node) nil)
   (setf (modifications node) '()))
 
@@ -143,49 +189,55 @@ Algorithm:
 (defun is-a-replacement (node)
   (replace-modification-p (parent-modification node)))
 
-(defmethod extract-modifications ((node tracked-xml-node) &key (flush t))
+(defmethod extract-modifications ((node tracked-xml-node)
+				  &key (flush nil)
+				  (declare-base-tree-member-p nil))
   (prog1
       (append
        (modifications node)
-       (reduce (lambda (node mods)
-		 (append (extract-modifications node :flush flush) mods))
-	       (children node)))
-    (when flush
-      (flush-modifications node))))
+       (flatten
+	(map-dlist
+	 (lambda (child)
+	   (extract-modifications child :flush flush))
+	 (children node))))
+    (progn
+      (when flush
+	(flush-node-modifications node))
+      (when declare-base-tree-member-p
+	(setf (base-tree-member-p node) t)))))
 
 (defun copy-xml-nodes-tree (xml-node)
-  (gstutils:deep-copy xml-node))
+  (gst.util:deep-copy xml-node))
 
-(defmethod apply-modifications (modifications (tree xml-node))
-  (loop for modification in modifications
-       do (apply-modification modification tree)))
+;; (defmethod apply-modifications (modifications (tree xml-node))
+;;   (loop for modification in modifications
+;;        do (apply-modification modification tree)))
 
-(defvar *xml-node-id* 1 "Node id counter")
+;; (defvar *xml-node-id* 1 "Node id counter")
 
-(defvar *xml-nodes-table* (make-hash-table :test #'equalp)
-  "A hash table that maps to xml nodes")
+;; (defvar *xml-nodes-table* (make-hash-table :test #'equalp)
+;;   "A hash table that maps to xml nodes")
 
 
-(defmethod apply-modification ((mod append-child-modification) node)
-  (let ((target
-	 (search-node (target modification) tree)))
-    (append-child 
+;; (defmethod apply-modification ((mod append-child-modification) node)
+;;   (let ((target
+;; 	 (search-node (target modification) tree)))
+;;     (append-child 
 
 ;-----------------------------------
 ; Wrapped xml-node operations
 ;-----------------------------------
 
-(defmethod append-child :around ((node tracked-xml-node) child)
-  (when *register-modifications*
+(defmethod append-child :after ((node tracked-xml-node) child)
+  (when (and *register-modifications* (base-tree-member-p node))
     (let ((modification (make-instance 'append-child-modification
 				       :target node
 				       :child child)))
       (setf (parent-modification child) modification)
-      (add-modification modification node)))
-  (call-next-method))
+      (add-modification modification node))))
 
-(defmethod remove-child :around ((node tracked-xml-node) child)
-  (when *register-modifications*
+(defmethod remove-child :after ((node tracked-xml-node) child)
+  (when (and *register-modifications* (base-tree-member-p node))
     (cond
       ((is-appended child) (remove-modification (parent-modification child) node))
       ((is-inserted child) (remove-modification (parent-modification child) node))
@@ -194,59 +246,76 @@ Algorithm:
 				   (remove-modification replace-mod node)
 				   (add-modification (make-instance 'remove-child-modification
 								    :target node
-								    :child replaced-node) node))))
-    (flush-modifications child))
-  (call-next-method))
+								    :child replaced-node) node)))
+      (t (let ((modification (make-instance 'remove-child-modification
+					    :target node
+					    :child child)))
+	   (setf (parent-modification child) modification)
+	   (add-modification modification node))))
+    (remove-from-base-tree child)))
 
-(defmethod insert-child-before :around ((node tracked-xml-node) child reference-child)
-  (when *register-modifications*
+(defmethod insert-child-before :after ((node tracked-xml-node) child reference-child)
+  (when (and *register-modifications* (base-tree-member-p node))
     (let ((modification (make-instance 'insert-child-modification
 				       :place :before
 				       :target node
 				       :child child
 				       :reference-child child)))
       (setf (parent-modification child) modification)
-      (add-modification modification node)))
-  (call-next-method))
+      (add-modification modification node))))
 
-(defmethod insert-child-after :around ((node tracked-xml-node) child reference-child)
-  (when *register-modifications*
+(defmethod insert-child-after :after ((node tracked-xml-node) child reference-child)
+  (when (and *register-modifications* (base-tree-member-p node))
     (let ((modification (make-instance 'insert-child-modification
 				       :place :after
 				       :target node
 				       :child child
 				       :reference-child child)))
       (setf (parent-modification child) modification)
-      (add-modification modification node)))
-  (call-next-method))
+      (add-modification modification node))))
 
-(defmethod replace-child :around ((node tracked-xml-node) child replacement)
-  (when *register-modifications*
+(defmethod replace-child :after ((node tracked-xml-node) child replacement)
+  (when (and *register-modifications* (base-tree-member-p node))
     (cond
       ((is-appended child) (let ((append-mod (parent-modification child)))
 				  (setf (child append-mod) replacement)))
       ((is-inserted child) (let ((insert-mod (parent-modification child)))
 				   (setf (child insert-mod) replacement)))
       ((is-a-replacement child) (let ((replace-mod (parent-modification child)))
-				      (setf (replacement replace-mod) replacement)))))
-  (call-next-method))
+				  (setf (replacement replace-mod) replacement)))
+      (t (let ((modification (make-instance 'replace-child-modification
+					    :target node
+					    :child child
+					    :replacement replacement)))
+	   (setf (parent-modification replacement) modification)
+	   (add-modification modification node))))
+    (remove-from-base-tree child)))
  
-(defmethod set-attribute :around ((node tracked-xml-node) attribute value)
-  (when *register-modifications*
+(defmethod set-attribute :after ((node tracked-xml-node) attribute value)
+  (when (and *register-modifications* (base-tree-member-p node))
     (add-modification (make-instance 'set-attribute-modification
 				     :target node
 				     :attribute attribute
 				     :value value)
-		      node))
-  (call-next-method))
+		      node)))
 
-(defmethod remove-attribute :around ((node tracked-xml-node) attribute)
-  (when *register-modifications*
+(defmethod remove-attribute :after ((node tracked-xml-node) attribute)
+  (when (and *register-modifications* (base-tree-member-p node))
     (add-modification (make-instance 'remove-attribute-modification
 				     :target node
 				     :attribute attribute)
-		      node))
-  (call-next-method))
+		      node)))
+
+;------------------------------
+;   XMLisp Glue
+;------------------------------
+
+(defmethod xml:print-slot-with-name-p :around ((tracked-xml-node tracked-xml-node) name)
+  (and (call-next-method)
+       (not (one-of ("modifications"
+		     "parent-modification"
+		     "base-tree-member-p") name
+		    :test #'string-equal))))
 
 ;--------------------------------
 ; Modifications serialization
@@ -265,7 +334,7 @@ Algorithm:
 			(:remove 'remove-child-modification)
 			(:replace 'replace-child-modification))))
 		 (with-unique-names (out)
-		 `(defmethod serialize-modification((,mod ,modification-class) (,out (eql ,name)) &optional (,stream *standard-output*))
+		 `(defmethod serialize-modification ((,mod ,modification-class) (,out (eql ,name)) &optional (,stream *standard-output*))
 		      ,@body)))))))
     `(progn
        (pushnew ,name *serialization-outputs*)

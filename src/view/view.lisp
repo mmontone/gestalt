@@ -1,10 +1,11 @@
 (in-package :gst.view)
 
-(defclass view-node (xml-tracked-node dom-xml-node xml-node)
+(defclass view-node (xml-container tracked-xml-node dom-xml-node)
   ((print-cache
     :accessor print-cache
     :documentation "We hold a cached printed representation of this node in this variable. It is cleaned whenever the node changes")
    (encoded-node-id :accessor encoded-node-id
+		    :initform ""
 		    :documentation "The encoded node id (for dom browser handling)")
    (handler :initarg :handler
 	    :accessor handler
@@ -24,6 +25,11 @@
 (defmethod (setf node-id) :after (value (node view-node))
   (declare (ignore value))
   (setf (encoded-node-id node) (encode-node-id (node-id node))))
+
+(defmethod initialize-instance :after ((view-node view-node) &rest initargs)
+  (declare (ignore initargs))
+  (setf (node-id view-node) '(1)))
+  
 
 ;; printing caching
 (defmethod print-object :around ((node view-node) stream)
@@ -48,7 +54,7 @@
 	   (flush-down (node)
 	     (setf (print-cache node) nil)
 	     (loop for child in (children node)
-		  (flush-down child))))
+		  do (flush-down child))))
     (flush-down (find-root node))))
     
 (defun flush-print-cache (node &key all)
@@ -91,20 +97,37 @@ postponing the print-cache flush to the end to avoid performance overhead"
 
 (defvar *node-id-delimiter* #\:)
 
+;; (defun node-id-to-string (node-id)
+;;   (reduce (lambda (count str)
+;; 	    (concatenate 'string (string count)
+;; 			 (string *node-id-delimiter*)
+;; 			 str))
+;; 	  node-id
+;; 	  :initial-value ""))
+
+(defun foldl (function list initial-value)
+  (labels ((%foldl (list acc)
+	     (if (null list)
+		 acc
+		 (%foldl (cdr list) (funcall function (car list) acc)))))
+    (%foldl list initial-value)))
+
 (defun node-id-to-string (node-id)
-  (reduce (lambda (count str)
-	    (concatenate 'string (string count)
-			 (string *node-id-delimiter*)
-			 str))
-	  node-id
-	  :initial-value ""))
+  (foldl (lambda (pos str)
+	   (concatenate 'string
+			(string *node-id-delimiter*)
+			(princ-to-string pos)
+			str))
+	 node-id ""))
 
 (defun string-to-node-id (string)
-  (reduce (lambda (char list)
-	    (cons (parse-integer char)
-		  list))
-	  (split-sequence:split-sequence *node-id-delimiter* string)
-	  :initial-value '()))
+  (nreverse
+   (mapcar #'parse-integer
+	  (cdr
+	   (split-sequence:split-sequence
+	    *node-id-delimiter*
+	    string)))))
+
 
 (defun encode-node-id (node-id)
   (usb8-array-to-base64-string
@@ -114,6 +137,16 @@ postponing the print-cache flush to the end to avoid performance overhead"
 
 (defun decode-node-id (encoded-node-id)
   (string-to-node-id
-   (octects-to-string
+   (octets-to-string
     (decrypt
-     (base64-string-to-usb8-array encoded-node-id)))))
+     (base64-string-to-usb8-array
+      encoded-node-id :uri t)))))
+
+;------------------------------
+;   XMLisp Glue
+;------------------------------
+
+(defmethod xml:print-slot-with-name-p ((view-node view-node) name)
+  (and (call-next-method)
+       (not (one-of ("print-cache" "handler" "controller") name
+		    :test #'string-equal))))

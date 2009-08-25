@@ -3,12 +3,16 @@
 	:dlist
 	:alexandria
 	:gst.util
-	:xml
+	;:xml
 	:cl-who
 	:json
 	:parenscript
 	:closer-mop)
+  (:shadowing-import-from :alexandria #:switch)
   (:export #:xml-node
+	   #:parent
+	   #:children
+	   #:node-id
 	   #:xml-container
 	   ;; node operations
 	   #:append-child
@@ -21,6 +25,7 @@
 	   ;; modifications tracking
 	   #:tracked-xml-node
 	   #:*register-modifications*
+	   #:make-base-tree
 	   #:modified-p
 	   #:flush-modifications
 	   #:is-appended
@@ -42,14 +47,18 @@
 
 (defpackage :gst.view.dom
   (:use :cl
-	:gst.view.xml)
+	:gst.view.xml
+	:gst.util
+	;:xml
+	)
   (:export #:dom-xml-node))
 
 
 (defpackage :gst.view.html
   (:use :cl
 	:gst.view.xml
-	:xml)
+	;:xml
+	)
   (:export #:a
 	   #:p
 	   #:div))
@@ -59,13 +68,17 @@
 	:gst.view.html
 	;:xml
 	)
+  (:shadowing-import-from :xml #:container)
   (:export #:template
 	   #:container))
 
 (defpackage :gst.view
   (:use :cl
 	:gst.view.xml
+	:gst.view.dom
 	:gst.view.templates
+	:gst.util
+	:gst.encode
 	;:xml
 	)
   (:export #:view-node))
@@ -73,6 +86,8 @@
 (defpackage :gst.view.test
   (:use :cl
 	:gst.view.xml
+	:gst.view.dom
+	:gst.view
 	;:xml
 	:gst.view.templates
 	:5am))
