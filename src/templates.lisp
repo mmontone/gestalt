@@ -196,3 +196,79 @@
 
 (defmethod real-id ((var xml-variable))
   (attribute var "id"))
+
+#|
+
+Templates ideas:
+
+The idea is to have template-combinations, and some other options. Besides, we may want to make the templating engine extensible.
+
+So, for example:
+
+<template class="<component-class>"
+          combination="<template-combination>">
+   ...
+   <sub-template/>
+</template>
+
+Examples:
+
+We may want to have :above (equivalent to :before), :below (equivalent to :after) and :around. Besides, we can embed other templates (in the case of subclassing or :around method combinations, for example) using the special XML element <sub-template/>
+
+<template class="object-editor"
+          combination="above">
+   <container id="object-name"/>
+</template>
+
+<template class="object-editor"
+          combination="below">
+   <container id="accept-action"/>
+   <container id="cancel-action"/>
+</template>
+
+Or the equivalent to the above>
+
+<template class="object-editor"
+          combination="around">
+   <container id="object-name"/>
+   <sub-template/>
+   <container id="accept-action"/>
+   <container id="cancel-action"/>
+</template>
+
+Besides, it also makes sense to use <sub-template/> outside and :around template-combination. It is the equivalent of call-next-method
+
+The following model (imagine the corresponding components...):
+(defclass person ()
+  ((name :accessor name
+	 :initarg :name
+	 :initform (error "Provide the name"))
+   (lastname :accessor lastname
+	     :initarg :lastname
+	     :initform (error "Provide the lastname"))))
+
+(defclass employee ()
+  ((company :initarg :company
+	    :accessor company))))
+
+<template class="person-viewer">
+  <container id="name"/>
+  <container id="lastname"/>
+</template>
+
+<template class="employee-viewer">
+   <sub-template/>
+   <container id="company"/>
+</template>
+
+
+Last, but not least, we should make the template system extensible. On the one hand, it should be possible to implement
+new template-combinations. On the other hand, the template system should be extensible by means of options too. So, for example, we should be able to implement layered templates extending the options engine:
+
+<template class="person-viewer"
+          layer="my-layer">
+  <container id="name"/>
+  <container id="lastname"/>
+</template>
+
+|#
