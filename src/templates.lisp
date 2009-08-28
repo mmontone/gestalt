@@ -208,12 +208,12 @@ So, for example:
 <template class="<component-class>"
           combination="<template-combination>">
    ...
-   <sub-template/>
+   <next-template/>
 </template>
 
 Examples:
 
-We may want to have :above (equivalent to :before), :below (equivalent to :after) and :around. Besides, we can embed other templates (in the case of subclassing or :around method combinations, for example) using the special XML element <sub-template/>
+We may want to have :above (equivalent to :before), :below (equivalent to :after) and :around. Besides, we can embed other templates (in the case of subclassing or :around method combinations, for example) using the special XML element <next-template/>
 
 <template class="object-editor"
           combination="above">
@@ -231,12 +231,12 @@ Or the equivalent to the above>
 <template class="object-editor"
           combination="around">
    <container id="object-name"/>
-   <sub-template/>
+   <next-template/>
    <container id="accept-action"/>
    <container id="cancel-action"/>
 </template>
 
-Besides, it also makes sense to use <sub-template/> outside and :around template-combination. It is the equivalent of call-next-method
+Besides, it also makes sense to use <next-template/> outside and :around template-combination. It is the equivalent of call-next-method
 
 The following model (imagine the corresponding components...):
 (defclass person ()
@@ -257,12 +257,12 @@ The following model (imagine the corresponding components...):
 </template>
 
 <template class="employee-viewer">
-   <sub-template/>
+   <next-template/>
    <container id="company"/>
 </template>
 
 
-Last, but not least, we should make the template system extensible. On the one hand, it should be possible to implement
+We should also make the template system extensible. On the one hand, it should be possible to implement
 new template-combinations. On the other hand, the template system should be extensible by means of options too. So, for example, we should be able to implement layered templates extending the options engine:
 
 <template class="person-viewer"
@@ -270,5 +270,25 @@ new template-combinations. On the other hand, the template system should be exte
   <container id="name"/>
   <container id="lastname"/>
 </template>
+
+Finally, it is not clear to me whether the following is correct or not, but we could give more controls to templates throw some calculation, although I think EVERY calculation should be in the controller, so...
+
+We could have some expressions that expand to dataflow cells:
+
+<template class="person-viewer">
+  <container id="name"/>
+  <container id="lastname"/>
+  <div class="age">
+    <formula f="(+1 (age comp))"/>
+  </div>
+</template>
+
+(+1 (age comp)) should expand to something like:
+
+(make-formula :formula (lambda ()
+			 (+1 (age comp)))) and compiled in an environment where comp makes sense
+
+
+
 
 |#
