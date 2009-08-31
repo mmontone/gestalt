@@ -27,10 +27,7 @@ Algorithm:
 ;-------------------------
 
 (defclass tracked-xml-node ()
-  ((base-tree-member-p :accessor base-tree-member-p
-		       :initform nil
-		  :documentation "Flag that tells whether the node belongs to the base tree or not")
-   (parent-modification :accessor parent-modification
+  ((parent-modification :accessor parent-modification
 			:documentation "The modification made to the node's to add this node as a child")
    (modifications :accessor modifications
 		  :initform '()
@@ -60,15 +57,18 @@ Algorithm:
 	  :accessor child
 	  :initform (error "Provide the child node to insert")
 	  :documentation "The child node appended")
-   (reference-child :initarg :reference-child
-		    :accessor reference-child
-		    :initform (error "Provide the reference child")
-		    :documentation "The child we reference to position the inserted child")
+   (reference-position :initarg :reference-position
+		       :accessor reference-position
+		       :initform (error "Provide the reference position")
+		       :documentation "The position in the tree we reference to position the inserted child")
    (place :initarg :place
 	  :accessor place
 	  :initform (error "Provide the place")
 	  :documentation "Tells where to insert the child. One of :after o :before (the reference child)"))
   (:documentation "This modification means a child node was appended"))
+
+(defmethod reference-child ((mod insert-child-modification))
+  (dlist::dlink-content (reference-position mod)))
 
 (defclass replace-child-modification (xml-node-modification)
   ((child :initarg :child
@@ -94,7 +94,7 @@ Algorithm:
 
 (defmethod print-object ((mod append-child-modification) stream)
   (print-unreadable-object (mod stream :identity t)
-    (format stream "append ~A" (child mod))))
+    (format stream "append ~A to ~A" (child mod) (target mod))))
 
 (defmethod print-object ((mod replace-child-modification) stream)
   (print-unreadable-object (mod stream :identity t)
@@ -105,19 +105,14 @@ Algorithm:
     (format stream "remove ~A" (child mod))))
 
 (defmethod print-object ((mod insert-child-modification) stream)
-  (print-unreadable-object (mod stream :type t :identity t)
+  (print-unreadable-object (mod stream :identity t)
     (format stream "insert ~A ~A ~A"
 	    (child mod)
 	    (place mod)
 	    (reference-child mod))))
 
-(defun make-base-tree (tree &key (value t))
-  (labels ((%make-base-tree (tree)
-	   (setf (base-tree-member-p tree) value)
-	   (loop for child in (dlist-elements (children tree))
-	      do (%make-base-tree child))))
-    (%make-base-tree tree)
-    (flush-modifications tree :recurse t)))
+(defmethod make-base-tree-node :after ((node tracked-xml-node) &rest args)
+  (flush-modifications node))
 
 (defun remove-from-base-tree (node)
   (flush-modifications node :recurse t)
@@ -161,8 +156,8 @@ Algorithm:
 (defun flush-modifications-down (node)
   (labels ((flush-down (node)
 	     (flush-node-modifications node)
-	     (loop for child in (dlist-elements (children node))
-		  do (flush-down child))))
+	     (do-children (child node)
+	       (flush-down child))))
     (flush-down node)))
     
 (defun flush-modifications (node &key recurse)
@@ -196,33 +191,13 @@ Algorithm:
       (append
        (modifications node)
        (flatten
-	(map-dlist
-	 (lambda (child)
-	   (extract-modifications child :flush flush))
-	 (children node))))
+	(collect-children (child node)
+           (extract-modifications child :flush flush))))
     (progn
       (when flush
 	(flush-node-modifications node))
       (when declare-base-tree-member-p
 	(setf (base-tree-member-p node) t)))))
-
-(defun copy-xml-nodes-tree (xml-node)
-  (gst.util:deep-copy xml-node))
-
-;; (defmethod apply-modifications (modifications (tree xml-node))
-;;   (loop for modification in modifications
-;;        do (apply-modification modification tree)))
-
-;; (defvar *xml-node-id* 1 "Node id counter")
-
-;; (defvar *xml-nodes-table* (make-hash-table :test #'equalp)
-;;   "A hash table that maps to xml nodes")
-
-
-;; (defmethod apply-modification ((mod append-child-modification) node)
-;;   (let ((target
-;; 	 (search-node (target modification) tree)))
-;;     (append-child 
 
 ;-----------------------------------
 ; Wrapped xml-node operations
@@ -260,7 +235,7 @@ Algorithm:
 				       :place :before
 				       :target node
 				       :child child
-				       :reference-child child)))
+				       :reference-position (parent-link reference-child))))
       (setf (parent-modification child) modification)
       (add-modification modification node))))
 
@@ -270,7 +245,7 @@ Algorithm:
 				       :place :after
 				       :target node
 				       :child child
-				       :reference-child child)))
+				       :reference-position (parent-link reference-child))))
       (setf (parent-modification child) modification)
       (add-modification modification node))))
 
@@ -278,9 +253,9 @@ Algorithm:
   (when (and *register-modifications* (base-tree-member-p node))
     (cond
       ((is-appended child) (let ((append-mod (parent-modification child)))
-				  (setf (child append-mod) replacement)))
+			     (setf (child append-mod) replacement)))
       ((is-inserted child) (let ((insert-mod (parent-modification child)))
-				   (setf (child insert-mod) replacement)))
+			     (setf (child insert-mod) replacement)))
       ((is-a-replacement child) (let ((replace-mod (parent-modification child)))
 				  (setf (replacement replace-mod) replacement)))
       (t (let ((modification (make-instance 'replace-child-modification
@@ -305,6 +280,12 @@ Algorithm:
 				     :target node
 				     :attribute attribute)
 		      node)))
+
+(defmethod copy-xml-tree :around ((tree tracked-xml-node) &rest args)
+  ;; disable modifications tracking when copying
+  (let ((*register-modifications* nil))
+    (apply #'call-next-method tree args)))
+
 
 ;------------------------------
 ;   XMLisp Glue
@@ -400,7 +381,7 @@ Algorithm:
   ;; its body like the lisp form, but calls encode-json to the result ;)
   (write 
    (ps
-     (get-element-with-id (lisp (node-id (target modification)))))
+     (get-node-with-id (lisp (node-id (target modification)))))
    stream))
 
    

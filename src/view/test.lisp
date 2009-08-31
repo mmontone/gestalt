@@ -1,92 +1,207 @@
 (in-package :gst.view.test)
 
-(defclass tracked-node (tracked-xml-node xml-container)
+(def-suite view-test-suite)
+
+(in-suite view-test-suite)
+
+(defun run-tests ()
+  (run 'view-test-suite))
+
+;; basic tests
+
+(test append-child-test
+  (let* ((node (make-instance 'xml-container))
+	 (child1 (make-instance 'xml-node))
+	 (child2 (make-instance 'xml-node)))
+    (append-child node child1)
+    (is (childp child1 node))
+    ;; test the order in the tree
+    (append-child node child2)
+    (is (and (childp child2 node)
+	     (comes-after child1 child2)))
+    ;; test the error when trying to append an already appended node
+    (signals error
+      (append-child node child1))
+    ;; test the order again
+    (remove-child node child1)
+    (append-child node child1)
+    (is (and (childp child1 node)
+	     (comes-after child2 child1)))))
+
+(test remove-child-test
+  (let* ((node (make-instance 'xml-container))
+	 (child1 (make-instance 'xml-node)))
+    (append-child node child1)
+    (remove-child node child1)
+    ;; test dettaching
+    (is (not (childp child1 node)))
+    (is (dlist:null-dlist (children node)))
+    ;; test error signaling when trying to remove an object that is not in the node
+    (signals error
+      (remove-child node child1))))
+  
+(test insert-child-test
+  (let* ((node (make-instance 'xml-container))
+	 (child1 (make-instance 'xml-node))
+	 (child2 (make-instance 'xml-node))
+	 (child3 (make-instance 'xml-node)))
+    (append-child node child1)
+    (insert-child node child2 :after child1)
+    ;; test order
+    (is (and (childp child2 node)
+	     (is-next child1 child2)))
+    (insert-child node child3 :before child1)
+    (is (and (childp child3 node)
+	     (is-previous child1 child3)))
+    ;; shouldn't insert an already inserted child
+    (signals error
+      (insert-child node child2 :before child1))
+    (remove-child node child2)
+    ;; shouldn't insert if the reference-child is not one of the children
+    (remove-child node child1)
+    (signals error
+      (insert-child node child2 :after child1))
+    ;; shouldn't insert if the place is not correct
+    (append-child node child1)
+    (signals error
+      (insert-child node child2 :blah-blah child1))
+    (signals error
+      (insert-child node child2 nil child1))))
+
+(test replace-child-test
+  (let* ((node (make-instance 'xml-container))
+	 (child1 (make-instance 'xml-node))
+	 (child2 (make-instance 'xml-node))
+	 (child3 (make-instance 'xml-node))
+	 (child4 (make-instance 'xml-node)))
+    (append-child node child1)
+    ;; fails when trying to replace a non-child node
+    (signals error
+      (replace-child node child2 child4))
+    (append-child node child2)
+    (append-child node child3)
+    ;; test order
+    (replace-child node child2 child4)
+    (is (and (equalp (dlist:length-dlist (children node)) 3)
+	     (childp child4 node)
+	     (not (childp child2 node))
+	     (is-next child1 child4)
+	     (is-previous child3 child4)))))
+
+;; tracking test
+
+(defclass tracked-node (xml-container tracked-xml-node dom-xml-node)
   ())
 
-(let ((node
-       (make-instance 'tracked-node))
-      (y (make-instance 'tracked-node)))
-  (append-child y (make-instance 'tracked-node))
-  (append-child node y)
-  (make-base-tree node)
-  (append-child y (make-instance 'tracked-node))
-  (append-child y (make-instance 'tracked-node))
-  (append-child node (make-instance 'tracked-node))
-  (extract-modifications node))
+(defmethod xml:print-slot-with-name-p :wrap-around ((node tracked-node) name)
+  (or (string-equal "node-id" name)
+      (call-next-method)))
 
-(let ((node
-       (make-instance 'tracked-node))
-      (y (make-instance 'tracked-node)))
-  (make-base-tree node)
-  (append-child y (make-instance 'tracked-node))
-  (append-child y (make-instance 'tracked-node))
-  (append-child y (make-instance 'tracked-node))
+(test extract-modifications-test  ; test flush and make-base-tree-member-p
+  (let ((node (make-instance 'tracked-node))
+	(child1 (make-instance 'tracked-node))
+	(child2 (make-instance 'tracked-node)))
+    (append-child node child1)
+    (append-child node child2)
+    (is (null (extract-modifications node))))
+  (let ((node (make-instance 'tracked-node))
+	(child1 (make-instance 'tracked-node))
+	(child2 (make-instance 'tracked-node)))
+    (make-base-tree node)
+    (append-child node child1)
+    (append-child node child2)
+    (is (not (null (extract-modifications node))))))
 
-  (append-child node (make-instance 'tracked-node))
-  (append-child node y)
-  (remove-child node y)
-;  (remove-child node y)
-  (extract-modifications node))
+;; the following tests compare trees applying the modifications
+(test track-append-child-test
+  (let* ((node (make-instance 'tracked-node))
+	 (node-copy (progn (make-base-tree node)
+			   (copy-xml-tree node)))
+	 (child1 (make-instance 'tracked-node))
+	 (child2 (make-instance 'tracked-node)))
+    (make-base-tree node-copy)
+    (append-child node child1)
+    (append-child node child2)
+    (let ((mods (extract-modifications node :flush t)))
+      (gst.view::apply-modifications mods node-copy))
+    (is (xml-tree-equal node node-copy))))
+  
+(test track-insert-child-test
+  (let* ((node (make-instance 'tracked-node))
+	 (node-copy (progn (make-base-tree node)
+			   (copy-xml-tree node)))
+	 (child1 (make-instance 'tracked-node))
+	 (child2 (make-instance 'tracked-node))
+	 (child3 (make-instance 'tracked-node)))
+    (make-base-tree node-copy)
+    (append-child node child1)
+    (insert-child node child2 :after child1)
+    (insert-child node child3 :after child2)
+    (let ((mods (extract-modifications node :flush t)))
+      (gst.view::apply-modifications mods node-copy))
+    (is (xml-tree-equal node node-copy))))
 
-(let ((node
-       (make-instance 'tracked-node))
-      (y (make-instance 'tracked-node)))
-  (make-base-tree node)
-  (append-child y (make-instance 'tracked-node))
-  (append-child y (make-instance 'tracked-node))
-  (append-child y (make-instance 'tracked-node))
+(test track-replace-child-test
+  (let* ((node (make-instance 'tracked-node))
+	 (node-copy (progn (make-base-tree node)
+			   (copy-xml-tree node)))
+	 (child1 (make-instance 'tracked-node))
+	 (child2 (make-instance 'tracked-node))
+	 (child3 (make-instance 'tracked-node)))
+    (make-base-tree node-copy)
+    (append-child node child1)
+    (insert-child node child2 :after child1)
+    (replace-child node child1 child3)
+    (let ((mods (extract-modifications node :flush t)))
+      (gst.view::apply-modifications mods node-copy))
+    (is (xml-tree-equal node node-copy))))
 
-  (append-child node (make-instance 'tracked-node))
-  (append-child node y)
-  (print (extract-modifications node :flush t))
-  (extract-modifications node))
+(test track-remove-child-test
+  (let* ((node (make-instance 'tracked-node))
+	 (node-copy (progn (make-base-tree node)
+			   (copy-xml-tree node)))
+	 (child1 (make-instance 'tracked-node))
+	 (child2 (make-instance 'tracked-node))
+	 (child3 (make-instance 'tracked-node)))
+    (make-base-tree node-copy)
+    (append-child node child1)
+    (insert-child node child2 :after child1)
+    (remove-child node child2)
+    (let ((mods (extract-modifications node :flush t)))
+      (gst.view::apply-modifications mods node-copy))
+    (is (xml-tree-equal node node-copy))))
 
-(let ((node
-       (make-instance 'tracked-node))
-      (y (make-instance 'tracked-node))
-      (z (make-instance 'tracked-node)))
-  ;(make-base-tree node)
-  (append-child y (make-instance 'tracked-node))
-  (append-child y (make-instance 'tracked-node))
-  (append-child y (make-instance 'tracked-node))
-  (append-child node (make-instance 'tracked-node))
-  (append-child node y)
-  (append-child z (make-instance 'tracked-node))
-  (append-child z (make-instance 'tracked-node))
-  (make-base-tree node)
-  (replace-child node y z)
-  (extract-modifications node))
+;; dom tests
 
-(defclass super-node (tracked-xml-node xml-container dom-xml-node)
-  ())
+(defun fold-xml-tree (f value tree)
+  (if (null tree)
+      value
+      (funcall f tree
+	       (collect-children (child tree)
+				 (fold-xml-tree f value child)))))
 
-(let ((node
-       (make-instance 'super-node))
-      (y (make-instance 'super-node))
-      (z (make-instance 'super-node)))
-  (append-child y (make-instance 'super-node))
-  (append-child y (make-instance 'super-node))
-  (append-child y (make-instance 'super-node))
-  (append-child node (make-instance 'super-node))
-  (append-child node y)
-  (append-child z (make-instance 'super-node))
-  (append-child z (make-instance 'super-node))
-  (make-base-tree node)
-  (replace-child node y z)
-  (extract-modifications node))
+(defun repeated-id (tree)
+  (let ((ids (make-hash-table :test #'equalp)))
+    (labels ((%repeated-id (tree)
+	       (if (null tree)
+		   nil
+		   (multiple-value-bind (id found-p)
+		       (gethash (encoded-node-id tree) ids)
+		     (progn
+		       (if found-p
+			   (return-from repeated-id t)
+			   (setf (gethash (encoded-node-id tree) ids) id))
+		       (do-children (child tree)
+			 (%repeated-id child)))))))
+      (%repeated-id tree))))
+		   
 
+(test get-node-with-id-test
+  (is nil "WRITE THIS TEST"))
 
-(let ((node
-       (make-instance 'view-node :handler nil :controller nil))
-      (y (make-instance 'view-node :handler nil :controller nil))
-      (z (make-instance 'view-node :handler nil :controller nil)))
-  (append-child y (make-instance 'view-node :handler nil :controller nil))
-  (append-child y (make-instance 'view-node :handler nil :controller nil))
-  (append-child y (make-instance 'view-node :handler nil :controller nil))
-  (append-child node (make-instance 'view-node :handler nil :controller nil))
-  (append-child node y)
-  (append-child z (make-instance 'view-node :handler nil :controller nil))
-  (append-child z (make-instance 'view-node :handler nil :controller nil))
-  (make-base-tree node)
-  (replace-child node y z)
-  (extract-modifications node))
+;; view tests
+(test print-cache-test
+  (is nil "WRITE THIS TEST"))
+
+(test id-encoding-test
+  (is nil "WRITE THIS TEST"))

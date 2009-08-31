@@ -3,6 +3,7 @@
 (defclass view-node (xml-container tracked-xml-node dom-xml-node)
   ((print-cache
     :accessor print-cache
+    :initform nil
     :documentation "We hold a cached printed representation of this node in this variable. It is cleaned whenever the node changes")
    (encoded-node-id :accessor encoded-node-id
 		    :initform ""
@@ -26,11 +27,14 @@
   (declare (ignore value))
   (setf (encoded-node-id node) (encode-node-id (node-id node))))
 
-(defmethod initialize-instance :after ((view-node view-node) &rest initargs)
-  (declare (ignore initargs))
-  (setf (node-id view-node) '(1)))
   
+(defvar *root-view* nil "The view of the system")
 
+(defmethod make-base-tree ((node view-node) &rest args)
+  (declare (ignore args))
+  (call-next-method)
+  (setf *root-view* node))
+  
 ;; printing caching
 (defmethod print-object :around ((node view-node) stream)
   (when (not (print-cache node))
@@ -53,8 +57,8 @@
 		 (find-root (parent node))))
 	   (flush-down (node)
 	     (setf (print-cache node) nil)
-	     (loop for child in (children node)
-		  do (flush-down child))))
+	     (do-children (child node)
+	       (flush-down child))))
     (flush-down (find-root node))))
     
 (defun flush-print-cache (node &key all)
@@ -97,21 +101,6 @@ postponing the print-cache flush to the end to avoid performance overhead"
 
 (defvar *node-id-delimiter* #\:)
 
-;; (defun node-id-to-string (node-id)
-;;   (reduce (lambda (count str)
-;; 	    (concatenate 'string (string count)
-;; 			 (string *node-id-delimiter*)
-;; 			 str))
-;; 	  node-id
-;; 	  :initial-value ""))
-
-(defun foldl (function list initial-value)
-  (labels ((%foldl (list acc)
-	     (if (null list)
-		 acc
-		 (%foldl (cdr list) (funcall function (car list) acc)))))
-    (%foldl list initial-value)))
-
 (defun node-id-to-string (node-id)
   (foldl (lambda (pos str)
 	   (concatenate 'string
@@ -141,6 +130,58 @@ postponing the print-cache flush to the end to avoid performance overhead"
     (decrypt
      (base64-string-to-usb8-array
       encoded-node-id :uri t)))))
+
+;---------------------------
+; Applying modifications
+;---------------------------
+
+(defmethod apply-modifications (modifications (tree xml-node))
+  (loop for modification in modifications
+        do (apply-modification modification tree)))
+
+(defmethod apply-modification ((mod append-child-modification) tree)
+  (let ((target
+ 	 (get-node-with-id (node-id (target mod)) tree)))
+    (assert target nil "Node with id ~A not found in ~A when applying ~A" (node-id (target mod)) tree mod)
+    (append-child target (copy-xml-tree (child mod)))))
+
+(defmethod apply-modification ((mod insert-child-modification) tree)
+  (let ((target
+ 	 (get-node-with-id (node-id (target mod)) tree))
+ 	(reference-child
+ 	 (get-node-with-id (node-id (reference-child mod)) tree)))
+    (assert target nil "~A not found when applying ~A" (target mod) mod)
+    (assert reference-child nil "~A not found when applying ~A" (reference-child mod) mod)
+    (insert-child target
+                  (copy-xml-tree (child mod))
+		  (place mod)
+		  reference-child)))
+
+(defmethod apply-modification ((mod replace-child-modification) tree)
+  (let ((target
+ 	 (get-node-with-id (node-id (target mod)) tree))
+	(child (get-node-with-id (node-id (child mod)) tree)))
+    (assert target nil "~A not found when applying ~A" (target mod) mod)
+    (replace-child target child (copy-xml-tree (replacement mod)))))
+
+(defmethod apply-modification ((mod remove-child-modification) tree)
+  (let ((target
+ 	 (get-node-with-id (node-id (target mod)) tree))
+	(child (get-node-with-id (node-id (child mod)) tree)))
+    (assert target nil "~A not found when applying ~A" (target mod) mod)
+    (assert child nil "~A not found when applying ~A" (child mod) mod)
+    (remove-child target child)))
+
+(defmethod apply-modification :around ((mod xml-node-modification) (tree tracked-xml-node))
+  ; disable modifications tracking when applying modifications
+  (let ((*register-modifications* nil))
+    (call-next-method)))
+
+(defmethod apply-modification :around ((mod xml-node-modification) (tree dom-xml-node))
+  ; disable id assignation when applying modifications
+  (let ((*assign-ids* nil))
+    (call-next-method)))
+
 
 ;------------------------------
 ;   XMLisp Glue

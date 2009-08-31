@@ -3,7 +3,6 @@
 	:dlist
 	:alexandria
 	:gst.util
-	;:xml
 	:cl-who
 	:json
 	:parenscript
@@ -21,7 +20,20 @@
 	   #:insert-child-before
 	   #:insert-child-after
 	   #:insert-child
-	   #:attribute
+	   #:make-base-tree
+	   #:make-base-tree-node
+	   #:base-tree-member-p
+	   #:copy-xml-tree
+	   ;; querying
+	   #:childp
+	   #:is-next
+	   #:comes-after
+	   #:is-previous
+	   #:comes-before
+	   #:do-children
+	   #:collect-children
+	   #:xml-node-equal
+	   #:xml-tree-equal
 	   ;; modifications tracking
 	   #:tracked-xml-node
 	   #:*register-modifications*
@@ -41,6 +53,11 @@
 	   #:insert-modification-p
 	   #:replace-modification-p
 	   #:remove-modification-p
+	   #:target
+	   #:child
+	   #:replacement
+	   #:reference-child
+	   #:place
 	   ;; modifications serialization
 	   #:serialize-modifications
 	   #:define-serialization-output))
@@ -49,25 +66,21 @@
   (:use :cl
 	:gst.view.xml
 	:gst.util
-	;:xml
-	)
-  (:export #:dom-xml-node))
-
+	:dlist)
+  (:export #:dom-xml-node
+	   #:get-node-with-id
+	   #:*assign-ids*))
 
 (defpackage :gst.view.html
   (:use :cl
-	:gst.view.xml
-	;:xml
-	)
+	:gst.view.xml)
   (:export #:a
 	   #:p
 	   #:div))
 
 (defpackage :gst.view.templates
   (:use :cl
-	:gst.view.html
-	;:xml
-	)
+	:gst.view.html)
   (:shadowing-import-from :xml #:container)
   (:export #:template
 	   #:container))
@@ -78,16 +91,20 @@
 	:gst.view.dom
 	:gst.view.templates
 	:gst.util
-	:gst.encode
-	;:xml
-	)
-  (:export #:view-node))
+	:gst.encode)
+  (:export #:view-node
+	   #:handler
+	   #:controller
+	   #:encoded-node-id
+	   #:apply-modifications
+	   #:apply-modification
+	   ))
 
 (defpackage :gst.view.test
   (:use :cl
 	:gst.view.xml
 	:gst.view.dom
 	:gst.view
-	;:xml
 	:gst.view.templates
-	:5am))
+	:5am)
+  (:export #:run-tests))
