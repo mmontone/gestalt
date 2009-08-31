@@ -12,6 +12,7 @@
    #:replace-all
    #:always-with
    #:one-of
+   #:foldl
    
    ;; required-slots-class
    #:required-slots-class
@@ -57,7 +58,7 @@
 	   #:dlist-position))
 
 (defpackage :gst.encode
-  (:use :cl :cl-base64 :babel :zlib)
+  (:use :cl :cl-base64 :babel)
   (:export #:register-key
 	   #:compress
 	   #:inflate

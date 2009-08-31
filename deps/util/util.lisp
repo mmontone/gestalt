@@ -321,6 +321,14 @@ is replaced with replacement."
      (and alphanumericp (alphanumericp char)))
    str :initial-value t))
 
+(defun foldl (function list initial-value)
+  (labels ((%foldl (list acc)
+	     (if (null list)
+		 acc
+		 (%foldl (cdr list) (funcall function (car list) acc)))))
+    (%foldl list initial-value)))
+
+
 ;; Some hunchentoot syntax
 
 #|
