@@ -1,24 +1,49 @@
+(progn
+  (require :alexandria)
+  (require :anaphora)
+  (require :closer-mop)
+  (require :trivial-garbage)
+  (require :gst.util)
+  (require :log5)
+  )
 (defpackage dataflow
   (:nicknames :df)
   (:use :common-lisp
-	:gstutils
-	:sb-mop
+	:gst.util
+	:closer-mop
 	:log5
-	:trivial-garbage)
+	:trivial-garbage
+	:alexandria
+	:anaphora)
+  (:shadow #:add-dependent #:remove-dependent)
   (:export
-   #:wlambda
-   #:dfcell
-   #:dfvaluecell
+   ; dataflow cell definitions
+   #:cell
+   #:value-cell
    #:value
    #:test
-   #:add-listener
-   #:df
-   #:df-lambda
+   #:standard-event
+   #:event
+   #:changed
+   #:formula
+   ; dependency management
+   #:add-dependent
+   #:remove-dependent
+   ; event handling policies
+   #:define-event-handling-policy
+   #:with-events-handling-policy
+   ; events propagation
    #:trigger-event
-   #:run-listener
+   ; mop
    #:dataflow-class
-   #:with-df-slots
-   #:*track*))
+   ; dataflow syntax
+   #:mk-formula
+   #:mk-lambda
+   #:let-df-vars
+   #:using-df-vars
+   #:with-df-vars
+   #:as-df-vars
+   #:with-df-slots))
 
 (defpackage dataflow.test
   (:nicknames :df.test)
