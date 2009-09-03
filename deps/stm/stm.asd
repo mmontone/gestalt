@@ -20,6 +20,6 @@
      (:file "test")
      )
     :serial t
-    :depends-on (:gstutils
+    :depends-on (:gst.util
 		 :log5
 		 :code-walker))

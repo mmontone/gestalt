@@ -1,6 +1,6 @@
 (defpackage stm
   (:use :common-lisp
-	:gstutils
+	:gst.util
 	:sb-mop
 	:log5
 	:alexandria)
@@ -25,6 +25,6 @@
 (defpackage stm.test
   (:use :cl
 	:stm
-	:gstutils
+	:gst.util
 	:fiveam)
   (:export #:run-tests))

@@ -38,6 +38,9 @@ Should generate:
 
 And we need (setf name) ((p person) value) to be defined. It throws an error otherwise.
 
+Anyway we had better use dataflow-class metaclass.
+
+
 (df
      (let*	
 	 ((value 44)
@@ -92,6 +95,34 @@ Example:
 	      (if evaluated-p
 	          (propagate event dependent)))))
 
+(defvar *propagating* nil "t when we are propagating changes")
+
+(define-condition trigger-event-signal ()
+    ()
+    (:documentation "This condition is meant to be caught by the propagation algorithm when an event ocurrs"))
+
+(defun trigger-event (event triggerer &rest args)
+    (if *propagating*
+        (signal 'trigger-event-signal :event event
+	                              :triggerer triggerer
+				      :args args)
+	;else
+	(apply #'propagate-event event triggerer args)))
+
+(defun propagate-event (event triggerer &rest args)
+  (flet ((propagate-events (events)
+	   (loop for (event triggerer args) in events
+	      do (handler-bind ((trigger-event-signal (lambda (signal)
+							; enqueue the recently ocurred event
+							(push events (list (event signal) (triggerer signal) (args signal)))
+							(continue))))
+		   
+		   (loop for dependent in (dependents-on event triggerer)
+			do (evaluate dependent))))))
+  (let ((*propagating* t))
+    (propagate-events (list (list event triggerer args))))))
+    
+
 TODO: consider adding runtime type checking to dataflow syntax
 --------------------------------------------------
 
@@ -113,7 +144,7 @@ should macroexpand to:
 		     collect (cons var-name var-value)))) 
     (make-instance 'formula-cell	   
        :arguments arguments-gensym
-       ;; we do dynamic-compilation: we don't which our arguments are until runtime (because we need the dynamic type of them)
+       ;; we do dynamic-compilation: we don't know which our arguments are until runtime (because we need the dynamic type of them)
        ;; we take into account the type of the arguments only once, at creation time. once the function is compiled, we are done.
        :formula (compile nil
 		   `(lambda ,arguments-gensym

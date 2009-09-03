@@ -1,5 +1,15 @@
+(progn
+  (require :xmlisp)
+  (require :alexandria)
+  (require :closer-mop)
+  (load #p"/home/marian/src/lisp/gestalt/examples/dlist.lisp"))
+
 (defpackage :gst.templates
-  (:use :cl :xml :dlist :closer-mop :alexandria)
+  (:use :cl
+	:xml
+	:dlist
+	:closer-mop
+	:alexandria)
   (:export #:template
 	   #:style-sheets
 	   #:style-sheet
@@ -10,7 +20,7 @@
 
 (in-package :gst.templates)
 
-(defclass html-element (xml-serializer)
+(defclass xml-node (xml-serializer)
    ((node-id :initarg :id
 	     :accessor node-id
 	     :initform nil
@@ -23,27 +33,20 @@
 		 :documentation "The node's link in parent's children (the dlist's dlink)"))
    (:documentation "mother of all HTML element classes"))
 
-(defmacro one-of (cases expr &key (test '#'eql))
-  (once-only (expr)
-    `(or
-      ,@(loop for case in cases
-	     collect `(funcall ,test ,case ,expr)))))
-
-;; (defmethod print-slots ((html-element html-element))
-;;   (remove-if (lambda (slot-definition)
-;; 	       (not (one-of ("parent-link" "parent")
-;; 			    (slot-definition-name slot-definition)
-;; 			    :test #'string-equal)))
-;; 	     (class-slots (class-of html-element))))
-
-(defmethod print-slot-with-name-p ((html-element html-element) name)
+(defmethod print-slot-with-name-p ((xml-node xml-node) name)
   (not (one-of ("parent-link" "parent") name
 	       :test #'string-equal)))
 
-(defmethod tag-name ((html-element html-element))
-  (class-name (class-of html-element)))
+(defmethod tag-name ((xml-node xml-node))
+  (class-name (class-of xml-node)))
 
-(defclass xml-container ()
+(defmethod map-object ((dlist dlist) function)
+  (map-dlist function dlist))
+
+(defmethod xml-printable-as-subelement-p ((dlist dlist))
+  t)
+
+(defclass xml-container (xml-node)
   ((children :accessor children
 	     :initform (make-dlist)))
   (:documentation "An HTML element that contains other HTML elements. Use as a mixin"))

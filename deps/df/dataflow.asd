@@ -20,7 +20,7 @@
      (:file "mop")
      (:file "test"))
     :serial t
-    :depends-on (:gstutils
+    :depends-on (:gst.util
 		 :log5
 		 :fiveam
 		 :trivial-garbage))

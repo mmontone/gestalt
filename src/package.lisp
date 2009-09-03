@@ -3,7 +3,7 @@
   (:use
    :cl
    :anaphora
-   :gstutils
+   :gst.util
    ;:rucksack
    ;:dataflow
    ))

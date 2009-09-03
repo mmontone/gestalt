@@ -33,7 +33,7 @@
      :css-lite
      :cl-cont
      :contextl
-     :gstutils
+     :gst.util
      :dataflow
      :build-tree
      :code-walker
