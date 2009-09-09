@@ -271,6 +271,54 @@ new template-combinations. On the other hand, the template system should be exte
   <container id="lastname"/>
 </template>
 
+For example, let's consider the "promotions" problem. A product promotion is available to certain users for a period of time. Let's try to model it with context layers. So, we have a promotions-layer. When it is active, we want a special promotion component to be displayed on the main-page. So we have:
+
+
+(defclass main-page ()
+  ((banner :component t
+	   :initform (make-instance 'label :text "Hello!!. This is the main page")))
+  (:metaclass component-class))
+
+(defclass promotion-widget ()
+  ((product :initarg :product
+	    :reader product))
+  (:metaclass component-class))
+
+(contextl:deflayer promotion-layer ()
+  ())
+
+;; In the promotion-layer, the main-page displays the promotion-widget
+(defclass main-page ()
+  ((promotion-widget :component t
+		     :initform (make-instance 'promotion-widget :product *product*)))
+  (:metaclass component-class)
+  (:layer promotion-layer))
+
+<template class="main-page">
+  <container id="banner"/>
+</template>
+
+;; We place the promotion-widget at the top, when the promotions-layer is active. Note the interaction between templates combinations and template options. That should be configurable throgh a MOP. For example, how layered templates behave in presence of template combinations.
+<template class="main-page"
+          combination="above"
+          layer="promotion-layer">
+  <container id="promotion-widget"/>
+</template>
+
+<template class="promotion-widget">
+  ...
+</template>
+
+And the code sketch for activating the layers:
+
+(defun begin-user-session ()
+  (dynamic-wind
+    (if (active-promotions-for-user-p *user*)
+	(contextl:ensure-active-layer 'promotions-layer)
+	(contextl:ensure-inactive-layer 'promotions-layer))
+    (proceed
+     (go-on))))
+	     
 Finally, it is not clear to me whether the following is correct or not, but we could give more controls to templates throw some calculation, although I think EVERY calculation should be in the controller, so...
 
 We could have some expressions that expand to dataflow cells:
