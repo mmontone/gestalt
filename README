@@ -21,6 +21,11 @@ More composability through memory transactions.
 First-class composable declarative templates.
 A better way of doing Javascript.
 
+Motto:
+
+An application framework that doesn't affect the way you think about programming,
+is not worth knowing. (Adapted from Alan Perlis quote about programming languages)
+
 How mature is it?
 
 This is vaporware at the moment, but some of the design desitions have already been tested in another framework (PHP Web builder). I decided PHP is a very limited platform and language for what I wanted to do so I decided to switch to Common Lisp that fits a lot better.
