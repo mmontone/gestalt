@@ -1,25 +1,25 @@
-; page-renderer
+; interaction-mode
 
-(defclass page-renderer ()
+(defclass interaction-mode ()
   ((page :documentation "The page to render")
    (style-sheets :documentation "List of css style sheets")
    (default-view-factory :documentation "The default view factory")
    (app :documentation "The application")))
 
-(defmethod renders-ajax ((page-renderer page-renderer))
+(defmethod renders-ajax ((interaction-mode interaction-mode))
   nil)
 
-(defmethod basic-send-restart ((page-renderer page-renderer))
+(defmethod basic-send-restart ((interaction-mode interaction-mode))
   "Do nothing"
 )
 
-(defun get-renderer-class ()
-  (if (get-attribute 'renderer *request*)
-      (concatenate 'string (get-attribute 'renderer *request*)
-		   "-page-renderer")))
+(defun get-interaction-mode-class ()
+  (if (get-attribute 'interaction-mode *request*)
+      (concatenate 'string (get-attribute 'interaction-mode *request*)
+		   "-interaction-mode")))
 
 
-(defmethod init-page ((page-renderer page-renderer) wnd)
+(defmethod init-page ((interaction-mode interaction-mode) wnd)
   (let
       ((view (view wnd)))
     (setf (tag-name view) "form")
@@ -42,12 +42,12 @@
     (setf (controller xml-var) true)
     (append-child view xml-var)))
 
-(defmethod initial-page-render ((page-renderer page-renderer) wnd)
+(defmethod initial-page-render ((interaction-mode interaction-mode) wnd)
   ;; Maybe we should use *app* and we are done instead of
   ;; holding the app in objects slots
   (let
-      ((renderer (make-instance 'standard-page-renderer :app (app page-renderer)))))
-  (render-page renderer wnd))
+      ((interaction-mode (make-instance 'standard-interaction-mode :app (app interaction-mode)))))
+  (render-page interaction-mode wnd))
 
 (defmethod set-title ((wnd window) title)
   (setf (slot-value (view wnd) 'title) (to-ajax title)))
