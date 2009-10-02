@@ -5,6 +5,6 @@
 
 3) Use destructuring-bind or let or a pattern-matching library instead of car, cdr, cadr, and the like to obtain more readable code.
 
-4) Use widely known Common Lisp coding guidelines.
+4) Use widely known Common Lisp coding guidelines: http://web.archive.org/web/20050305123711/www.lisp.org/table/style.htm
 
  
