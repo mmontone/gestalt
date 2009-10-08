@@ -41,6 +41,67 @@
 ;;;      (with-transaction
 ;;; 	 (defclass ,name ,direct-superclasses ,direct-slots ,@(append options '((:metaclass model-class)))))))
 
+Idea: we want to manipulate our model objects consitently. So, we may create a macro for modifying model objects consitently. The macro could be activated or deactivated (for example, for efficiency in deployment).
+
+Each model object implements a validate method. Each model accessor checks for validity if there's no modification-transaction active. Example:
+
+(defvar *modification-transaction* nil)
+
+(define-condition consistency-error (simple-error)
+  ()
+  (:documentation "This error is raised when a model object consistency error occurs"))
+
+#+consistency-check
+(defmethod (setf name) :around (value (person person))
+  (if *modification-transaction*
+      (call-next-method)
+      (progn
+	(call-next-method)
+	(validate person))))
+
+;; For the following we need a new method combination that lets us attach
+;; several :before and :after methods to a :primary method. That makes
+;; it more compositional, although more difficult to redefine and remove
+;; methods.
+
+#+consistency-check
+(defmethod initialize-instance :after ((person person) &rest initargs)
+  (validate person))
+
+(defun consistency-error (datum &rest args)
+  (apply #'error 'consistency-error args))
+
+(defmacro with-modification-transaction (&body body)
+  `(let ((*modification-transaction* t))
+     ,@body))
+
+(defmethod validate ((person person))
+  (check (and (stringp (name person))
+	      (> (length (name person)) 0)))
+  (check (and (stringp (lastname person))
+	      (> (length (lastname person)) 0))))
+  
+;; Example:
+;; The following fails:
+(make-instance 'person)
+
+;; The following fails:
+(with-modification-transaction ()
+  (let ((person (make-instance 'person)))
+    (setf (name person) "Mariano")))
+
+;; The following fails:
+(let ((person (make-instance 'person)))
+    (setf (name person) "Mariano")
+    (setf (lastname person) "Montone"))
+
+;; The following works:  
+(with-modification-transaction ()
+  (let ((person (make-instance 'person)))
+    (setf (name person) "Mariano")
+    (setf (lastname person) "Montone")))
+   
+
 Idea:
 -----
 
