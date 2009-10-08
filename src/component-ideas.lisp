@@ -71,9 +71,11 @@ Each model object implements a validate method. Each model accessor checks for v
 (defun consistency-error (datum &rest args)
   (apply #'error 'consistency-error args))
 
-(defmacro with-modification-transaction (&body body)
+(defmacro with-modification-transaction (objects &body body)
   `(let ((*modification-transaction* t))
-     ,@body))
+     ,@body
+     ,@(loop for object in objects
+	  collect `(validate ,object))))
 
 (defmethod validate ((person person))
   (check (and (stringp (name person))
@@ -86,7 +88,7 @@ Each model object implements a validate method. Each model accessor checks for v
 (make-instance 'person)
 
 ;; The following fails:
-(with-modification-transaction ()
+(with-modification-transaction (person)
   (let ((person (make-instance 'person)))
     (setf (name person) "Mariano")))
 
@@ -96,7 +98,7 @@ Each model object implements a validate method. Each model accessor checks for v
     (setf (lastname person) "Montone"))
 
 ;; The following works:  
-(with-modification-transaction ()
+(with-modification-transaction (person)
   (let ((person (make-instance 'person)))
     (setf (name person) "Mariano")
     (setf (lastname person) "Montone")))
