@@ -76,20 +76,13 @@
 	:gst.view.xml)
   (:export #:a
 	   #:p
-	   #:div))
-
-(defpackage :gst.view.templates
-  (:use :cl
-	:gst.view.html)
-  (:shadowing-import-from :xml #:container)
-  (:export #:template
-	   #:container))
+	   #:div
+	   #:href))
 
 (defpackage :gst.view
   (:use :cl
 	:gst.view.xml
 	:gst.view.dom
-	:gst.view.templates
 	:gst.util
 	:gst.encode)
   (:export #:view-node

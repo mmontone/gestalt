@@ -19,8 +19,7 @@
 	       (:file "conditions")
 	       (:file "dispatcher")
 	       (:file "start"))
-	      :serial t
-	      ))
+	      :serial t))
     :serial t
     :depends-on
     (:anaphora
@@ -37,4 +36,4 @@
      :dataflow
      :build-tree
      :code-walker
-     :stm))
+     :elephant))
