@@ -100,6 +100,16 @@
 	   #:apply-modification
 	   ))
 
+(defpackage :gst.view.templates
+  (:use :cl
+	:gst.view.xml
+	:gst.view.html
+	:closer-mop
+	:alexandria)
+  (:shadowing-import-from :xml #:container)
+  (:export #:template
+	   #:container))
+
 (defpackage :gst.view.test
   (:use :cl
 	:gst.view.xml
