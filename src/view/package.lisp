@@ -77,7 +77,10 @@
   (:export #:a
 	   #:p
 	   #:div
-	   #:href))
+	   #:href
+	   #:input
+	   #:type
+	   #:input-type))
 
 (defpackage :gst.view
   (:use :cl

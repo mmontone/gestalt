@@ -33,7 +33,7 @@
 (defclass standard-template-combination (template-combination)
   ((combination-slots
     :reader combination-slots
-    :initform (make-hash-table :test #'equalp)
+    :initform (make-hash-table)
     :documentation "The defined templates by the component class name they are defined upon"))
   (:documentation "The default template-combination"))
 
@@ -90,7 +90,7 @@
 	((string-equal qualifier "ABOVE")
 	 (setf (above-template combination-slot) template))
 	((string-equal qualifier "BELOW") (setf (below-template combination-slot) template))
-	((string-equal qualifier "AROUND" (setf (around-template combination-slot) template)))
+	((string-equal qualifier "AROUND") (setf (around-template combination-slot) template))
 	(t (error "Invalid qualifier ~A for standard-template-combination" qualifier))))))
 
 (defmethod template-class-register-template ((class standard-template-class)
@@ -103,28 +103,35 @@
 				    template))
 
 (defun template-classes ()
+  ; TODO: rewrite. The flatten invocation is a hack
   (labels ((all-subclasses (class)
 	   (let ((all-subclasses (closer-mop:class-direct-subclasses class)))
 	     (append all-subclasses
 		     (loop for subclass in all-subclasses
 			  collect (all-subclasses subclass))))))
     (let ((standard-template-class (find-class 'standard-template)))
-      (cons standard-template-class
-	    (all-subclasses standard-template-class)))))
+      (flatten
+       (cons standard-template-class
+	     (all-subclasses standard-template-class))))))
 
-(defgeneric find-templates-for-class (class template-class)
-  (:method-combination append))
+(defmethod find-templates-for-class ((class symbol) template-class)
+  (find-templates-for-class (find-class class) template-class))
 
-(defmethod find-templates-for-class append (class (template-class standard-template-class))
-  (template-combination-find-templates-for-class (class (template-combination template-class))))
+(defmethod find-templates-for-class ((class standard-object) (template-class standard-template-class))
+  (template-combination-find-templates-for-class class (template-combination template-class)))
 
 (defmethod template-combination-find-templates-for-class (class (template-combination standard-template-combination))
   (multiple-value-bind (combination-slot found-p)
-      (gethash (class-name class) *standard-combination-templates*)
+      (gethash class (combination-slots template-combination))
     (when found-p
-      (flatten (list (around-template combination-slot)
+      (flatten (list (primary-template combination-slot)
+		     (around-template combination-slot)
 		     (above-template combination-slot)
 		     (below-template combination-slot))))))
+
+(defun templates-for-class (class)
+  (loop for template in (template-classes)
+       append (find-templates-for-class class template)))
 
 ;; Templates
 
@@ -217,6 +224,8 @@
 (defclass container (xml-node)
   ((id :accessor id)))
 
+(defclass next-template (xml-node)
+  ())
 
 #|
 
@@ -251,6 +260,13 @@
      </div>
    </body>  
 </template>)
+
+<template component-class="person-editor"
+          description="A template for a person-editor"
+	  qualifiers="around">
+  <next-template/>
+  <input type="button">Save</input>
+</template>
 
 COP in templates can be introduced in templates by defining a new template class and a new template-combination:
 

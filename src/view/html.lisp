@@ -24,3 +24,7 @@
 (defclass p (html-element)
   ()
   (:documentation "An HTML paragraph"))
+
+(defclass input (html-element)
+  ((type :accessor input-type :initform "" :initarg :type))
+  (:documentation "An HTML input"))
