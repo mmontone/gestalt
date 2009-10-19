@@ -226,6 +226,5 @@
 (defmethod xml:xml-printable-as-subelement-p ((dlist dlist))
   t)
 
-(defmethod xml:add-subobject ((node xml-container)
-			  (child xml-node))
+(defmethod xml:add-subobject ((node xml-container) (child xml-node))
   (append-child node child))

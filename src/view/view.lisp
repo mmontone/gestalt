@@ -1,6 +1,6 @@
 (in-package :gst.view)
 
-(defclass view-node (xml-container tracked-xml-node dom-xml-node)
+(defclass view-node (xml-node tracked-xml-node dom-xml-node)
   ((print-cache
     :accessor print-cache
     :initform nil
@@ -10,13 +10,16 @@
 		    :documentation "The encoded node id (for dom browser handling)")
    (handler :initarg :handler
 	    :accessor handler
-	    :initform (error "Provide the handler")
+	    :initform nil
 	    :documentation "The view handler")
    (controller :initarg :controller
 	       :accessor controller
-	       :initform (error "Provide the controller")
+	       :initform nil
 	       :documentation "The associated controller"))
   (:documentation "A node of the view is an xml-node with changes tracked"))
+
+(defclass view-container (view-node xml-container)
+  ())
 
 ;----------------------
 ; Operations wrappers
@@ -74,27 +77,27 @@ postponing the print-cache flush to the end to avoid performance overhead"
        ,@body)
      (flush-print-cache ,node :all t)))
 
-(defmethod append-child :after ((node view-node) child)
+(defmethod append-child :after ((node view-container) child)
   (declare (ignore child))
   (when *flush-print-cache*
     (flush-print-cache node)))
 
-(defmethod replace-child :after ((node view-node) child new-child)
+(defmethod replace-child :after ((node view-container) child new-child)
   (declare (ignore child new-child))
   (when *flush-print-cache*
     (flush-print-cache node)))
 
-(defmethod insert-child-after :after ((node view-node) child reference-child)
+(defmethod insert-child-after :after ((node view-container) child reference-child)
   (declare (ignore child reference-child))
   (when *flush-print-cache*
     (flush-print-cache node)))
 
-(defmethod insert-child-before :after ((node view-node) child reference-child)
+(defmethod insert-child-before :after ((node view-container) child reference-child)
   (declare (ignore child reference-child))
   (when *flush-print-cache*
     (flush-print-cache node)))
 
-(defmethod remove-child :after ((node view-node) child)
+(defmethod remove-child :after ((node view-container) child)
   (declare (ignore child))
   (when *flush-print-cache*
     (flush-print-cache node)))

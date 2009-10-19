@@ -93,6 +93,7 @@
 	:gst.util
 	:gst.encode)
   (:export #:view-node
+	   #:view-container
 	   #:handler
 	   #:controller
 	   #:encoded-node-id
