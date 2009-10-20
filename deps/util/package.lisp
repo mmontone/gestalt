@@ -13,6 +13,7 @@
    #:always-with
    #:one-of
    #:foldl
+   #:with-object
    
    ;; required-slots-class
    #:required-slots-class

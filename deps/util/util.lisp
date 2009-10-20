@@ -16,6 +16,12 @@
 	,@(loop for case in cases
 	     collect `(funcall ,test ,case ,expr))))))
 
+(defmacro with-object ((object) &body body)
+  (once-only (object)
+    `(progn
+       ,@(loop for form in body
+	    collect (cons (car form)
+			  (cons object (cdr form)))))))
 
 ;; Free variables manipulation
 ;; See dataflow package for examples
