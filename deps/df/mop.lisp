@@ -164,10 +164,11 @@
 (defmethod dataflow-slot-test ((object slot-definition))
   nil)
 
-(defmacro with-df-slots (slots object &rest body)
+(defmacro with-df-slots (slots object &body body)
   (let
       ((slots-gensyms (make-hash-table :test #'equal)))
-  `(let
+    (once-only (object)
+      `(let
        ,(loop for slot in slots
 	   collect
 	     (let
@@ -177,4 +178,4 @@
      (symbol-macrolet
 	 ,(loop for slot in slots
 	       collect `(,slot ,(gethash slot slots-gensyms)))
-       ,@body))))
+       ,@body)))))
