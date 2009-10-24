@@ -217,7 +217,7 @@
 ;------------------------------
 
 (defmethod xml:print-slot-with-name-p ((xml-node xml-node) name)
-  (not (one-of ("parent-link" "parent") name
+  (not (one-of ("parent-link" "parent" "content") name
 	       :test #'string-equal)))
 
 (defmethod xml:map-object ((dlist dlist) function)

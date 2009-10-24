@@ -28,24 +28,25 @@
 
 (defclass template-combination ()
   ()
-  (:documentation "Superclass of all template combinations. Templates can be combined depending on the template-combination. Template combinations can be defined through a MOP"))
+  (:documentation
+   "Superclass of all template combinations.
+    Templates can be combined depending on the template-combination.
+    Template combinations can be defined through a MOP"))
 
 (defclass standard-template-combination (template-combination)
   ((combination-slots
     :reader combination-slots
     :initform (make-hash-table)
-    :documentation "The defined templates by the component class name they are defined upon"))
+    :documentation "The defined templates by the component
+                    class name they are defined upon"))
   (:documentation "The default template-combination"))
 
 (defmethod validate-superclass ((class standard-template-class)
 				(super standard-class))
   t)
 
-(defmethod reinitialize-instance :after ((class standard-template-class) &rest initargs &key)
-  (setf (template-combination class)
-	(make-instance (find-class (first (template-combination class))))))
-
-(defmethod initialize-instance :after ((class standard-template-class) &rest initargs)
+(defmethod initialize-instance :after
+    ((class standard-template-class) &rest initargs)
   (setf (template-combination class)
 	(make-instance (find-class (first (template-combination class))))))
 
@@ -53,34 +54,42 @@
   (print-unreadable-object (slot stream :type t :identity t)
     (format stream "on ~A" (component-class slot))))
 
-(defmethod (setf primary-template) (template (slot standard-template-combination-slot))
+(defmethod (setf primary-template) (template
+				    (slot standard-template-combination-slot))
   (when (not (null (primary-template slot)))
     (warn "Redefining :primary template for ~A" (component-class template)))
   (setf (slot-value slot 'primary-template) template))
 
-(defmethod (setf above-template) (template (slot standard-template-combination-slot))
+(defmethod (setf above-template) (template
+				  (slot standard-template-combination-slot))
   (when (not (null (above-template slot)))
     (warn "Redefining :above template for ~A" (component-class template)))
   (setf (slot-value slot 'above-template) template))
 
-(defmethod (setf below-template) (template (slot standard-template-combination-slot))
+(defmethod (setf below-template) (template
+				  (slot standard-template-combination-slot))
   (when (not (null (below-template slot)))
     (warn "Redefining :below template for ~A" (component-class template)))
   (setf (slot-value slot 'below-template) template))
 
-(defmethod (setf around-template) (template (slot standard-template-combination-slot))
+(defmethod (setf around-template) (template
+				   (slot standard-template-combination-slot))
   (when (not (null (around-template slot)))
     (warn "Redefining :around template for ~A" (component-class template)))
   (setf (slot-value slot 'around-template) template))
 
-(defmethod template-combination-register-template ((template-combination standard-template-combination) template)
+(defmethod template-combination-register-template
+    ((template-combination standard-template-combination) template)
   (multiple-value-bind (combination-slot found-p)
-      (gethash (component-class template) (combination-slots template-combination))
+      (gethash (component-class template)
+	       (combination-slots template-combination))
     (when (not found-p)
-      (setf (gethash (component-class template) (combination-slots template-combination))
+      (setf (gethash (component-class template)
+		     (combination-slots template-combination))
 	   (make-instance 'standard-template-combination-slot
 			  :component-class (component-class template)))
-      (setf combination-slot (gethash (component-class template) (combination-slots template-combination))))
+      (setf combination-slot (gethash (component-class template)
+				      (combination-slots template-combination))))
     (let ((qualifier (first (qualifiers template))))
       (cond
 	((emptyp qualifier)
@@ -89,12 +98,14 @@
 	 (setf (primary-template combination-slot) template)) 
 	((string-equal qualifier "ABOVE")
 	 (setf (above-template combination-slot) template))
-	((string-equal qualifier "BELOW") (setf (below-template combination-slot) template))
-	((string-equal qualifier "AROUND") (setf (around-template combination-slot) template))
+	((string-equal qualifier "BELOW")
+	 (setf (below-template combination-slot) template))
+	((string-equal qualifier "AROUND")
+	 (setf (around-template combination-slot) template))
 	(t (error "Invalid qualifier ~A for standard-template-combination" qualifier))))))
 
-(defmethod template-class-register-template ((class standard-template-class)
-				    template)
+(defmethod template-class-register-template
+    ((class standard-template-class) template)
   (template-combination-register-template (template-combination class)
 				 template))
 		 
@@ -117,10 +128,12 @@
 (defmethod find-templates-for-class ((class symbol) template-class)
   (find-templates-for-class (find-class class) template-class))
 
-(defmethod find-templates-for-class ((class standard-object) (template-class standard-template-class))
+(defmethod find-templates-for-class ((class standard-object)
+				     (template-class standard-template-class))
   (template-combination-find-templates-for-class class (template-combination template-class)))
 
-(defmethod template-combination-find-templates-for-class (class (template-combination standard-template-combination))
+(defmethod template-combination-find-templates-for-class
+    (class (template-combination standard-template-combination))
   (multiple-value-bind (combination-slot found-p)
       (gethash class (combination-slots template-combination))
     (when found-p
@@ -161,7 +174,10 @@
     (qualifiers :initarg :qualifiers
 		:accessor qualifiers
 		:initform ""
-		:documentation "Qualifiers used by template-combinations, COP, etc"))
+		:documentation "Qualifiers used by template-combinations, COP, etc")
+    (local-templates :accessor local-templates
+		     :initform (make-hash-table)
+		     :documentation "Holds the locally defined templates"))
   (:metaclass standard-template-class)
   (:documentation "The standard Gestalt template"))
 
@@ -170,9 +186,27 @@
   (:metaclass standard-template-class)
   (:documentation "Nickname for standard-template"))
 
+(defvar *template* '()
+  "Variable to track the template that is being created")
+
+(defun unregister-all-templates ()
+  (loop for template-class in (template-classes)
+       do (clear-templates
+	   (template-combination template-class)))
+  t)
+
+(defmethod clear-templates ((template-combination
+				      standard-template-combination))
+  (clrhash (slot-value template-combination 'combination-slots)))
+
+(defmethod initialize-instance :before ((template standard-template) &rest initargs)
+  (declare (ignore initargs))
+  (push template *template*))
 
 (defmethod xml:finished-reading :after ((template standard-template) stream)
   (declare (ignore stream))
+  (setf *template* (cdr *template*))
+  ;; Set the correct variable values
   (setf (component-id template)
 	(if (emptyp (component-id template))
 	    nil
@@ -181,7 +215,24 @@
 	(if (emptyp (qualifiers template))
 	    '()
 	    (split-sequence:split-sequence #\ (qualifiers template))))
-  (register-template template))
+  (if (null *template*)
+      (register-template template)
+      (let ((parent-template (first *template*)))
+	(register-local-template parent-template template))))
+	      
+(defmethod register-local-template ((template standard-template)
+				    (local-template standard-template))
+  (let ((component-class (component-class local-template)))
+    (multiple-value-bind (registered-local-template found-p)
+	(gethash component-class
+		 (local-templates template))
+      	(declare (ignore registered-local-template))
+	(if found-p
+	    (error "There's another local-template defined for class ~A in template ~A"
+	       component-class
+	       template)
+	    (setf (gethash component-class (local-templates template))
+		  local-template)))))
 
 (defmethod component-class ((template standard-template))
   (find-class (read-from-string (slot-value template 'component-class))))
@@ -226,6 +277,8 @@
 
 (defclass next-template (xml-node)
   ())
+
+(defmethod xml:finished-reading)
 
 #|
 

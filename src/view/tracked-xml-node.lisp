@@ -28,11 +28,16 @@ Algorithm:
 
 (defclass tracked-xml-node ()
   ((parent-modification :accessor parent-modification
-			:documentation "The modification made to the node's to add this node as a child")
+			:documentation "The modification made to the
+                                        node's to add this node as a child")
    (modifications :accessor modifications
 		  :initform '()
-		  :documentation "Node modifications list. TODO?: hold modifications with a dlist??"))
-  (:documentation "This class is meant to be used as a mixin (see xml-node definition). When *register-modifications* is active, changes to the node are registered in the modifications slot"))
+		  :documentation "Node modifications list.
+                                  TODO?: hold modifications with a dlist??"))
+  (:documentation
+   "This class is meant to be used as a mixin (see xml-node definition).
+    When *register-modifications* is active, changes to the node are
+    registered in the modifications slot"))
 
 ;----------------------------------
 ;  Node modifications
@@ -60,11 +65,13 @@ Algorithm:
    (reference-position :initarg :reference-position
 		       :accessor reference-position
 		       :initform (error "Provide the reference position")
-		       :documentation "The position in the tree we reference to position the inserted child")
+		       :documentation "The position in the tree we reference
+                                       to position the inserted child")
    (place :initarg :place
 	  :accessor place
 	  :initform (error "Provide the place")
-	  :documentation "Tells where to insert the child. One of :after o :before (the reference child)"))
+	  :documentation "Tells where to insert the child.
+                          One of :after o :before (the reference child)"))
   (:documentation "This modification means a child node was appended"))
 
 (defmethod reference-child ((mod insert-child-modification))
@@ -383,12 +390,3 @@ Algorithm:
    (ps
      (get-node-with-id (lisp (node-id (target modification)))))
    stream))
-
-   
-		 
-  
-     
-			                    
-  
-
- 

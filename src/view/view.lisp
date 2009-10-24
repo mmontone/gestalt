@@ -4,7 +4,10 @@
   ((print-cache
     :accessor print-cache
     :initform nil
-    :documentation "We hold a cached printed representation of this node in this variable. It is cleaned whenever the node changes")
+    :documentation
+    "We hold a cached printed representation of
+     this node in this variable. It is cleaned
+     whenever the node changes")
    (encoded-node-id :accessor encoded-node-id
 		    :initform ""
 		    :documentation "The encoded node id (for dom browser handling)")
@@ -16,7 +19,8 @@
 	       :accessor controller
 	       :initform nil
 	       :documentation "The associated controller"))
-  (:documentation "A node of the view is an xml-node with changes tracked"))
+  (:documentation "A node of the view is an xml-node
+                   with changes tracked"))
 
 (defclass view-container (view-node xml-container)
   ())
@@ -28,7 +32,8 @@
 ;; node-id encoding
 (defmethod (setf node-id) :after (value (node view-node))
   (declare (ignore value))
-  (setf (encoded-node-id node) (encode-node-id (node-id node))))
+  (setf (encoded-node-id node)
+	(encode-node-id (node-id node))))
 
   
 (defvar *root-view* nil "The view of the system")
@@ -145,7 +150,8 @@ postponing the print-cache flush to the end to avoid performance overhead"
 (defmethod apply-modification ((mod append-child-modification) tree)
   (let ((target
  	 (get-node-with-id (node-id (target mod)) tree)))
-    (assert target nil "Node with id ~A not found in ~A when applying ~A" (node-id (target mod)) tree mod)
+    (assert target nil "Node with id ~A not found in ~A when applying ~A"
+	    (node-id (target mod)) tree mod)
     (append-child target (copy-xml-tree (child mod)))))
 
 (defmethod apply-modification ((mod insert-child-modification) tree)
@@ -154,7 +160,8 @@ postponing the print-cache flush to the end to avoid performance overhead"
  	(reference-child
  	 (get-node-with-id (node-id (reference-child mod)) tree)))
     (assert target nil "~A not found when applying ~A" (target mod) mod)
-    (assert reference-child nil "~A not found when applying ~A" (reference-child mod) mod)
+    (assert reference-child nil "~A not found when applying ~A"
+	    (reference-child mod) mod)
     (insert-child target
                   (copy-xml-tree (child mod))
 		  (place mod)
@@ -175,12 +182,14 @@ postponing the print-cache flush to the end to avoid performance overhead"
     (assert child nil "~A not found when applying ~A" (child mod) mod)
     (remove-child target child)))
 
-(defmethod apply-modification :around ((mod xml-node-modification) (tree tracked-xml-node))
+(defmethod apply-modification :around ((mod xml-node-modification)
+				       (tree tracked-xml-node))
   ; disable modifications tracking when applying modifications
   (let ((*register-modifications* nil))
     (call-next-method)))
 
-(defmethod apply-modification :around ((mod xml-node-modification) (tree dom-xml-node))
+(defmethod apply-modification :around ((mod xml-node-modification)
+				       (tree dom-xml-node))
   ; disable id assignation when applying modifications
   (let ((*assign-ids* nil))
     (call-next-method)))
