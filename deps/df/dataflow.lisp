@@ -95,7 +95,8 @@
 	  (loop for arg in args
 	     collect (make-weak-pointer arg)))
     (loop for arg in args
-       do (add-dependent arg 'changed cell))))
+       do (add-dependent arg 'changed cell)))
+  (evaluate-formula cell))
 
 (defun evaluate-formula (cell)
   (let ((args (loop for arg in (arguments cell)
@@ -157,7 +158,7 @@
 			  for dep in deps
 			  when
 			    (eql (dependency-binding-target dep)
-				   (weak-pointer-value binding))
+				   (dependency-binding-target binding))
 			  do (error 'dependency-exists
 				    :cell cell
 				    :event event
@@ -208,7 +209,7 @@
       (loop for binding in event-dependents
 	 when (eql (dependency-binding-target binding)
 		   dependent)
-	   do (setf (gethash (hash event) (dependents cell))
+	 do (setf (gethash (hash event) (dependents cell))
 		    (delete binding event-dependents))))))
 
 (defgeneric dependents-of-event (event cell)
