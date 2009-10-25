@@ -11,9 +11,6 @@
 		   :accessor dataflow-slots))
   (:documentation "Base class of every dataflow enhanced object. This class is automatically to the list of the object's superclasses by the dataflow-class metaclass"))
 
-;(defmethod validate-superclass ((class standard-class) (super dataflow-class))
-;  t)
-
 (defmethod validate-superclass ((class dataflow-class) (super standard-class))
   t)
 

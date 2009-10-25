@@ -43,7 +43,16 @@
    #:using-df-vars
    #:with-df-vars
    #:as-df-vars
-   #:with-df-slots))
+   #:with-df-slots
+   ; logging
+   #:start-df-tracking
+   #:stop-df-tracking
+   #:df
+   #:all
+   #:mop
+   #:none
+   ; conditions
+   #:dependency-exists))
 
 (defpackage dataflow.test
   (:nicknames :df.test)

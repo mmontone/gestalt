@@ -7,30 +7,15 @@
     (or mop df))
 (defcategory none)
 
-#|
-(start-sender 'mop  
-  (stream-sender :location *error-output*)  
-  :category-spec '(mop)
-  :output-spec '(message))
+(defun start-df-tracking (&key (name 'df)
+			  (stream *error-output*))
+  (start-sender name
+		(stream-sender :location stream)
+		:category-spec (list name)
+		:output-spec '(message)))
 
-(start-sender 'df  
-  (stream-sender :location *error-output*)  
-  :category-spec '(df)
-  :output-spec '(message))
-
-(start-sender 'all
-  (stream-sender :location *error-output*)  
-  :category-spec '(all)
-  :output-spec '(message))
-
-(start-sender 'none
-  (stream-sender :location *error-output*)  
-  :category-spec '(none)
-  :output-spec '(message))
-
-
-
-|#
+(defun stop-df-tracking (&optional (name 'df))
+  (stop-sender name))
 
 (defvar *debug* t "Turn off to disable debugging macros. Note you'll have to recompile your code in order for this to be effective")
 

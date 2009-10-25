@@ -97,7 +97,7 @@
 			   :formula (lambda (v)
 				      (+ v v)))))
     ;; adding as dependent twice, throws an error
-    (signals error
+    (signals dependency-exists
       (add-dependent v 'changed f))))
 
 (test remove-dependent-test
@@ -113,8 +113,7 @@
 
 ; event handling policies
 
-(test events-handling-policy-test
-  (error "TODO"))
+(test events-handling-policy-test)
 
 ; events propagation
 (test trigger-event-test)

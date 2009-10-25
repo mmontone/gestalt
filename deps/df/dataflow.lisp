@@ -5,7 +5,7 @@
 ;----------------------------
 
 (defclass cell ()
-  ((dependents :initform (make-hash-table :test #'equalp)
+  ((dependents :initform (make-hash-table)
 	       :accessor dependents
 	       :documentation "The cells dependents table. It is organized by event"))
   (:documentation "A cell is an object that triggers events and has dependents interested in those changes"))
@@ -90,13 +90,12 @@
   ;; 				       (declare (ignore event))
   ;; 				       (evaluate-formula cell)))
   ;; Keep weak-references to the arguments only
-  (setf (arguments cell)
-	(loop for arg in (arguments cell)
-	   collect (progn
-		     ;; add as a dependent
-		     (add-dependent arg 'changed cell)
-		     ;; bind the argument weakly
-		     (make-weak-pointer arg)))))
+  (let ((args (copy-list (arguments cell))))
+    (setf (arguments cell)
+	  (loop for arg in args
+	     collect (make-weak-pointer arg)))
+    (loop for arg in args
+       do (add-dependent arg 'changed cell))))
 
 (defun evaluate-formula (cell)
   (let ((args (loop for arg in (arguments cell)
@@ -124,6 +123,11 @@
    (dependent :initarg :dependent
 	      :reader dependent
 	      :initform (error "Provide the dependent")))
+  (:report (lambda (c s)
+	     (format s "~A is already registered as dependent of ~A for event ~A"
+		     (dependent c)
+		     (cell c)
+		     (event c))))
   (:documentation "The dependent we are trying to add already exists"))
 
 (defun dependency-binding-target (binding)
@@ -151,7 +155,9 @@
 		       (loop
 			  with deps = events-dependents
 			  for dep in deps
-			  when (eql (dependency-binding-target dep) binding)
+			  when
+			    (eql (dependency-binding-target dep)
+				   (weak-pointer-value binding))
 			  do (error 'dependency-exists
 				    :cell cell
 				    :event event
@@ -173,11 +179,15 @@
   (:documentation "Adds a dependent to a cell")
   (:method (cell event dependent &key (if-exists :error))
     ;; add dependents weakly in general
+    (log-for df "Adding dependent ~A to ~A for event ~A"
+	     dependent cell event)
     (add-dependency-binding (make-weak-pointer dependent)
 			    cell event
 			    :if-exists if-exists))
   (:method (cell event (dependent function) &key (if-exists :error))
     ;; in the case of a function, add dependent strongly
+    (log-for df "Adding dependent ~A to ~A for event ~A"
+	     dependent cell event)
     (add-dependency-binding dependent cell event
 			    :if-exists if-exists)))
 
@@ -196,7 +206,8 @@
   (:method ((cell cell) (event standard-event) dependent)
     (let ((event-dependents (gethash (hash event) (dependents cell))))
       (loop for binding in event-dependents
-	 when (eql (dependency-binding-target binding) dependent)
+	 when (eql (dependency-binding-target binding)
+		   dependent)
 	   do (setf (gethash (hash event) (dependents cell))
 		    (delete binding event-dependents))))))
 
