@@ -32,6 +32,13 @@
 (defmethod hash ((event-class standard-event))
   event-class)
 
+(defmethod event-dependents ((event symbol) (cell cell))
+  (event-dependents (find-class event) cell))
+
+(defmethod event-dependents ((event standard-event) (cell cell))
+  (gethash event (dependents cell)))
+
+
 (defclass event ()
   ((triggerer :initarg :triggerer
 	      :accessor triggerer

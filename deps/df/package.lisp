@@ -19,6 +19,8 @@
   (:export
    ; dataflow cell definitions
    #:cell
+   #:dependents
+   #:event-dependents
    #:value-cell
    #:value
    #:test

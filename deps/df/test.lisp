@@ -88,6 +88,17 @@
 ;; design desition 2: add-dependent returns the binding so we can convert it to a weak one afterwards by calling a weakly function on it??
 ;; (weakly (add-dependent cell 'changed some-object))
 
+;; The following test is not working because it seems
+;; the gc is not being run when invoked
+(test weak-dependency-binding-removal-test
+  (let ((money (make-instance 'value-cell :value 100)))
+    (let ((suma (let ((b 2))
+		  (mk-formula (money)
+		    (+ money b)))))
+	  (is (equalp (length (event-dependents 'changed money)) 1)))
+    (trivial-garbage:gc :full t :verbose t)
+    (is (zerop (length (event-dependents 'changed money))))))
+
 ; dependency management
 
 (test add-dependent-test
