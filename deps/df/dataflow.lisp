@@ -144,9 +144,23 @@
 			     it
 			     (error "The event is not valid"))
 			    :if-exists if-exists))
-  (:method (binding (cell cell) (event standard-event) &key (if-exists :error))
+  (:method (binding (cell cell) (event standard-event)
+	    &key (if-exists :error))
     (labels ((%add-dependency-binding ()
-	       (symbol-macrolet ((events-dependents (gethash (hash event) (dependents cell))))
+	       (symbol-macrolet ((events-dependents
+				  (gethash (hash event) (dependents cell))))
+		 (flet ((push-binding (binding)
+			  ;; Hook for finalization
+			  (when (weak-pointer-p binding)
+			    (trivial-garbage:finalize
+			     (weak-pointer-value binding)
+			     (lambda ()
+			       (log-for df "Removed obsolete ~A from ~A list of dependents" binding cell)
+			       (setf events-dependents
+				     (delete binding events-dependents)))))
+			  ;; Add the binding
+			  (push binding events-dependents)
+			  binding))
 		 (multiple-value-bind (list found-p) events-dependents
 		   (declare (ignore list))
 		   (when (not found-p)
@@ -163,11 +177,9 @@
 				    :cell cell
 				    :event event
 				    :dependent (dependency-binding-target dep)))
-		       (push binding events-dependents)
-		       binding)
+		       (push-binding binding))
 		   (superceed ()
-		     (push binding events-dependents)
-		     binding)))))
+		     (push-binding binding)))))))
       (ecase if-exists
 	(:error (%add-dependency-binding))
 	(:superseed (handler-bind 
