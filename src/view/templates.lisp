@@ -104,8 +104,79 @@
 	 (setf (around-template combination-slot) template))
 	(t (error "Invalid qualifier ~A for standard-template-combination" qualifier))))))
 
+(defvar *template-class-assignments*
+  (make-hash-table))
+
+(defun assign-component-template-class (component-class template-class)
+  (setf (gethash component-class *template-class-assignments*) template-class))
+
+(define-condition template-class-assignment-error (serious-condition)
+  ())
+
+(define-condition template-class-already-assigned-error (template-class-assignment-error)
+  ((component-class :initarg :component-class
+		    :reader component-class)
+   (assigned-template-class :initarg :assigned-template-class
+			    :reader assigned-template-class)
+   (template-class :initarg :template-class
+		   :reader template-class))
+  (:report (lambda (c s)
+	     (format s "~A is already assigned to ~A when trying to assign ~A to it"
+		     (assigned-template-class c)
+		     (component-class c)
+		     (template-class c)))))
+
+(define-condition template-class-not-assigned-error (template-class-assignment-error)
+  ((component-class :initarg :component-class
+		    :reader component-class))
+  (:report (lambda (c s)
+	     (format s "template-class not assigned to ~A"
+		     (component-class c)))))
+
+(defgeneric ensure-template-class-assignment (component-class template-class &key if-does-not-exist)
+  (:documentation "Ensures that template-class has been assigned to component-class")
+  (:method ((component-class symbol) template-class &key if-does-not-exist)
+    (declare (ignore if-does-not-exist))
+    (ensure-template-class-assignment (find-class component-class) template-class))
+  (:method (component (template-class symbol) &key if-does-not-exist)
+    (declare (ignore if-does-not-exist))
+    (ensure-template-class-assignment component (find-class template-class)))
+  (:method ((component-class standard-class)
+	    (template-class standard-class)
+	    &key (if-does-not-exist :assign))
+    (multiple-value-bind (assigned-template-class found-p)
+	(gethash component-class *template-class-assignments*)
+      (if found-p
+	  (when (not (eql template-class assigned-template-class))
+	    ; error: the template-class assigment is different for
+	    ; the component-class
+	    (error 'template-class-already-assigned-error
+	       :component-class component-class
+	       :assigned-template-class assigned-template-class
+	       :template-class template-class))
+	(case if-does-not-exist
+	  (:assign (progn
+		     (assign-component-template-class component-class
+						      template-class)
+		     (warn "Implicitly assigning ~A to ~A"
+			   template-class
+			   component-class)))
+	  (:error (restart-case
+		      (error 'template-class-not-assigned-error
+			     :component-class component-class)
+		    (assign ()
+		      :report (lambda (stream)
+				(format stream "Assign ~A to ~A"
+					template-class
+					component-class))
+		      (assign-component-template-class component-class
+						       template-class))))
+	  (t (error "if-does-not-exists parameter must be one of :assign, :error")))))))
+
 (defmethod template-class-register-template
     ((class standard-template-class) template)
+  (ensure-template-class-assignment (component-class template)
+				    class)
   (template-combination-register-template (template-combination class)
 				 template))
 		 
