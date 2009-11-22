@@ -318,6 +318,50 @@ And the code sketch for activating the layers:
 	(contextl:ensure-inactive-layer 'promotions-layer))
     (proceed
      (go-on))))
+
+We could define a volatile-layer to improve the code:
+
+(deflayer volatile-layer ()
+  ()
+  (:documentation "This kind of layers are volatile. That means, they are active for some period.
+                   We have to implement the valid-layer-p method"))
+
+(defgeneric valid-layer-p (layer &optional period)
+  (:documentation "Tells whether a volatile-layer is valid in a period of time")
+  (:method ((layer volatile-layer) &optional period)
+    (declare (ignore layer period))
+    ;; not valid by default
+    nil))
+
+(deflayer period-layer (volatile-layer)
+  ((from-date-time :initarg :from
+		   :reader from-date-time
+		   :initform (error "Supply the from date-time"))
+   (to-date-time :initarg :to
+		 :reader to-date-time))
+  (:documentation "A volatile-layer that is valid for a period of time"))
+
+(defmethod valid-layer-p (layer &optional (period (date-time-now)))
+  (in-period-p period (cons (from-date-time layer)
+			    (to-date-time layer))))
+
+(defmacro with-volatile-layers (layers &body body)
+  (with-unique-names (valid-layers invalid-layers)
+    `(let (,valid-layers ,invalid-layers)
+       (loop for layer in ,layers
+	    if (valid-layer-p (find-layer layer))
+	      do (push layer ,valid-layers)
+	    else do (push layer ,invalid-layers))
+        (call-with-active-layers ,valid-layers           ; we need to implement call-with-active-layers in contextl
+	  (lambda ()
+	    (call-with-inactive-layers ,invalid-layers   ; we need to implement call-with-inactive-layers in contextl
+		(lambda ()		       
+	           ,@body)))))))
+	  
+(defun begin-user-session ()
+  (with-volatile-layers ('promotions-layer)
+    (go-on)))
+  
 	     
 Finally, it is not clear to me whether the following is correct or not, but we could give more controls to templates throw some calculation, although I think EVERY calculation should be in the controller, so...
 
