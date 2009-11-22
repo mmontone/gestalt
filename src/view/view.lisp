@@ -1,7 +1,11 @@
 (in-package :gst.view)
 
 (defclass view-node (xml-node tracked-xml-node dom-xml-node)
-  ((print-cache
+  ((template
+    :accessor template
+    :initform nil
+    :documentation "The template the node was created from")
+   (print-cache
     :accessor print-cache
     :initform nil
     :documentation
@@ -201,5 +205,7 @@ postponing the print-cache flush to the end to avoid performance overhead"
 
 (defmethod xml:print-slot-with-name-p ((view-node view-node) name)
   (and (call-next-method)
-       (not (one-of ("print-cache" "handler" "controller") name
+       (not (one-of ("print-cache"
+		     "handler"
+		     "controller") name
 		    :test #'string-equal))))

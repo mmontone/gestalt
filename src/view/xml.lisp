@@ -137,6 +137,9 @@
 ;------------------------------
 ; Querying
 ;------------------------------
+(defun childp (child parent)
+  (eql (parent child) parent))
+
 (defgeneric tag-name (node)
   (:method ((xml-node xml-node))
     (class-name (class-of xml-node))))
@@ -171,8 +174,6 @@
        do (return-from comes-before t)
        finally (return nil))))
 
-(defun childp (child parent)
-  (eql (parent child) parent))
 
 ;------------------------------
 ; Copying and comparing

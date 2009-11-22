@@ -196,6 +196,14 @@
        (cons standard-template-class
 	     (all-subclasses standard-template-class))))))
 
+(defmethod find-all-templates-for-class ((class symbol))
+  (find-all-templates-for-class (find-class class)))
+
+(defmethod find-all-templates-for-class ((class standard-object))
+  (let ((template-classes (template-classes)))
+    (loop for template-class in template-classes
+       append (find-templates-for-class component template-class))))
+
 (defmethod find-templates-for-class ((class symbol) template-class)
   (find-templates-for-class (find-class class) template-class))
 
@@ -349,8 +357,6 @@
 (defclass next-template (xml-node)
   ())
 
-(defmethod xml:finished-reading)
-
 #|
 
 (defclass person-viewer ()
@@ -385,16 +391,17 @@
    </body>  
 </template>)
 
+(swank:inspect-in-emacs
 <template component-class="person-editor"
           description="A template for a person-editor"
 	  qualifiers="around">
   <next-template/>
   <input type="button">Save</input>
-</template>
+</template>)
 
 COP in templates can be introduced in templates by defining a new template class and a new template-combination:
 
-(defclass cop-template-combination (template-combination)
+(defclass cop-template-combination (standard-template-combination)
   ()
   (:documentation "Context Oriented Programming support for templates"))
 
@@ -408,7 +415,8 @@ COP in templates can be introduced in templates by defining a new template class
 
 And then we can do:
 
-<cop-template component-class="person-editor"
+(swank:inspect-in-emacs
+<cop-template component-class="person-viewer"
           description="A template for a person-editor"
 	  qualifiers="primary"
           layer="view-layer">
@@ -432,5 +440,6 @@ And then we can do:
        </template>
      </div>
    </body>  
-</cop-template>
+</cop-template>)
+
 |#

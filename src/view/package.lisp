@@ -80,14 +80,20 @@
 	   #:href
 	   #:input
 	   #:type
-	   #:input-type))
+	   #:input-type
+	   #:content))
 
 (defpackage :gst.view
   (:use :cl
 	:gst.view.xml
+	:gst.view.html
 	:gst.view.dom
 	:gst.util
 	:gst.encode)
+  (:shadow #:a
+	   #:div
+	   #:input
+	   #:p)
   (:export #:view-node
 	   #:view-container
 	   #:handler
