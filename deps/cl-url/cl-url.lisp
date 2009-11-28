@@ -149,17 +149,10 @@
 	   *url-protocols*)
       (error "~A is not a valid URL protocol" protocol))
 
-;; (defun zip-plist (plist &optional (zipper #'cons))
-;;   (let ((result '()))
-;;     (alexandria:doplist (key val plist)
-;;       (push (funcall zipper key val) result))
-;;     (nreverse result)))
-
 (defun validate-url-parameters (params)
   ;(when (not (alexandria:proper-list-p params))
   ;  (error "URL parameters: ~A should be a property list" params))
   params)
-
 
 (defun url-string (url)
   (format nil "~@[~(~a~):~]~@[~@[//~a~]~@[:~a~]/~]~@[~{~(~a~)/~}~]~@[~a~]~@[?~{~(~a~)=~a~^&~}~]~@[#~a~]"
@@ -301,4 +294,3 @@
       (read-url namestring))))
 
 (set-dispatch-macro-character #\# #\u #'sharp-url)
-
