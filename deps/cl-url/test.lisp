@@ -10,21 +10,21 @@
 ;reader-syntax:   #url"http://localhost/myapp/main.do"
 
 (test url-reader-syntax-test
-  (is (equal-url #u"/" (make-url))))
-  (is (equal-url #url"" (make-url)))
-  (is (equal-url #url"//localhost") (make-url :hostname "localhost"))
-  (is (equal-url #url"foo/bar") (make-url :path (list "foo")
-					  :program "bar"))
-  (is (equal-url #url"bar/") (make-url :path (list "bar")))
-  (is (equal-url #url"foo/bar/" (make-url :path (list "foo" "bar"))))
-  (is (equal-url #url"/foo/bar/" (make-url :path (list "foo" "bar"))))
-  (is (equal-url #url"#fragment" (make-url :fragment "fragment")))
-  (is (equal-url #url"action.do") (make-url :program "action.do"))
-  (is (equal-url #url"http:") (make-url :protocol :http))
-  (is (equal-url #url"?a1=v1&a2=v2" (make-url :parameters '(:a1 v1 :a2 v2))))
-  (is (equal-url #url"//:80") (make-url :port 80))
-  (is (equal-url #url"//localhost:80") (make-url :hostname "localhost"
-						 :port 80)))
+  (is (url-equal #u"/" (make-url)))
+  (is (url-equal #u"" (make-url)))
+  (is (url-equal #u"//localhost" (make-url :hostname "localhost")))
+  (is (url-equal #u"foo/bar" (make-url :path (list "foo")
+				       :program "bar")))
+  (is (url-equal #u"bar/" (make-url :path (list "bar"))))
+  (is (url-equal #u"foo/bar/" (make-url :path (list "foo" "bar"))))
+  (is (url-equal #u"/foo/bar/" (make-url :path (list "foo" "bar"))))
+  (is (url-equal #u"#fragment" (make-url :fragment "fragment")))
+  (is (url-equal #u"action.do" (make-url :program "action.do")))
+  (is (url-equal #u"http:" (make-url :protocol :http)))
+  (is (url-equal #u"?a1=v1&a2=v2" (make-url :parameters '(:a1 v1 :a2 v2))))
+  (is (url-equal #u"//:80" (make-url :port 80)))
+  (is (url-equal #u"//localhost:80" (make-url :hostname "localhost"
+					       :port 80))))
 
 
 
