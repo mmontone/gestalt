@@ -171,8 +171,21 @@
 					      :protocol :http
 					      :hostname "localhost"))
 
-(define-condition merging-error (simple-error)
-  ()
+(define-condition merge-conflict (simple-error)
+  ((url :initarg :url
+	:reader url
+	:initform nil)
+   (defaults :initarg :defaults
+             :reader defaults
+	     :initform nil)
+   (property :initarg :property
+	     :reader property
+	     :initform nil))
+  (:report (lambda (c s)
+	     (format s "Conflict merging ~A property between ~A and ~A"
+		     (property c)
+		     (url c)
+		     (defaults c))))
   (:documentation "An error of this kind is raised when an error ocurs when merging urls"))
 
 (defun merge-urls (url
@@ -185,11 +198,13 @@
 				 program
 				 parameters
 				 fragment))
-		   (on-error nil on-error-p))
-  ":on-error specifies the restart to call. One of :use-default :use-url or nil"
-  (if on-error-p
-      (handler-bind ((merging-error #'(lambda (error)
-					(invoke-restart on-error))))
+		   (on-conflict :superceed))
+  ":on-conflict specifies the restart to call. One of :continue :superceed :use-defaults :use-url :error"
+  (if (not (equalp on-conflict :error))
+      (handler-bind ((merge-conflict #'(lambda (c)
+					 (declare (ignore c))
+					 (invoke-restart (intern (symbol-name on-conflict)
+								 :cl-url)))))
 	(%merge-urls url
 		     :defaults defaults
 		     :properties properties))
@@ -210,11 +225,11 @@
   (let ((new-url (make-instance 'generic-url)))
     (flet ((assign-default-property (prop)
 	     (funcall (fdefinition `(setf ,prop))
-		      (funcall (fdefinition prop) url)
+		      (funcall (fdefinition prop) defaults)
 		      new-url))
 	   (assign-url-property (prop)
 	     (funcall (fdefinition `(setf ,prop))
-		      (funcall (fdefinition prop) defaults)
+		      (funcall (fdefinition prop) url)
 		      new-url)))
     (loop for prop in properties
        do (cond
@@ -223,17 +238,30 @@
 	    ((null (funcall (fdefinition prop) defaults))
 	     (assign-url-property prop))
 	    (t (restart-case
-		   (error 'merging-error)
-		 (continue ()) ;we do nothing. the property does not get assigned
+		   (cerror "Continue. Leave the value unmerged"
+			   'merge-conflict
+			   :url url
+			   :defaults defaults
+			   :property prop)
 		 (use-value (value)
+		   :report (lambda (s)
+			     (format s "Set a value"))
 		   (funcall (fdefinition `(setf ,prop))
 			    value
 			    new-url))
-		 (use-default ()
+		 (use-defaults ()
+		   :report (lambda (s)
+			     (format s "Use the default value"))
 		   (assign-default-property prop))
 		 (use-url ()
-		   (assign-url-property prop))))))
-    new-url)))
+		   :report (lambda (s)
+			     (format s "Use the URL value"))
+		   (assign-url-property prop))
+		 (superceed ()
+		   :report (lambda (s)
+			     (format s "Superceed (use the URL value)"))
+		   (assign-url-property prop)))))))
+    new-url))
 
 (defun copy-url (url)
   (merge-urls url (make-instance 'generic-url)))
@@ -289,6 +317,7 @@
 	     :fragment ,fragment))))
       
 ;; Reader plug
+
 (defun sharp-url (stream sub-char numarg)
   (declare (ignore sub-char numarg))
   (let ((namestring (read stream t nil t)))
