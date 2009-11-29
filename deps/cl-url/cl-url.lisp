@@ -55,83 +55,83 @@
 (defun protocol-name (protocol)
   (string-downcase (symbol-name protocol)))
 
-;; Taken from:
-;;
-;; Cluts web application framework
-;;
-;; Copyright (c) 2003 Tor Henrik Hanken, torhenrik@copyleft.no
-;; This code is under the GPL.
-;;
+;; ;; Taken from:
+;; ;;
+;; ;; Cluts web application framework
+;; ;;
+;; ;; Copyright (c) 2003 Tor Henrik Hanken, torhenrik@copyleft.no
+;; ;; This code is under the GPL.
+;; ;;
 
-(defun try-decode-utf-8 (string)
-  (debug-log "utf-8-decode ~S" string)
-  (handler-case 
-      (flexi-streams:octets-to-string
-       (flexi-streams:string-to-octets
-	string :external-format :latin1) :external-format :utf-8)
-    (flexi-streams:external-format-encoding-error () string)))
+;; (defun try-decode-utf-8 (string)
+;;   (debug-log "utf-8-decode ~S" string)
+;;   (handler-case 
+;;       (flexi-streams:octets-to-string
+;;        (flexi-streams:string-to-octets
+;; 	string :external-format :latin1) :external-format :utf-8)
+;;     (flexi-streams:external-format-encoding-error () string)))
 
-(defun url-unescape (string)
-  "Unescape parameter-strings.  Taken from IMHO."
-  (let ((dest (make-string (length string))))
-    (do ((i 0 (incf i))
-         (j 0 (incf j)))
-        ((= i (length string)) (try-decode-utf-8 (subseq dest 0 j)))
-      (cond ((equal (aref string i) #\%)
-             (incf i)
-             (setf (aref dest j)
-                   (code-char
-                    (parse-integer string :start i :end (+ i 2) :radix 16)))
-             (incf i))
-            ((equal (aref string i) #\+)
-             (setf (aref dest j)
-                   #\Space))
-            (t
-             (setf (aref dest j)
-                   (aref string i)))))))
+;; (defun url-unescape (string)
+;;   "Unescape parameter-strings.  Taken from IMHO."
+;;   (let ((dest (make-string (length string))))
+;;     (do ((i 0 (incf i))
+;;          (j 0 (incf j)))
+;;         ((= i (length string)) (try-decode-utf-8 (subseq dest 0 j)))
+;;       (cond ((equal (aref string i) #\%)
+;;              (incf i)
+;;              (setf (aref dest j)
+;;                    (code-char
+;;                     (parse-integer string :start i :end (+ i 2) :radix 16)))
+;;              (incf i))
+;;             ((equal (aref string i) #\+)
+;;              (setf (aref dest j)
+;;                    #\Space))
+;;             (t
+;;              (setf (aref dest j)
+;;                    (aref string i)))))))
 
 
-(defparameter *html-escaped*
-  '((#\& . "&amp;")
-    (#\< . "&lt;")
-    (#\> . "&gt;")))
+;; (defparameter *html-escaped*
+;;   '((#\& . "&amp;")
+;;     (#\< . "&lt;")
+;;     (#\> . "&gt;")))
 
-(defun url-escape (string)
-  (with-output-to-string (s)
-    (loop for char across string do
-	 (cond ((char= char #\Space)
-		(princ #\+ s))
-	       ((or (char<= #\0 char #\9)
-		    (char<= #\a char #\z)
-		    (char<= #\A char #\Z)
-		    (find char "-_.," :test #'char=))
-		(princ char s))
-	       (t
-		(format s "~{%~2,'0X~}"
-			(coerce (flex:string-to-octets (string char)
-						       :external-format :utf-8)
-				'list)))))))
+;; (defun url-escape (string)
+;;   (with-output-to-string (s)
+;;     (loop for char across string do
+;; 	 (cond ((char= char #\Space)
+;; 		(princ #\+ s))
+;; 	       ((or (char<= #\0 char #\9)
+;; 		    (char<= #\a char #\z)
+;; 		    (char<= #\A char #\Z)
+;; 		    (find char "-_.," :test #'char=))
+;; 		(princ char s))
+;; 	       (t
+;; 		(format s "~{%~2,'0X~}"
+;; 			(coerce (flex:string-to-octets (string char)
+;; 						       :external-format :utf-8)
+;; 				'list)))))))
 
-(defun html-escape (str)
-  "return HTML escaped string (eg, '<' replaced by '&lt;')"
-  (dolist (pair *html-escaped*)
-    (setq str (string-replace (car pair) (cdr pair) str)))
-  str)
+;; (defun html-escape (str)
+;;   "return HTML escaped string (eg, '<' replaced by '&lt;')"
+;;   (dolist (pair *html-escaped*)
+;;     (setq str (string-replace (car pair) (cdr pair) str)))
+;;   str)
 
-(defun xml-escape (str)
-  (html-escape str))
+;; (defun xml-escape (str)
+;;   (html-escape str))
 
-(defun try-decode-utf8-parameters (parameters)
-  (loop for parameter in parameters
-       collect (if (consp (cdr parameter))
-		   (list (try-decode-utf-8 (first parameter))
-			 (second parameter)
-			 (try-decode-utf-8 (third parameter))
-			 (fourth parameter)) 
-		   (cons  (try-decode-utf-8 (car parameter))
-			  (try-decode-utf-8 (cdr parameter))))))
+;; (defun try-decode-utf8-parameters (parameters)
+;;   (loop for parameter in parameters
+;;        collect (if (consp (cdr parameter))
+;; 		   (list (try-decode-utf-8 (first parameter))
+;; 			 (second parameter)
+;; 			 (try-decode-utf-8 (third parameter))
+;; 			 (fourth parameter)) 
+;; 		   (cons  (try-decode-utf-8 (car parameter))
+;; 			  (try-decode-utf-8 (cdr parameter))))))
 
-;; end of stolen code
+;; ;; end of stolen code
 
 
 ; standard-protocols
