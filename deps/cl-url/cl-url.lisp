@@ -325,3 +325,6 @@
       (read-url namestring))))
 
 (set-dispatch-macro-character #\# #\u #'sharp-url)
+
+(defmethod make-load-form ((url url) &optional environment)
+  (make-load-form-saving-slots url :environment environment))
