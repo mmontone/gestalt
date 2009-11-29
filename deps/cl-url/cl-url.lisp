@@ -254,7 +254,7 @@
 	      properties))
 
 (defun parse-url (str)
-  (let ((regex "(?:(\\w+)\\:)?(?:\\/\\/([\\w|%|-|\\.|\\d]+))?(?:\\:(\\d+))?(\\/(?:[\\w|%|-|\\.|\\d]+\\/)+)?(\\/?[\\w|%|-|\\d|\\.]+)?(?:\\?([\\w|\\d|%|-]+=[\\w|\\d|%|-]*(?:&[\\w|\\d|%|-]+=[\\w|\\d|%|-]*)*))?(?:#([\\w|\\d|%|-]*))?"))
+  (let ((regex "(?:(\\w+)\\:)?(?:\\/\\/([\\w|%|-|\\.|\\d]*))?(?:\\:(\\d+))?(\\/(?:[\\w|%|-|\\.|\\d]+\\/)+)?(\\/?[\\w|%|-|\\d|\\.]+)?(?:\\?([\\w|\\d|%|-]+=[\\w|\\d|%|-]*(?:&[\\w|\\d|%|-]+=[\\w|\\d|%|-]*)*))?(?:#([\\w|\\d|%|-]*))?"))
     (multiple-value-bind (result matches)
 	(cl-ppcre:scan-to-strings regex str)
       (declare (ignore result))
@@ -272,8 +272,10 @@
     (apply #'make-instance 'generic-url
 	   `(:protocol ,(when protocol
 			      (intern (string-upcase protocol) :keyword))
-	     :hostname ,hostname
-	     :port ,port
+	     :hostname ,(when (and (stringp hostname)
+				  (plusp (length hostname)))
+			 hostname)
+	     :port ,(when port (parse-integer port))
 	     :path ,(remove-if (lambda (p) (zerop (length p)))
 			       (when path
 				 (split-sequence:split-sequence #\/ path)))
