@@ -1,19 +1,16 @@
-(defpackage cl-url-system
+(defpackage cl-url-test-system
   (:use :cl :asdf))
 
-(in-package :cl-url-system)
+(in-package :cl-url-test-system)
 
-(defsystem cl-url
+(defsystem cl-url-test
     :description "cl-url: A Common Lisp library for handling URLs"
     :version "0.1"
     :author "Mariano Montone <mariano@copyleft.no>"
     :maintainer "Mariano Montone <mariano@copyleft.no>"
     :licence "Public Domain"
     :components
-    ((:file "package")
-     (:file "cl-url"))
+    ((:file "test"))
     :serial t
     :depends-on
-    (:alexandria
-     :cl-ppcre
-     :split-sequence))
+    (:cl-url :fiveam))

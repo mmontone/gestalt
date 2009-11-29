@@ -18,8 +18,5 @@
 	   #:url-equal
 	   #:extract-url
 	   #:read-url
-	   #:*default-url-defaults*))
-
-(defpackage cl-url.test
-  (:use :cl :cl-url :fiveam)
-  (:export #:run-tests))
+	   #:*default-url-defaults*
+	   #:merge-conflict))
