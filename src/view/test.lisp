@@ -205,3 +205,35 @@
 
 (test id-encoding-test
   (is nil "WRITE THIS TEST"))
+
+;; (defclass person ()
+;;   ((name
+;;     :initarg :name
+;;     :accessor name
+;;     :initform (error "Provide the person's name"))
+;;    (lastname
+;;     :initarg :lastname
+;;     :accessor lastname
+;;     :initform (error "Provide the person's lastname")))
+;;   (:metaclass dataflow:dataflow-class)
+;;   (:documentation "A simple person model object"))
+
+;; (let ((person (make-instance 'person
+;; 			     :name "Mariano"
+;; 			     :lastname "Montone")))
+;;   (dataflow:with-df-slots (name lastname) person
+;;     (swank:inspect-in-emacs name)))
+
+
+;; (defclass person-viewer (model-component)
+;;   ((name :component t)
+;;    (lastname :component t))
+;;   (:metaclass standard-component-class))
+
+;; (defclass initialize-instance :after ((person-viewer person-viewer) &rest initargs)
+;;   (dataflow:with-df-slots (name lastname) (model person-viewer)
+;;     (gst.util:with-object (person-viewer)
+;;       (add-component 'name
+;; 		     (make-instance 'text-widget :model name))
+;;       (add-component 'lastname
+;; 		     (make-instance 'text-widget :model lastname)))))

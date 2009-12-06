@@ -351,8 +351,27 @@
 	:documentation "The iteration variable"))
   (:documentation "A slot that contains a collection of components"))
 
-(defclass container (xml-node)
+(defclass update (xml-node)
+  ())
+
+(defclass container (update)
   ((id :accessor id)))
+
+(defclass *if (update xml-container)
+  ((cond :accessor cond
+	 :initform "")))
+
+(defclass then (xml-container)
+  ())
+
+(defclass else (xml-container)
+  ())
+
+(defclass *loop (update xml-container)
+  ((var :accessor var
+	:initform "")
+   (collection :accessor collection
+	       :initform "")))
 
 (defclass next-template (xml-node)
   ())

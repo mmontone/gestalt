@@ -26,8 +26,147 @@
   (:documentation "A node of the view is an xml-node
                    with changes tracked"))
 
+(defmethod view-controller ((view-node view-node))
+  (flet ((%view-controller (node)
+	   (if (controller node)
+	       (controller node)
+	       (if (null (parent node))
+		   (error "~A has no attached controller" view-node)
+		   (%view-controller (parent node))))))
+    (%view-controller view-node)))
+
+(defclass standard-view-context ()
+  ((parent :initarg :parent
+	   :accessor parent
+	   :initform nil
+	   )))
+
+(defclass global-view-context (standard-view-context)
+  ())
+
+(defclass template-view-context (standard-view-context)
+  ((template
+    :initarg :template
+    :accessor template))
+  )
+
+(defparameter *global-view-context* (make-instance 'global-view-context))
+ 
+;; (defmethod add-component :after :view
+;;   ((parent component) slot (child component))
+;;   (let ((place-holder
+;; 	 (find-place-holder (view component)
+;; 			    slot))
+;; 	(view (assign-view child :context
+;; 			   (make-instance 'template-context
+;; 					  :template (template (view component))
+;; 					  :parent *global-view-context*))))
+;;     (clear-place-holder place-holder)
+;;     (loop for v in view
+;; 	 do (add-child place-holder v))))
+
+;; (defmethod assign-view ((component component) &key (context *global-view-context*))
+;;   (let ((view (make-view context component)))
+;;     (setf (view component) view)))
+
+;; (defmethod make-view ((context global-view-context)
+;; 		      (component component))
+;;   (let ((templates-for-class
+;; 	 (find-all-templates-for-class component)))
+;;     (if (emptyp templates-for-class)
+;; 	(error "Could not find a view for ~A in context ~A"
+;; 	       component context)
+;; 	())))
+
+
+
 (defclass view-container (view-node xml-container)
   ())
+
+(defclass a (gst.view.html:a view-node)
+  ())
+
+(defclass div (gst.view.html:div view-container)
+  ())
+
+(defclass p (gst.view.html:p view-node)
+  ())
+
+(defclass special-element (view-container)
+  ()
+  (:documentation "A special (and non-printable) element"))
+
+(defclass updater (special-element)
+  ((updater :initarg :updater
+	    :initform (error "Provide the updater")
+	    :accessor updater
+	    ))
+  )
+
+(defmethod empty-node ((xml-node xml-node))
+  )
+
+(defmethod empty-node ((xml-container xml-container))
+  (loop for child in (children xml-container)
+       do (remove-child child xml-container)))
+
+(defvar *debug* nil)
+
+(defmethod print-object ((view-node special-element) stream)
+  (if *debug*
+      (call-next-method)
+      (loop for child in (children view-node)
+	 do (print-object child stream))))
+
+(defmethod populate-template-instance ((view-node view-node) node)
+  (setf (slot-value view-node 'template)
+	node))
+
+(defmethod populate-template-instance ((view-node a) node)
+  (call-next-method)
+  (setf (slot-value view-node 'href)
+	(slot-value node 'gst.view.html::href))
+  (setf (slot-value view-node 'xml:content)
+	(slot-value node 'xml:content)))
+
+(defmethod populate-template-instance ((view-node div) node)
+  (call-next-method)
+  (setf (slot-value view-node 'children)
+	(slot-value node 'gst.view.html::children)))
+
+(defmethod populate-template-instance ((view-node p) node)
+  (call-next-method)
+  (setf (slot-value view-node 'xml:content)
+	(slot-value node 'xml:content)))
+  
+(defmethod make-template-instance ((node xml-node))
+  (let ((view-node
+	 (make-instance
+	  (intern (string-upcase
+		   (xml:xml-tag-name-string node))
+		  (find-package :gst.view)))))
+    (populate-template-instance view-node node)
+    view-node))
+
+(defmethod make-template-instance ((update update))
+  (let ((function-name (gensym "UPDATER-FUNCTION-")))
+    (compile function-name (read-from-string (content update)))
+    (make-instance 'updater
+		   :updater (symbol-function function-name))))
+
+(defmethod make-template-instance ((container container))
+  (let ((function-name (gensym "UPDATER-FUNCTION-")))
+    (compile function-name '(lambda (view controller)
+			     
+			     )
+    (make-instance 'updater
+		   :updater (symbol-function function-name)))))
+
+(defmethod make-template-instance ((loop *loop))
+  )
+
+(defmethod make-template-instance ((if *if))
+  )
 
 ;----------------------
 ; Operations wrappers
@@ -129,7 +268,6 @@ postponing the print-cache flush to the end to avoid performance overhead"
 	    *node-id-delimiter*
 	    string)))))
 
-
 (defun encode-node-id (node-id)
   (usb8-array-to-base64-string
    (encrypt
@@ -197,7 +335,6 @@ postponing the print-cache flush to the end to avoid performance overhead"
   ; disable id assignation when applying modifications
   (let ((*assign-ids* nil))
     (call-next-method)))
-
 
 ;------------------------------
 ;   XMLisp Glue

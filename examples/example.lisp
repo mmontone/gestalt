@@ -115,10 +115,8 @@
 (defun entry-points ()
   *applications*)
 
-(defmethod make-instance :around ((class entry-point-class) &rest initargs)
-  (let ((ep-name (getf initargs :name)))
-    (if (gethash ep-name *entry-points*)
-  (error "The singleton class ~S cannot be instantiated." class)))))
+(defclass entry-point-class (contextl:singleton-class)
+  ())
 
 (defvar *applications* (make-root-folder) "The registered applications")
 
@@ -142,6 +140,8 @@
    (root-component :accessor root-component
 		   :documentation "The application root component"))
   (:documentation "A Gestalt Web application"))
+
+
 
 (defmethod hash ((app application))
   (name app))
@@ -277,6 +277,7 @@
 		     ,cases))))
 
 (defmacro defapplication (name &rest args)
+  "Syntax for defining applications."
   (flet ((process-application-args (args)
 	   "Build the start function"
 	   (let ((start-function-body (getf args :start)))
@@ -298,6 +299,126 @@
 				,start-function-body)))))))))
 	   args))
     `(make-instance 'application ,@(append (list :name (string name)) (process-application-args args)))))
+
+(defapplication app-admin ()
+  :entry-point (make-instance 'application-entry-point
+			      :name "admin")
+  :start (call 'applications-admin)
+  :description "This application lets is the Gestalt applications admin. You can browse, configurate and execute them from its frontend")
+
+(defun initialize-rendering-list ()
+  (setf (session-value 'rendering-list *session*)
+	(trivial-garbage:make-weak-hash-table :weakness :key-and-value)))
+
+(defun render-rendering-list ()
+  (loop for component in (session-value 'rendering-list *session*)
+       when (is-active component)
+       do (render-component component)))
+
+(defun render-on-request (component)
+  (let
+      ((rendering-list
+	(session-value 'rendering-list *session*)))
+    (setf (gethash component rendering-list) component)))
+
+(defclass applications-admin ()
+  ((entry-points :component t
+		 :initform (make-instance 'entry-points-list)
+		 :reader entry-points))
+  (:metaclass component-class))
+
+(defclass model-component ()
+  ((model :initarg model
+	  :reader model
+	  :initform (error "Provide the component model"))
+   (:documentation "A mixin for components that hold a single model")))
+
+(defclass list-component (model-component)
+  ()
+  (:metaclass component-class)
+  (:documentation "A list simply renders its items on the screen. You can use it with either a cons list of a collection. In the first case, the component is registered to be updated on each request (as we don't have an events mechanism). You should consider using collections for better control"))
+
+(defmethod initialize-instance :after ((list-component list-component) &rest initargs)
+  (declare (ignore initargs))
+  (render-list-elements list-component)
+  (when (listp (model list-component))
+    ; Register the component to be rendered on each request
+    (render-on-request list-component)))
+
+(defclass list-navigator (model-component)
+  ((size :dataflow t
+	 :initform 10
+	 :documentation "The list size")
+   (page :dataflow t
+	 :initform 1
+	 :documentation "The page to be displayed")
+   (size-entry :component t)
+   (page-entry :component t)
+   (first :component t)
+   (last :component t)
+   (next :component t)
+   (previous :component t)
+   (list :component t))
+  (:metaclass component-class))
+
+(defmethod initialize-instance :after ((list-navigator list-navigator) &rest initargs)
+  (with-df-slots (page size) list-navigator
+    (with-object (list-navigator)
+       (add-component 'size-entry
+		   (make-instance 'number-entry :model size)) ; note that there shall be a conversion from number, to number value-holder
+       (add-component 'page-entry
+		   (make-instance 'number-entry :model page))
+       (add-component 'first
+		      (make-instance 'action-link
+				     :action (lambda ()
+					       (setf (page list-navigator) 1))))
+       (add-component 'last
+		      (make-instance 'action-link
+				     :action (lambda ()
+					       (setf (page list-navigator)
+						     (multiple-value-bind (pages remainder)
+							 (truncate (/ (length (model list-navigator))
+								      (size list-navigator)))
+							     (when (> remainder 0)
+							       (incf pages))
+							     (setf (page list-navigator) pages))))))
+       (add-component 'next (make-instance 'action-link
+					   :action (lambda ()
+						     (incf (page list-navigator)))))
+       (add-component 'previous (make-instance 'action-link
+					       :action (lambda ()
+							 (decf (page list-navigator)))))
+       (add-component 'list (make-instance 'list-component
+					   :model (extract-elements (model list-navigator)
+								    :from (page list-navigator)
+								    :by (size list-navigator)))))))
+
+; a list-component simply displays every component that gets added to it
+<template class="list-component">
+  <list id="children"/>
+</template>
+
+<template class="list-navigator">
+  <child id="list"/>
+  <child id="size-entry"/>
+  <child id="page-entry"/>
+  <child id="first"/>
+  <child id="last"/>
+  <child id="next"/>
+  <child id="previous"/>
+</template>
+
+
+(defclass list-navigator ()
+  ())
+
+(defmethod navigate-entry-point ((entry-point application-entry-point))
+  
+
+(defmethod initialize-instance :after ((admin applications-admin))
+  (
+						  
+    
 
 (defapplication hola
     :entry-point (make-instance 'folder-entry-point :name "example/")
@@ -356,7 +477,6 @@
 	  :initarg :value
 	  :documentation "The widget's value"))
   (:documentation "A widget that contains a value. This is meant to be used as a mixin"))
-
 
 (defclass text-entry (widget value-widget)
   ()

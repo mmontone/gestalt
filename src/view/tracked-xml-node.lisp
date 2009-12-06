@@ -322,7 +322,9 @@ Algorithm:
 			(:remove 'remove-child-modification)
 			(:replace 'replace-child-modification))))
 		 (with-unique-names (out)
-		 `(defmethod serialize-modification ((,mod ,modification-class) (,out (eql ,name)) &optional (,stream *standard-output*))
+		 `(defmethod serialize-modification ((,mod ,modification-class)
+						     (,out (eql ,name))
+						     &optional (,stream *standard-output*))
 		      ,@body)))))))
     `(progn
        (pushnew ,name *serialization-outputs*)
