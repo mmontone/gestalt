@@ -16,6 +16,10 @@
 	:alexandria
 	:anaphora)
   (:shadow #:add-dependent #:remove-dependent)
+  (:shadowing-import-from :cl
+			  #:defmethod
+			  #:defgeneric
+			  #:standard-generic-function)
   (:export
    ; dataflow cell definitions
    #:cell
