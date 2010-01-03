@@ -14,17 +14,42 @@
    
    Finally, at the view level, we use a flexible and conveniente template engine and a set of widgets.
 ** Model
-** View
-** Templates
 *** Introduction
-   
-    We achieve view-model-controller separation by means of templates. In spite of not begin of much use in some frameworks, I think they are indispensible for working with graphic designers.
+*** Defining model objects
+*** Objects validation
+**** Consistent objects
+*** Objects that require arguments
+*** The Elephant object database
+** Controller
+*** Introduction
+*** Programming with components
+*** Continuations and components
+**** Introduction
+**** Continuations and dynamic scope
+*** Model objects validation
+*** Component threads and database transactions
+*** View updates
+**** Introduction
+**** Imperative and declarative programming
+**** Dataflow extensions
+***** API
+***** Memory management
+      I have thought dataflow extensions to be used with a garbage collector. That means, you should use weak-references most of the time, and strong-referencing and explicit memory deallocation in exceptional cases. For example, you may want to respond to some event in some object, but you may not be interested in that object itself. So you want to reference the object strongly because it would be gone otherwise. REVISE THIS PREVIOUS SENTECES.
+*** Context Oriented Programming
+**** Introduction
+**** COP in components
+** View
+*** Introduction
+*** Templates
+**** Introduction
+    
+     We achieve view-model-controller separation by means of templates. In spite of not begin of much use in some frameworks, I think they are indispensible for working with graphic designers.
 
-   In Gestalt, templates are first-class XML entities. They are loaded in memory in your web application, and you can inspect them and modify them incrementally and on the fly.
-*** Defining a template
-    To define a template, we use the xml template element syntax:
-**** Template definition
-***** Syntax:
+    In Gestalt, templates are first-class XML entities. They are loaded in memory in your web application, and you can inspect them and modify them incrementally and on the fly.
+**** Defining a template
+     To define a template, we use the xml template element syntax:
+***** Template definition
+****** Syntax:
 #+BEGIN_SRC html
 
  <template component-class="[component-class-name]"
@@ -34,19 +59,19 @@
    {xml-element}*
 </template>
 #+END_SRC
-***** Arguments and values: 
-      \\
-      *component-class-name --* The class name of the child component
+****** Arguments and values: 
+       \\
+       *component-class-name --* The class name of the child component
 
-      *qualifier --* The template definition qualifiers. In a standard-template-combination, one of *AROUND*, *BELOW*, *ABOVE*. This attribute is optional.
+       *qualifier --* The template definition qualifiers. In a standard-template-combination, one of *AROUND*, *BELOW*, *ABOVE*. This attribute is optional.
 
-      *template-metaclass-name --* The template metaclass. The template metaclass defines the way the templates qualifiers are interpreted and how the templates are attached to the component. Important restriction: all the templates defined for a particular class of component (you can have different definitions for the same class of component through templates qualifiers) must have the same template-metaclass. If this attribute is not specified, then the template-metaclass used is standard-template-metaclass. This attribute is optional.
+       *template-metaclass-name --* The template metaclass. The template metaclass defines the way the templates qualifiers are interpreted and how the templates are attached to the component. Important restriction: all the templates defined for a particular class of component (you can have different definitions for the same class of component through templates qualifiers) must have the same template-metaclass. If this attribute is not specified, then the template-metaclass used is standard-template-metaclass. This attribute is optional.
 
-      *options --* The options are arbitrary strings consumed by the template-metaclass.
-***** Description:
+       *options --* The options are arbitrary strings consumed by the template-metaclass.
+****** Description:
       
 The template xml element defines a template for a certain component class.
-***** Examples:
+****** Examples:
 #+BEGIN_SRC html
 <template class="person">
   <p>Name: </p> <container slot="name" 
@@ -55,17 +80,17 @@ The template xml element defines a template for a certain component class.
                                 class="label"/>
 </template>
 #+END_SRC
-*** Template elements
-**** Container elements
-     Container elements refer to a model slot. The component slot is supposed to refer to a component or be null. If no component is begin referenced by the slot, then nothing is displayed. If the slot references a component, then a view is searched for it, attached to it, and displayed in the place the container element is found.
-***** Container definition
-****** Syntax:
+**** Template elements
+***** Container elements
+      Container elements refer to a model slot. The component slot is supposed to refer to a component or be null. If no component is begin referenced by the slot, then nothing is displayed. If the slot references a component, then a view is searched for it, attached to it, and displayed in the place the container element is found.
+****** Container definition
+******* Syntax:
 #+BEGIN_EXAMPLE  
 <container slot="[slot-name]" 
            [class="container-class"]
            {attributes}*/>
 #+END_EXAMPLE
-****** Arguments and values:
+******* Arguments and values:
        \\
       *slot-name --* The name of the slots that contains the child component.
 
@@ -82,8 +107,8 @@ The template xml element defines a template for a certain component class.
    <container slot="friend"/>
 </template>
 #+END_EXAMPLE
-***** Container classes
-****** Motivation
+****** Container classes
+******* Motivation
 When we use a container element to embed a component, the described algorithm is used to match the component view. But what we are trying to embed is a widget, things get a little too rigid. Let's take the following example to see this:
 #+BEGIN_EXAMPLE  
 <template class="person">
@@ -103,8 +128,8 @@ In this example, we are saying we want the name and lastname of the person embed
 </template>
 #+END_EXAMPLE
 
-****** Defining container classes
-******* Syntax: 
+******* Defining container classes
+******** Syntax: 
 	*-- Macro:* 
 #+BEGIN_EXAMPLE
 define-container-class name ({superclasses}*)
@@ -112,18 +137,18 @@ define-container-class name ({superclasses}*)
        (:compatiblity compatiblity-list)
        [(:render (view-type stream) {form}*)]
 #+END_EXAMPLE
-******* Arguments and values:
+******** Arguments and values:
 
-	*name --* The name of the container class
+	 *name --* The name of the container class
 
-	*superclasses --* The classes the container class inherits from
+	 *superclasses --* The classes the container class inherits from
 
-	*slots --* The list of the container class slots
+	 *slots --* The list of the container class slots
 
-	*compatibility-list --* The list of the other container-classes this container-class is compatible with. 
-******* Description:
-	Defines a new container class.
-******* Examples:
+	 *compatibility-list --* The list of the other container-classes this container-class is compatible with. 
+******** Description:
+	 Defines a new container class.
+******** Examples:
 #+BEGIN_SRC lisp
 	(define-container-class read-only-text-input (label)
 	   ()
@@ -137,7 +162,7 @@ define-container-class name ({superclasses}*)
 
     	   In this case, the compatibility list indicates that a read-only-tet-input can be used in place of a label.
 
-***** Design alternatives
+****** Design alternatives
 Maybe container elements are just too rigid. We can use a container-element mixin and a define-container-element macro and just use the name of the container element in the tag of the xml element.
 
 Example:
@@ -170,9 +195,9 @@ instead of:
 </template>
 #+END_EXAMPLE
 
-**** Collection elements
-     Collection elements are a special kind of container elements. They are used to display collections of components.
-***** Syntax:
+***** Collection elements
+      Collection elements are a special kind of container elements. They are used to display collections of components.
+****** Syntax:
 #+BEGIN_EXAMPLE  
       collection-element ::= <collection slot="slot-name"
                                          [binding="binding-name"]>
@@ -181,15 +206,15 @@ instead of:
                              </collection>
       collection-element ::= <collection-element [binding="binding-name"]/> 
 #+END_EXAMPLE
-***** Arguments and values:
-      *slot-name --* The name of the slot that contains the collection of components.
+****** Arguments and values:
+       *slot-name --* The name of the slot that contains the collection of components.
 
-      *binding-name --* The name of the variable that binds the collection elements.
+       *binding-name --* The name of the variable that binds the collection elements.
 
-      *template-definition --* A local template definition. Collection elements are scoped elements. That means you can define local templates in their bodies.
-***** Description:
-      Collection elements come in two flavors:
-****** Collection elements without body
+       *template-definition --* A local template definition. Collection elements are scoped elements. That means you can define local templates in their bodies.
+****** Description:
+       Collection elements come in two flavors:
+******* Collection elements without body
 	This is the easiest and more straightforward way of displaying a collection of elements. We display a collection of component; each component gets a view attached following the standard algorithm.
         Example:
 #+BEGIN_EXAMPLE
@@ -199,7 +224,7 @@ instead of:
           <collection slot="friends"/>
         </template>
 #+END_EXAMPLE
-****** Collection elements with body
+******* Collection elements with body
         This flavor lets the user display the elements of a collection in a particual way. As a collection element is a scoped-element, we can define local templates in the beggining of its body.
         Example: we can display a person's friends in a table like this:
 #+BEGIN_EXAMPLE
@@ -218,7 +243,7 @@ instead of:
           </table>
         </template> 
 #+END_EXAMPLE
-****** Collection bindings
+******* Collection bindings
        It may be desirable to give collection bindings a name instead of doing it implitly by the standard form of collection-element xml element. This is true in situations we we want to nest two collections of elements. In that case, we can use the 'binding' attribute.
        Example:
 #+BEGIN_EXAMPLE
@@ -232,10 +257,10 @@ instead of:
              </collection>
           </collection>
 #+END_EXAMPLE
-*** Templates and scope
-**** Introduction
-     Some templates elements introduce new scopes. That means we can declare templates that are relevant in the scope of that element only. The most common examples of those elements are template and collection. Those elements may have a list of template definitions in the beggining of their body, before any other type of xml element.
-**** Examples
+**** Templates and scope
+***** Introduction
+      Some templates elements introduce new scopes. That means we can declare templates that are relevant in the scope of that element only. The most common examples of those elements are template and collection. Those elements may have a list of template definitions in the beggining of their body, before any other type of xml element.
+***** Examples
 #+BEGIN_EXAMPLE
      <template class="person">
        <template class="person">
@@ -262,16 +287,16 @@ instead of:
           </table>
         </template> 
 #+END_EXAMPLE
-**** Implementation
-     XML elements that introduce new scopes are inherited from the scoping-template-element class. You can inherit from it when defining your own template elements.
-*** Templates combinations
-**** Introduction
-     In order to improve templates composition we provide template combinations. Template combinations are a lot like Common Lisp method combinations and are inspired by them, but for templates. The default template combination in standard-template-combination.
+***** Implementation
+      XML elements that introduce new scopes are inherited from the scoping-template-element class. You can inherit from it when defining your own template elements.
+**** Templates combinations
+***** Introduction
+      In order to improve templates composition we provide template combinations. Template combinations are a lot like Common Lisp method combinations and are inspired by them, but for templates. The default template combination in standard-template-combination.
 
-     Template combinations use the qualifiers of the template definition for instantiating the view to the component.
-**** Standard template combination 
-      The standard template combination recognizes AROUND, ABOVE  and BELOW qualifiers, corresponding to AROUND, BEFORE and AFTER of standard method combination.
-***** AROUND combination
+      Template combinations use the qualifiers of the template definition for instantiating the view to the component.
+***** Standard template combination 
+       The standard template combination recognizes AROUND, ABOVE  and BELOW qualifiers, corresponding to AROUND, BEFORE and AFTER of standard method combination.
+****** AROUND combination
        AROUND templates are displayed around the ABOVE, PRIMARY and BELOW templates. Templates embedding is achieved through the element <next-template/>
 
       Example:
@@ -285,7 +310,7 @@ instead of:
 #+END_EXAMPLE
 
        This makes the person to be displayed inside a red coloured box.
-***** ABOVE combination
+****** ABOVE combination
        ABOVE templates are displayed above the PRIMARY template.
 
        Example:
@@ -295,7 +320,7 @@ instead of:
            <p>There's a person below this message</p>
        </template>
 #+END_EXAMPLE
-***** BELOW combination
+****** BELOW combination
        BELOW templates are displayed below the PRIMARY template
 
        Example:
@@ -305,20 +330,22 @@ instead of:
            <p>There's a person above this message</p>
        </template>
 #+END_EXAMPLE
-*** Custom templates
-**** Introduction
-     It is possible to define custom templates through a MOP.
-     The algorithm to change the way views are assigned to component can be changed creating a new template-metaclass, assigning a new template-combintation to it and defining the appropiate methods. For an example of this, see [[Context oriented templates]].
-*** Built-in templates classes
-**** Standard templates
-     standard-template-class
-**** Context oriented templates
-     cop-template-class
-** View updates
-*** Introduction
-*** Imperative and declarative programming
-*** Dataflow extensions
-**** API
-**** Memory management
-     I have thought dataflow extensions to be used with a garbage collector. That means, you should use weak-references most of the time, and strong-referencing and explicit memory deallocation in exceptional cases. For example, you may want to respond to some event in some object, but you may not be interested in that object itself. So you want to reference the object strongly because it would be gone otherwise. REVISE THIS PREVIOUS SENTECES.
+**** Custom templates
+***** Introduction
+      It is possible to define custom templates through a MOP.
+      The algorithm to change the way views are assigned to component can be changed creating a new template-metaclass, assigning a new template-combintation to it and defining the appropiate methods. For an example of this, see [[Context oriented templates]].
+**** Built-in templates classes
+***** Standard templates
+      standard-template-class
+***** Context oriented templates
+      cop-template-class
 * Related links
+  [[http://common-lisp.net][Common Lisp Directory]]
+  
+  [[http://seaside.st][Smalltalk Seaside Web Framework]]
+
+  [[http://www.cliki.net][Common Lisp Wiki]]
+
+  [[http://common-lisp.net/project/cells][Cells - A Common Lisp dataflow extension]]
+
+  [[http://common-lisp.net/project/elephant][Elephant - A Common Lisp object database]]
