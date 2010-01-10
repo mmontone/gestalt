@@ -1,0 +1,806 @@
+\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename gestalt.info
+@settitle Gestalt - A comprehensive Common Lisp Web Framework
+
+@set VERSION 0.1
+@set DATE November 2009
+
+@c Version and Contact Info
+@set MAINTAINERSITE @uref{http://common-lisp.net/project/gestalt, maintainers webpage}
+@set AUTHOR Mariano Montone
+@set MAINTAINER Mariano Montone
+@set MAINTAINEREMAIL @email{marianomontone at gmail dot com}
+@set MAINTAINERCONTACT @uref{mailto:marianomontone at gmail dot com,contact the maintainer}
+@c %**end of header
+
+@ignore
+@ifinfo
+@format
+START-INFO-DIR-ENTRY
+* Gestalt: (gestalt.info). A comprehensive Common Lisp Web framework.
+END-INFO-DIR-ENTRY
+@end format
+@end ifinfo
+@end ignore
+
+@c Subheadings inside a table.
+@macro tsubheading{text}
+@ifinfo
+@subsubheading \text\
+@end ifinfo
+@ifnotinfo
+@item @b{\text\}
+@end ifnotinfo
+@end macro
+
+@copying
+
+This manual is for Gestalt Web Framework version @value{VERSION}.
+
+Copyright @copyright{} 2009, 2010 Mariano Montone
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with the Front-Cover texts being ``A GNU Manual,''
+and with the Back-Cover Texts as in (a) below.  A copy of the license
+is included in the section entitled ``GNU Free Documentation License.''
+
+(a) The FSF's Back-Cover Text is: ``You have the freedom to copy and
+modify this GNU manual.  Buying copies from the FSF supports it in
+developing GNU and promoting software freedom.''
+
+This document is part of a collection distributed under the GNU Free
+Documentation License.  If you want to distribute this document
+separately from the collection, you can do so by adding a copy of the
+license to the document, as described in section 6 of the license.
+@end quotation
+@end copying
+
+@titlepage
+@title Gestalt
+@subtitle A comprehensive Common Lisp Web Framework
+@subtitle Release @value{VERSION}
+@author by Mariano Montone
+
+@c Output the table of contents at the beginning.
+@contents
+
+@c The following two commands start the copyright page.
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@ifnottex
+@node Top
+@top Gestalt - A comprehensive Common Lisp Web Framework
+
+This is Gestalt Common Lisp Web Framework documentation
+
+@end ifnottex
+
+@menu
+* Introduction::                What is Gestalt?
+* Web application programming:: What does Web application programming consists of?
+* Programming with Gestalt::    How does Web application programming feel like with Gestalt?
+* System reference::            References to related works
+* Appendix::                    Appendix with references
+* Index::                       Complete index.
+
+@detailmenu
+ --- The Detailed Node Listing ---
+
+Introduction
+
+* Summary::                     A brief summary of what Gestalt is
+* Installation::                How to install Gestalt
+* Feedback::                    Bug reports, ideas, patches etc.
+* Conventions::                 Type-setting conventions in the manual
+
+Web application programming
+
+* Web application programming overview::  A brief summary of Web application programming
+* Problems::                              The problems of Web application programming
+* MVC in the Web::                        The Model-View-Controller in the Web
+
+Programming with Gestalt
+
+* Gestalt programming overview::          A brief summary of Web application programming with Gestalt
+* MVC in Gestalt::                        How Gestalt approaches the MVC architecture
+* The model::                             The Web application bussiness objects in Gestalt
+* Model overview::                        An overview of what's the model like in Gestalt
+* Why an object database?::               An explanation of why we stick to an object database
+* Defining model objects::                How to define Gestalt model objects
+* Objects validation::                    How model validation is done in Gestalt
+* Consistent objects::                    What consistent objects are.
+* Objects that require arguments::        How to define objects that require arguments
+* The Elephant object database::          An overview of the Elephant object database
+* The controller::                        The Web application controller in Gestalt
+* Controller overview::                            The application controller in Gestalt overview
+* Programming with components::                    How programming with components feels like.
+* Continuations::                                  What continuations are
+* Continuations and web applications programming:: How are continuations used in web applications development
+* Continuations and components::                   How are continuations and components related
+* Model objects validation::                       How the controller deals with model objects validation errors
+* View updates::                                   How the view gets updated
+* View update overview::                           An overview of how the view gets updated
+* Dataflow extensions::                            Summary of the dataflow programming extensions in Gestalt
+* Dataflow and memory management::                              A brief description on how the memory in managed under dataflow
+* The dynamic environment::                        Section about the dyanmic environment and what we can do with it
+* Component threads and database transactions::    Component threads and database transactions overview
+* Context Oriented Programming::                   Context Oriented Programming overview
+* Layered components::                             Layered components overview
+* The view::                              The Web application view in Gestalt
+* View overview::              An overview of how the view is approached in Gestalt
+* Defining a template::        The Gestalt template system overview
+* Template assignation::       How templates get assigned to components
+* Template elements::          Template elements
+* Templates and scope::        Scope and template definitions
+* Template combinations::      How templates can be combined
+* Custom templates::           How to define your own class of templates
+* Built-in templates classes:: Short reference of the already defined template classes
+
+References
+
+Appendix
+
+* System reference::                      Reference of system definitions
+
+@end detailmenu
+@end menu
+
+@node Introduction
+@chapter Introduction
+Gestalt is yet another Common Lisp Web framework. Its purpose is to both try to make simple things simple and investigate new ideas in Web development.
+
+  You can get a copy and this manual at @url{http://common-lisp.net/project/gestalt}
+
+@menu
+* Summary::                     A brief summary of what Gestalt is
+* Installation::                How to install Gestalt
+* Feedback::                    Bug reports, ideas, patches etc.
+* Conventions::                 Type-setting conventions in the manual
+@end menu
+
+@node Summary
+@section Summary
+@cindex summary
+
+This is Gestalt summary...
+
+@node Installation
+@section Installation
+@cindex installation
+
+To install gestalt, start a Common Lisp session and type the following:
+
+@example
+CL-USER> (require :asdf-install)
+CL-USER> (asdf-install:asdf-install 'gestalt)
+@end example
+
+@node Feedback
+@section Feedback
+@cindex feedback
+
+Mail marianomontone at gmail dot com with feedback
+
+@node Conventions
+@section Conventions
+@cindex conventions
+
+Hear are some coding conventions we'd like to follow:
+
+@itemize
+
+@bullet{We @emph{do} believe in documentation. Document your dynamic variables, functions, macros and classes. Besides, provide a documentation from a wider perspective. Provide diagrams and arquitecture documentation; examples and tutorials, too. Consider using an automatic documentation generator (see the bitacora package in the dependencies).}
+
+@bullet{We don't want functions to be shorter than the should nor longer than they should. There is no "every function should have at most ten lines of code" rule. We think that coding is like literature to a great extent. So you should strive for beauty and clarity. Again, that your code is object oriented doesn't imply that your methods will ideally have two lines of code and dispatch to somewhere else; that is not always good at all. It may be good from an object oriented point of view, but it is too low level. We want to think in terms of languages, that is higher level,  instead of objects sending messages.}
+
+@bullet{Use destructuring-bind or let or a pattern-matching library instead of car, cdr, cadr, and the like to obtain more readable code.}
+
+@bullet{Use widely known Common Lisp coding guidelines: @url{http://web.archive.org/web/20050305123711/www.lisp.org/table/style.htm}}
+
+@end itemize
+
+@node Web application programming
+@chapter Web application programming
+@cindex web programming
+
+Web application programming is like this...
+
+@menu
+* Web application programming overview::  A brief summary of Web application programming
+* Problems::                              The problems of Web application programming
+* MVC in the Web::                        The Model-View-Controller in the Web
+@end menu
+
+@node Web application programming overview
+@section Web application programming overview
+
+Web application programming is like this
+
+@node Problems
+@section Problems
+@cindex web programming, problems of
+
+The problems with Web application programming are these...
+
+@node MVC in the Web
+@section MVC in the Web
+@cindex mvc
+
+The MVC in the Web is like this...
+
+@node Programming with Gestalt
+@chapter Programming with Gestalt
+
+Web application programming with Gestalt is like that...
+
+@menu
+* Gestalt programming overview::          A brief summary of Web application programming with Gestalt
+* MVC in Gestalt::                        How Gestalt approaches the MVC architecture
+* The model::                             The Web application bussiness objects in Gestalt
+* The controller::                        The Web application controller in Gestalt
+* The view::                              The Web application view in Gestalt
+@end menu
+
+@node Gestalt programming overview
+@section Gestalt programming overview
+@cindex gestalt, programming in
+
+   Gestalt applications follow a MVC architecture. At the model layer, the framework is designed to work with an optimistic object database; that's because implicit saving of objects and long transactions are needed by the rest of the parts of the framework.
+   
+   At the controller level, we use a component based approach, a lot like the @url{http://seaside.st} Seaside framework; dataflow semantics for view updating.
+   
+   Finally, at the view level, we use a flexible and conveniente template engine and a set of widgets.
+
+@node MVC in Gestalt
+@section MVC in Gestalt
+
+MVC in Gestalt is like this...
+
+@node The model
+@section The model
+
+@menu
+* Model overview::                 An overview of what's the model like in Gestalt
+* Why an object database?::        An explanation of why we stick to an object database
+* Defining model objects::         How to define Gestalt model objects
+* Objects validation::             How model validation is done in Gestalt
+* Consistent objects::             What consistent objects are.
+* Objects that require arguments:: How to define objects that require arguments
+* The Elephant object database::   An overview of the Elephant object 
+@end menu
+
+@node Model overview
+@subsection Model overview
+@cindex model
+
+The model in a Gestalt application is based on an object database...
+
+@node Why an object database?
+@subsection Why an object database?
+@cindex object database
+
+    We persist objects in an object database because, on the one hand, our framework architecture relies on being able to store objects implicitly; that means, it is important for composability not to do explicit call to a save method on objects. Object database provide just this; they let us save objects implicitly just adding them to some root object. This let's us preserve composability.
+
+    On the other hand, we need optimistic transactions. This is not a unique object database feature, but available RDBMs do not provide this in general, and the object database we are using does.
+
+@node Defining model objects
+@subsection Defining model objects
+
+@node Objects validation
+@subsection Objects validation
+
+@node Consistent objects
+@subsection Consistent objects
+
+@node Objects that require arguments
+@subsection Objects that require arguments
+
+@node The Elephant object database
+@subsection The Elephant object database
+
+@node The controller
+@section The controller
+@cindex controller
+
+@menu
+* Controller overview::                            The application controller in Gestalt overview
+* Programming with components::                    How programming with components feels like.
+* Continuations::                                  What continuations are
+* Model objects validation::                       How the controller deals with model objects validation errors
+* View updates::                                   How the view gets updated
+* Dataflow extensions::                            Summary of the dataflow programming extensions in Gestalt
+* The dynamic environment::                        Section about the dynamic environment and what we can do with it
+@end menu
+
+@node Controller overview
+@subsection Controller overview
+
+@node Programming with components
+@subsection Programming with components
+
+@node Continuations
+@subsection Continuations
+@menu
+* Continuations and web applications programming:: How are continuations used in web applications development
+* Continuations and components::                   How are continuations and components related
+@end menu
+
+@node Continuations and web applications programming
+@subsubsection Continuations and web applications programming
+
+@node Continuations and components
+@subsubsection Continuations and components
+
+@node Model objects validation
+@subsection Model objects validation
+
+@node View updates
+@subsection View updates
+
+@menu
+* View update overview::                           An overview of how the view gets updated
+@end menu
+
+@node View update overview
+@subsubsection View update overview
+
+@node Dataflow extensions
+@subsection Dataflow extensions
+@menu
+* Dataflow and memory management::                              A brief description on how the memory in managed under dataflow
+@end menu
+
+@node Dataflow and memory management
+@subsubsection Dataflow and memory management
+
+I have thought dataflow extensions to be used with a garbage collector. That means, you should use weak-references most of the time, and strong-referencing and explicit memory deallocation in exceptional cases. For example, you may want to respond to some event in some object, but you may not be interested in that object itself. So you want to reference the object strongly because it would be gone otherwise. REVISE THIS PREVIOUS SENTECES.
+
+@node The dynamic environment
+@subsection The dynamic environment
+
+This is a section...
+
+@menu
+* Component threads and database transactions::    Component threads and database transactions overview
+* Context Oriented Programming::                   Context Oriented Programming overview
+* Layered components::                             Layered components overview
+@end menu
+
+@node Component threads and database transactions
+@subsubsection Component threads and database transactions
+
+This is a subsection...
+
+@node Context Oriented Programming
+@subsubsection Context Oriented Programming
+
+This is a subsection...
+
+@node Layered components
+@subsubsection Layered components
+
+@node The view
+@section The view
+@cindex view
+
+@menu
+* View overview::              An overview of how the view is approached in Gestalt
+* Defining a template::        The Gestalt template system overview
+* Template assignation::       How templates get assigned to components
+* Template elements::          Template elements
+* Templates and scope::        Scope and template definitions
+* Template combinations::      How templates can be combined
+* Custom templates::           How to define your own class of templates
+* Built-in templates classes:: Short reference of the already defined template classes
+@end menu
+
+@node View overview
+@subsection View overview
+
+     We achieve view-model-controller separation by means of templates. In spite of not begin of much use in some frameworks, I think they are indispensible for working with graphic designers.
+
+    In Gestalt, templates are first-class XML entities. They are loaded in memory in your web application, and you can inspect them and modify them incrementally and on the fly.
+
+@node Defining a template
+@subsection Defining a template
+
+To define a template, we use the xml template element syntax:
+@itemize
+@emph{Syntax:}
+@example
+<template component-class="[component-class-name]"
+          [qualifiers="@{qualifier@}*"] 
+          [template-metaclass="template-metaclass-name"]
+          [options="@{option@}*"]>
+   @{xml-element@}*
+</template>
+@end example
+
+@emph{Arguments and values:}
+@itemize
+@emph{component-class-name} -- The class name of the child component
+
+@emph{qualifier} -- The template definition qualifiers. In a standard-template-combination, one of @emph{AROUND}, @emph{BELOW}, @emph{ABOVE}. This attribute is optional.
+
+@emph{template-metaclass-name} -- The template metaclass. The template metaclass defines the way the templates qualifiers are interpreted and how the templates are attached to the component. Important restriction: all the templates defined for a particular class of component (you can have different definitions for the same class of component through templates qualifiers) must have the same template-metaclass. If this attribute is not specified, then the template-metaclass used is standard-template-metaclass. This attribute is optional.
+
+@emph{options} -- The options are arbitrary strings consumed by the template-metaclass.
+@end itemize
+@end itemize
+
+@emph{Description:}
+The template xml element defines a template for a certain component class.
+
+@emph{Examples:}
+@example
+<template class="person">
+  <p>Name: </p> <container slot="name" 
+                           class="label"/>
+  <p> Lastname: </p> <container slot="lastname"
+                                class="label"/>
+</template>
+@end example
+
+@node Template assignation
+@subsection Template assignation
+
+@node Template elements
+@subsection Template elements
+
+@menu
+* Container elements::         Embedding components in templates
+* Container classes::          Container classes
+* Design alternatives::        Design alternatives for container objects
+* Collection elements::        Embedding a collection of elements
+@end menu
+
+@node Container elements
+@subsubsection Container elements
+Container elements refer to a model slot. The component slot is supposed to refer to a component or be null. If no component is begin referenced by the slot, then nothing is displayed. If the slot references a component, then a view is searched for it, attached to it, and displayed in the place the container element is found.
+@subsubsection Container definition
+@itemize
+@emph{Syntax:}
+@example
+<container slot="[slot-name]" 
+                 [class="container-class"]
+       @{attributes@}*/>
+@end example
+
+@emph{Arguments and values:}
+@itemize
+@emph{slot-name} -- The name of the slots that contains the child component.
+
+@emph{container-class-name} -- The name of the container-class.
+
+@emph{attributes} -- A list of xml-attributes specifications that are used by the container-class.
+@end itemize
+
+@emph{Example}
+@example
+<template class="person">
+   <container slot="name"/>
+   <container slot="lastname"/>
+   <container slot="friend"/>
+</template>
+@end example
+@end itemize
+
+@emph{Arguments and values:}
+
+@node Container classes
+@subsubsection Container classes
+@itemize
+@emph{Motivation}
+When we use a container element to embed a component, the described algorithm is used to match the component view. But what we are trying to embed is a widget, things get a little too rigid. Let's take the following example to see this:
+@example
+<template class="person">
+   <p>Name:</p><container slot="name"/>
+   <p>Lastname:</p><container slot="lastname"/>
+   <container slot="friend"/>
+</template>
+@end example
+        In this example, we are saying we want the name and lastname of the person embedded, but we are not saying how. Let's suppose we have two Label wslotgets on them, as we are only interested in reading them, not writing the attributes. But we may want to represent that with a read-only text input instead of that. So we may use a container-class read-only-text-input to control that.
+@example        
+<template class="person">
+   <p>Name:</p><container slot="name"
+                          class="read-only-text-input"/>
+   <p>Lastname:</p><container slot="lastname"
+                              class="read-only-text-input"/>
+   <container slot="friend"/>
+</template>
+@end example
+
+@emph{Defining container classes:}
+@itemize
+@emph{Syntax:}
+@example
+@emph{- Macro:}
+   define-container-class name (@{superclasses@}*)
+      (@{slots@}*)
+      (:compatiblity compatiblity-list)
+      [(:render (view-type stream) @{form@}*)]
+@end example
+
+@emph{Arguments and values:}
+@itemize
+@emph{name} -- The name of the container class
+
+@emph{superclasses} -- The classes the container class inherits from
+
+@emph{slots} -- The list of the container class slots
+
+@emph{compatibility-list} -- The list of the other container-classes this container-class is compatible with. 
+@end itemize
+
+@emph{Description:}
+Defines a new container class.
+
+@emph{Examples:}
+@example
+(define-container-class read-only-text-input (label)
+     ()
+     (:render (self stream (view-type (:eql 'html)))
+                 (with-xml (stream)
+                     (input :type "text"
+                            :readonly t
+                            :value (esc (print-string (model self))))))
+             (:compatilibity-list '(label)))
+@end example
+In this case, the compatibility list indicates that a read-only-tet-input can be used in place of a label.
+@end itemize
+@end itemize
+
+@node Design alternatives
+@subsubsection Design alternatives
+
+Maybe container elements are just too rigid. We can use a container-element mixin and a define-container-element macro and just use the name of the container element in the tag of the xml element.
+
+Example:
+
+@example
+(define-container-element text-input ()
+           )
+@end example
+
+And then:
+@example
+<template class="person">
+   <p>Name:</p><text-input slot="name"
+                           read-only="t"/>
+   <p>Lastname:</p><container slot="lastname"
+                              read-only="t"/>
+   <container slot="friend"/>
+</template>
+@end example
+
+instead of:
+
+@example
+<template class="person">
+   <p>Name:</p><container slot="name"
+                          class="read-only-text-input"/>
+   <p>Lastname:</p><container slot="lastname"
+                              class="read-only-text-input"/>
+   <container slot="friend"/>
+</template>
+@end example
+
+@node Collection elements
+@subsubsection Collection elements
+
+Collection elements are a special kind of container elements. They are used to display collections of components.
+
+@itemize
+@emph{Syntax:}
+@example
+collection-element ::= <collection slot="slot-name"
+                                [binding="binding-name"]>
+                                @{template-definition@}*
+                                @{xml-element | collection-element@}*
+                       </collection>
+collection-element ::= <collection-element [binding="binding-name"]/>
+@end example
+
+@emph{Arguments and values:}
+@itemize
+@emph{slot-name} -- The name of the slot that contains the collection of components.
+
+@emph{binding-name} -- The name of the variable that binds the collection elements.
+
+@emph{template-definition} -- A local template definition. Collection elements are scoped elements. That means you can define local templates in their bodies.
+@end itemize
+
+@emph{Description:}
+Collection elements come in two flavors:
+
+@itemize
+@emph{Collection elements without body}
+This is the easiest and more straightforward way of displaying a collection of elements. We display a collection of component; each component gets a view attached following the standard algorithm.
+Example:
+@example
+<template class="person">
+   <p>Name</p><text-input slot="name" style="read-only;"/>
+   <p>Lastname</p><text-input slot="lastname" style="read-only;"/>
+   <collection slot="friends"/>
+</template>
+@end example
+
+@emph{Collection elements with body}
+This flavor lets the user display the elements of a collection in a particual way. As a collection element is a scoped-element, we can define local templates in the beggining of its body.
+Example: we can display a person's friends in a table like this:
+@example
+<template class="person">
+            <p>Name</p><text-input slot="name" style="read-only;"/>
+            <p>Lastname</p><text-input slot="lastname" style="read-only;"/>
+            <table>
+               <tbody>
+         <collection slot="friends">
+           <template class="person">
+               Name: <label slot="name"/> lastname: <label slot="lastname"/>
+           </template>
+           <tr><collection-element/></tr>
+         </collection>
+               </tbody>
+            </table>
+          </template>
+@end example
+
+@emph{Collection bindings}
+It may be desirable to give collection bindings a name instead of doing it implitly by the standard form of collection-element xml element. This is true in situations we we want to nest two collections of elements. In that case, we can use the 'binding' attribute.
+Example:
+@example
+          <collection slot="friends" binding="friend">
+             <collection slot="friend-friend">
+           <tr>
+             <td><collection-element binding="friend"/>
+                 <collection-element binding="friend-friend"/>
+             </td>
+           </tr>
+             </collection>
+          </collection>
+@end example
+@end itemize
+@end itemize
+
+@node Templates and scope
+@subsection Templates and scope
+    Some templates elements introduce new scopes. That means we can declare templates that are relevant in the scope of that element only. The most common examples of those elements are template and collection. Those elements may have a list of template definitions in the beggining of their body, before any other type of xml element.
+
+Examples:
+@example
+    <template class="person">
+      <template class="person">
+         <p>Friend name:</p><label slot="name"/>
+         <p>Friend lastname:</p><label slot="lastname"/>
+      </template>
+      <p>Name:<p><label slot="name"/>
+      <p>Lastname:</p><label slot="lastname"/>
+      <container slot="friend"/>
+    </template>
+    
+    <template class="person">
+         <p>Name</p><text-input slot="name" style="read-only;"/>
+         <p>Lastname</p><text-input slot="lastname" style="read-only;"/>
+         <table>
+            <tbody>
+              <collection slot="friends">
+                <template class="person">
+                    Name: <label slot="name"/> lastname: <label slot="lastname"/>
+                </template>
+                <tr><collection-element/></tr>
+              </collection>
+            </tbody>
+         </table>
+       </template>
+@end example
+
+Implementation: XML elements that introduce new scopes are inherited from the scoping-template-element class. You can inherit from it when defining your own template elements.
+
+@node Template combinations
+@subsection Template combinations
+
+@menu
+* Template combinations overview::         A brief summary of what template combinations are
+* Standard template combination::          The standard template combination
+@end menu
+
+@node Template combinations overview
+@subsubsection Template combinations overview
+
+In order to improve templates composition we provide template combinations. Template combinations are a lot like Common Lisp method combinations and are inspired by them, but for templates. The default template combination in standard-template-combination.
+    
+    Template combinations use the qualifiers of the template definition for instantiating the view to the component.
+
+@node Standard template combination
+@subsubsection Standard template combination
+    The standard template combination recognizes AROUND, ABOVE  and BELOW qualifiers, corresponding to AROUND, BEFORE and AFTER of standard method combination.
+
+@itemize
+@emph{AROUND combination}
+      AROUND templates are displayed around the ABOVE, PRIMARY and BELOW templates. Templates embedding is achieved through the element <next-template/>
+      Example:
+      @example
+        <template component-class="person"
+           qualifiers="around">
+            <div style="background-color:red;">
+        <next-template/>
+            </div>
+        </template>
+      @end example  
+      This makes the person to be displayed inside a red coloured box.
+
+@emph{ABOVE combination}
+ABOVE templates are displayed above the PRIMARY template.
+   Example:
+   @example
+        <template class="person"
+           qualifiers="above">
+            <p>There's a person below this message</p>
+        </template>
+   @end example
+
+@emph{BELOW combination}
+  BELOW templates are displayed below the PRIMARY template
+  Example:
+  @example
+        <template class="person"
+           qualifiers="below">
+            <p>There's a person above this message</p>
+        </template>
+  @end example      
+@end itemize
+
+
+@node Custom templates
+@subsection Custom templates
+
+It is possible to define custom templates through a MOP.
+
+The algorithm to change the way views are assigned to component can be changed creating a new template-metaclass, assigning a new template-combintation to it and defining the appropiate methods. For an example of this, see [Context oriented templates].
+
+@node Built-in templates classes
+@subsection Built-in templates classes
+
++ Standard templates 
+    standard-template-class
++ Context oriented templates 
+    cop-template-class
+
+@node System reference
+@chapter System reference
+@cindex reference
+
+ [Common Lisp Directory]
+  
+  [Smalltalk Seaside Web Framework]
+
+  [Common Lisp Wiki]
+
+  [Cells - A Common Lisp dataflow extension]
+
+  [[http://common-lisp.net/project/elephant][Elephant - A Common Lisp object database]
+
+  [Common Lisp Directory]: http://common-lisp.net
+  [Smalltalk Seaside Web Framework]: http://seaside.st
+  [Common Lisp Wiki]: http://www.cliki.net
+  [Cells - A Common Lisp dataflow extension]: http://common-lisp.net/project/cells
+
+@node Appendix
+@chapter Appendix
+@cindex appendix
+
+This is the appendix...
+
+@node Index
+@unnumbered Index
+
+@printindex cp
+
+@bye
