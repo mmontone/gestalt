@@ -121,6 +121,9 @@ Programming with Gestalt
 * The controller::                        The Web application controller in Gestalt
 * Controller overview::                            The application controller in Gestalt overview
 * Programming with components::                    How programming with components feels like.
+* Application composition::     How to embed components inside other
+* Call and answer semantics::   How we control the application flow?
+* Component wrappers::          What are component wrappers
 * Continuations::                                  What continuations are
 * Continuations and web applications programming:: How are continuations used in web applications development
 * Continuations and components::                   How are continuations and components related
@@ -296,11 +299,101 @@ The model in a Gestalt application is based on an object database...
 @node Objects validation
 @subsection Objects validation
 
+@example
+(defmethod validate ((person person))
+  (check (and (stringp (name person))
+	      (> (length (name person)) 0)))
+  (check (and (stringp (lastname person))
+	      (> (length (lastname person)) 0))))
+@end example
+
 @node Consistent objects
 @subsection Consistent objects
 
+@example
+(defclass person ()
+  ((name :initarg :name
+	 :accessor name
+	 :initform "")
+   (lastname :initarg :lastname
+	     :accessor lastname
+	     :initform ""))
+  (:metaclass consistent-object-class)
+  (:documentation "A person"))
+
+(defmethod validate ((person person))
+  (ensure (and (stringp (name person))
+	       (> (length (name person)) 0))
+	  "Provide a name for ~A" person)
+  (ensure (and (stringp (lastname person))
+	       (> (length (lastname person)) 0))
+	  "Provide a lastname for ~A" person))
+  
+(test consistent-object-test
+      ;; The following fails:
+      (signals consistency-error
+	       (make-instance 'person))
+      ;; The following fails:
+      (signals consistency-error
+	(let (person)
+	  (suspending-consistency-for (person)
+	    (setf person (make-instance 'person))
+	    (setf (name person) "Mariano")
+	    person)))
+
+      ;; The following fails:
+      (signals consistency-error
+	       (let ((person (make-instance 'person)))
+		 (setf (name person) "Mariano")
+		 (setf (lastname person) "Montone")))
+
+      ;; The following works:
+      (finishes
+	(let (person)
+	  (suspending-consistency-for (person)
+	    (setf person (make-instance 'person))
+	    (setf (name person) "Mariano")
+	    (setf (lastname person) "Montone")
+	    person)))
+      
+      ;; Test the result is correct:
+      (let (person)
+	(let ((p (suspending-consistency-for (person)
+		   (setf person (make-instance 'person))
+		   (setf (name person) "Mariano")
+		   (setf (lastname person) "Montone")
+		   person)))
+	  (is (name p) "Mariano")
+	  (is (lastname p) "Montone"))))
+@end example
+
 @node Objects that require arguments
 @subsection Objects that require arguments
+
+@example
+(defclass person ()
+  ((name :initarg :name :required t)
+   (lastname :initarg :lastname :required t :error-msg "Please give me a lastname!!")
+   (phone :initarg :phone :initform "" :required nil)
+   (address :initarg :address :initform ""))
+  (:metaclass required-slots-class)
+  (:documentation "The class definition to test required slots"))
+
+(defmethod print-object ((person person) stream)
+  (print-unreadable-object (person stream :type t :identity t)
+    (format stream "name: ~A lastname: ~A phone: ~A address: ~A"
+	    (slot-value person 'name)
+	    (slot-value person 'lastname)
+	    (slot-value person 'phone)
+	    (slot-value person 'address))))
+
+(test required-slots-class-test
+  (signals required-slot-error (make-instance 'person))
+  (signals required-slot-error (make-instance 'person :name "Mariano"))
+  (signals required-slot-error (make-instance 'person :lastname "Montone"))
+  (finishes (make-instance 'person :name "Mariano" :lastname "Montone"))
+  (signals required-slot-error (make-instance 'person :address "Mi casa")))
+@end example
 
 @node The Elephant object database
 @subsection The Elephant object database
@@ -324,6 +417,237 @@ The model in a Gestalt application is based on an object database...
 
 @node Programming with components
 @subsection Programming with components
+@menu
+* Application composition::     How to embed components inside other
+* Call and answer semantics::   How we control the application flow?
+* Component wrappers::          What are component wrappers
+* Application navigation and bookmarking::  Application navigation and bookmarking
+@end menu
+
+@node Call and answer semantics
+@subsubsection Call and answer semantics
+When an active component calls another, it loses its control and passes it to the called component. The called component becomes the active one.
+
+If an unactive component answers, then an error is raised (although proper restarts are available).
+
+If an unactive component calls another, then an error is raised (although proper restarts are available).
+
+If a child component calls another, then it loses focus, and the called one gains control.
+
+If a child component answers an object, then it desappears from the screen. The parent can set a callback on it to intercept the child component answer. Child components multiply the flow of control. Continuation passing doesn't hold anymore in their presence. Example:
+
+@example
+(defmethod initialize :after ((component my-component) &rest initargs)
+  (declare (ignore initargs))
+  (add-child (component first-child)
+   (format t "This is the first flow of control")
+   (let ((answer (call (make-instance 'my-child-component)))) ;; This embeds and sets the child component
+     ;; The answer
+     (format t "The first child component answered ~A" answer)))
+  (add-child (component second-child)
+   (format t "This is the second flow of control")
+   (let ((answer (call (make-instance 'my-child-component)))) ;; This embeds and sets the child component
+     ;; The answer
+     (format t "The second child component answered ~A" answer))))
+@end example
+
+@node Application composition
+@subsubsection Application composition
+
+Wow!! add-child doen't take a component, it is a macro and takes a block of code (that corresponds to the concurrent control flow). It is the fork equivalent!! Great...
+
+Sketchy implementation:
+
+@example
+(defmacro add-child (component slot &rest body)
+  (once-only (component)
+	     `(setf (slot-value ,slot ,component)
+		    (make-instance 'child-component-handler
+				   :name (symbol-name ,slot)
+				   :parent ,component
+				   :go (lambda (self)
+					 ,@@body)))))
+
+(defmethod call ((self child-component-handler) other-component &rest args)
+  "call redefinition for child components calling"
+  ;; set which is the child component (we need that, the template system needs to know which are the child components, for example)
+  (setf (component self) component)
+  ;; invoque the original call operation
+  (prim-call self comp args))
+
+(defmacro simple-add-child (component slot child-component)
+  "Adds a child-component without 'threading code' complications"
+  `(add-child ,component ,slot
+	      (call ,child-component)))
+@end example              
+
+child-component-handler may be designed as a subclass of task as it has a :go lambda.
+It is different from a task because we need to redefine the call method on it in order to indicate
+which is the new child component in the slot.
+
+tasks are components with a :go lambda.
+
+(defclass task (component)
+  ((go :initarg :go :accessor go)))
+
+Note: task components or variations of them may act as component-wrappers and/or child-component-handlers. Think about that.
+
+We can extend this idea of child "components" and consider "building the whole component tree from lambdas"
+
+About "component tree from lambdas":
+-------------------------------
+
+We can build the component tree from lambdas. The semantics of some of the operations depends on what kind of component we are building.
+
+For example, to declare the main component, we could have:
+
+@example
+(defapplication my-application ()
+  ())
+
+(defvar *application* nil "The running application")
+@end example
+
+;; We use defmethod/cc. We need continuations for component calling, and dynamic environment restoring (contextl) so that dynamic variables and
+;; other structures continue to make sense in presence of continuations.
+
+@example
+(defmethod/cc start-application :around ((app application))
+   (let
+       ((*application* app))
+     (dflet ;; dynamic functions binding
+         ((call (component)  ; the semantics of the call operation depends on the context (in this case we are setting the root component)
+	      (set-root-component *application* component)))
+	 (call-next-method))))
+
+(defmethod/cc start-application ((app my-application))
+  ;; now, this is an example of how we can specify the root component of our application
+  (loop while t
+       do (let ((user (call (make-instance 'login-component))))
+	    (set-logged-user user)
+	    (call (make-instance 'main-component))
+	    (unlog-user))))
+@end example            
+
+Other example, is the semantics of call when adding child components.
+
+@node Component wrappers
+@subsubsection Component wrappers
+Implement component-wrappers (should be the equivalent of :after :before :around and other method combinations for methods).
+
+component-wrappers should alter the behaviour of a component (for example, its rendering), but should remain transparent to some machinery (for example, the templating engine assignment policy should be independent of component-wrappers. component-wrappers are invisible to the template-engine).
+
+Use case:
+
+We can use component-wrappers to build complex objects editors. In general, an object editor should not contain an accept and cancel button, because that depends on the context. So, the following is incorrect:
+
+@example
+(defcomponent person-editor ()
+  ((name :type :input :model (name model))
+   (lastname :type :input :model (lastname model))
+   (accept :type :button :on-click (accept-edition self))      <-- The accept button should not belong to the editor
+   (cancel :type :button :on-click (cancel-edition self))))    <-- The cancel button should not belong to the editor
+@end example   
+
+The problem with this design is that it is difficult to build more complex editors from existent ones.
+
+@example
+(defcomponent artist-editor ()
+  ((artistic-name :type :input :model (artistic-name model))
+   (art :type :input :model (art model))
+   (accept :type :button :on-click (accept-edition self))      <-- The accept button should not belong to the editor
+   (cancel :type :button :on-click (cancel-edition self))))    <-- The cancel button should not belong to the editor
+@end example
+
+The problem is that person-editor and artist-editor are not incompatible by design, but we are adding the accept and cancel button twice.
+
+A possible solution is to use component-wrappers:
+
+@example
+(defcomponent-wrapper editor-wrapper ()
+  (:render (component wrapper)
+	   (call-next-method)    ; We render the component
+	   ; We render the accept and cancel buttons once.
+	   (accept :type :button :on-click (accept-edition self))
+	   (cancel :type :button :on-click (cancel-edition self))))
+
+(defmethod call ((wrapper editor-wrapper))
+  ; We wrap the editor call
+  (with-transaction
+      (call (component wrapper))))
+@end example      
+
+And with transaction should expand to something similar to:
+
+@example
+(unwind-protect
+     (tagbody edition-block
+	(restart-case (progn
+			(begin-transaction)
+			(call (component wrapper))
+			(commit-stm-transaction))
+	  (retry-edition ()
+	    :report (lambda (stream)
+		      (format stream "Restart the edition"))
+	    ;; This is all. It's responsibility of the piece of code that
+	    ;; throws errors to provide other restarts, such as :continue, for example.
+	    (rollback-transaction)
+	    (go edition-block))
+	  (abort-edition ()
+	    :report (lambda (stream)
+		      (format stream "Abort the edition"))
+	    (rollback-transaction))))
+  (when (transaction-active)
+    (rollback-transaction)))
+@end example
+
+THIS IS WHY WE NEED TO ADAPT DYNAMIC LANGUAGE CONSTRUCTS TO COMPONENT CHAINING!!
+
+Finally, under this scheme, the editor component should commit anything on accept, and raise a signal (versioning-error, etc) on error.
+
+@node Application navigation and bookmarking
+@subsubsection Application navigation and bookmarking
+The bookmarking problem is difficult to solve in the context of a complex Web application. In particular, it is not clear how to obtain a particular state of the application from a simple bookmarking string. Besides, there are some states of the application that cannot and should not be reached by bookmarking. That's the case of a user session navigation (content that is available to a logged user only) or a commercial transaction, for example. So, first, we must identify the parts of the application that are reachable by bookmarking. Second, we must provide a framework that allows us to do that as simply and naturally as possible.
+
+One approach to solve the problem, would be to map the application as a state transition machine, identify the navigational paths, and apply a tag to each one of them. But we've already seen that determine each of the states is not desirable in complex Web applications. So we'd better find a better approach.
+
+Discarding the state machine, there are at least two more possibilities to solve the problem:
+
+One would be to register the components calling chain. The advantages are: we can repeat the navigation chain to reach any state. The disadvantages are: the chain of components gets large depending of how much time the user has been navigating. That is to say, how many transitions the user caused. On the other hand, there's room for a lot of unnecesary applications transitions; a same state could have been reached with less transitions. This is because this solution is not mapping a multiple input (components transition) to a unique output (a declarative application state specification). [See the next section for a generalized explanation of this problem].
+
+The other option is to register pertinent navigation layers and component states to reach the desired state. Bookmarks have a declarative taste, like this.
+
+@example
+bookmark = layers=layer1:layer2+collection-navigator-1:offset=22:segment=22... etc
+@end example
+
+Each component should define how to be restored given some parameters. Some components may be uninteresting to restore, once more, depending on the context.
+
+Bookmarking configuration: we can have three ways of configuring a component.
+@enumerate
+From the component itself (subclasses, mixins, class definition).
+@example
+(defcomponent collection-navigator ()
+
+  (:bookmarking (offset :accessor bm-offset) ;; bm-offset is used to extract the offset in bookmarking format. (setf bm-offset) is used to set the component offset from a bookmarking parameter)
+		(segment :accessor bm-segment))
+  (:bookmark :all))
+@end example  
+
+From the outside.
+@example
+(with (make-instance 'collection-navigator :on my-collection)
+      (disable-bookmarking-of 'segment it)
+      (call it))
+@end example      
+
+From the outside, dynamically. It may be useful if we don't want to bookmark certain embedded subcomponent nor any of its components.
+@example
+(with (make-instance 'my-complex-component)
+      (disabling-bookmarking
+       (call it)))
+@end example       
+@end enumerate
 
 @node Continuations
 @subsection Continuations
@@ -365,23 +689,300 @@ I have thought dataflow extensions to be used with a garbage collector. That mea
 @node The dynamic environment
 @subsection The dynamic environment
 
-This is a section...
-
 @menu
+* Component threads::                              What component threads are
+* Example - Programming a login::                  A login example
 * Component threads and database transactions::    Component threads and database transactions overview
 * Context Oriented Programming::                   Context Oriented Programming overview
 * Layered components::                             Layered components overview
 @end menu
 
+@node Component threads
+@subsubsection Component threads
+
+Child threads are aborted if the parent is aborted. For example, if the user hits the logout button of the root component, all of the child components are aborted before aborting the root component.
+
+So, for example:
+
+@example
+(defapplication my-application ()
+  ())
+
+(defmethod/cc start-application ((app my-application))
+  ;; now, this is an example of how we can specify the root component of our application
+  (loop while t
+       do (let ((user (call (make-instance 'login-component))))
+	    (set-logged-user user)
+	    (call (make-instance 'main-component)) ; **
+	    (unlog-user))))
+@end example            
+
+When the user hits the logout button of the main-component, the main-component child threads are aborted before proceeding. Note that aborting a child component may lead to some behaviour. For example, if the child component is an editor that is configured to ask for cancellation in case the user leaves the component. Then, trying to logout, will raise the cancelling exception and a dialog box asking for cancellation will appear; the user will not be able to logout without asking. Now, that's ok, but it would be interesting to think how we can control that. For example, we may want the editor to avoid asking the question in case we hit the logout button, but ask it otherwise. It's not clear how to achieve that with a "threading" semantics. Possible solution??: the logout button activates a layer. That layer should deactivate the abort-condition catch up that shows the dialog, and provide some that just proceeds with the editor abortion. Not trivial anyway...but interesting.
+
+Not that the components threads semantics is preemtive; the parent component may abort nested components.
+
+Implementation thought: we may implement dynamic environments manual setting using ContextL dynamic-environments manipulation library. Then, each component would hold its own dynamic layer (or environment). The user should be able to control whether he wants to restore some dynamic environments or not. In the logout case, we don't want to restore the aborted component (editor) dynamic environment; we want to treat signaled conditions differently (for example, avoiding a question dialog, and proceeding instead). If the user leaves, or hits cancel, then we *do* want to restore the components dynamic environment.
+
+Sketch:
+
+Suppose we have A as the parent of B. B calls C for performing some operation.
+@example
+(defmethod initialize-instance :after ((comp A) &rest initargs)
+  (add-child comp
+	...     
+   (call comp 'B)
+     ...
+   ))
+
+;; add-child should get translated to the following:
+(let ((env (dynamic-environment comp)))
+  (with-dynamic-environment env ;; the parent component dynamic-environment
+    (dynamic-wind     ;; This *should* compose the local environment with the above one
+     ...
+     (proceed
+      (let ((child (make-instance 'B)))
+	(setf (environment child) (capture-dynamic-environment))
+	(effectively-add-child child)))
+     ...)))
+
+(defaction accept-action ((comp B))
+  ...
+  (call 'C)
+  ...)
+
+; should be translated to something like:
+(let ((env (dynamic-environment comp)))
+  (with-dynamic-environment env ;; the parent component dynamic-environment
+    (dynamic-wind     ;; This *must* compose the local environment with the above one
+     ...
+     (proceed
+      (let ((calle (make-instance 'B)))
+	(setf (environment calle) (capture-dynamic-environment))
+	(effective-call calle)))
+     ...)))
+
+;; Note:
+;; First: the code before and after the call (...) is part of the dynamic winding (altough if we have continuations "there's no after code").
+;; Second: with-dynamic-environment pushes the reevaluated thunks to the stack so we get an augmented dynamic environment when we call capture-dynamic-environment. So, now we have component threads dynamic-environments. So, for example, component threads dynamic variables can be accesed like this:
+
+(defdynamic my-var 33)
+(defdynamic parent-var 22)
+
+;; Luego podemos acceder esa variable con (dynamic my-var) en el scope generado a través de la inyección de environments en los componentes:
+
+(defmethod initialize-instance :after ((comp A))
+  (add-child comp
+    (dynamic-let
+       ((parent-var 45))
+         (call 'B))))
+
+(defaction accept-action ((comp B))
+  (dynamic-let
+    ((my-var 55))
+      (call 'C)))
+
+(defmethod initialize-instance :after ()
+    (print (dynamic parent-var)) ;; This prints 45!! (component thread variable!)
+    (print (dynamic my-var))) ;; This prints 55
+@end example    
+
+@emph{An example of thread semantics:}
+
+Queremos mostrar una lista y cada vez que hacemos click sobre uno de sus elementos, queremos abrir un editor en la parte de abajo de la pantalla:
+
+@example
+(defaction initialize ((comp main-component))
+  (add-child comp 'elements
+   (let ((list-component (make-instance 'collection-navigator :on *elements*)))
+     (on-click list-component
+	       (lambda (element)
+		 (add-child comp 'element-editor
+			    (with-transaction
+				(call (make-instance 'element-editor :on element)))))))))
+@end example                                
+
+Entonces, cada vez que el usuario hace click en un elemento, se corre el thread para agregar el editor de elementos. Si hay un editor mostrandose, entonces se aborta el thread. La forma de abortar el thread es recuperando el contexto dinámico asociado a la continuación del thread y hacer un (signal 'abort-thread) (no se ejecuta la continuación) bajo ese contexto. En este ejemplo, se estaŕia ejecutando el unwind-protect de with-transaction. En otro caso, se podría interrumpir la cancelación del thread, y preguntar por la cancelación de la edición, por ejemplo así:
+
+@example
+(defaction initialize ((comp main-component))
+  (add-child comp 'elements
+   (let ((list-component (make-instance 'collection-navigator :on *elements*)))
+     (on-click list-component
+	       (lambda (element)
+		 (add-child comp 'element-editor
+			    (with-transaction
+				(handler-case 
+				    (call (make-instance 'element-editor :on element))
+				  (abort-thread (e)
+				    (when (call (make-instance 'message-box :text "Cancelar edición del elemento?"))
+				      (signal e))))))))
+     (call list-component)))) ;; re-signal the condition  ;; we do nothing other wise (the component remains in place)
+@end example     
+
+Problema: cómo tratar a with-transaction bajo extensión dinámica??: No queremos ejecutar with-transaction cada vez; queremos reutilizar la transacción bindeada en rucksack:*transaction*!! We should redefine it something like:
+
+@example
+(defmacro with-transaction% (&rest body)
+  (with-gensyms (transaction)
+    `(with-transaction
+	 (let ((,transaction rucksack:*transaction*)) ; ,transaction should not be dynamically bound
+	 (component-dynamic-wind
+	  (let ((rucksack:*transaction* ,transaction))
+	    (proceed ,@@body)))))))
+
+(defmacro record-vars (vars &rest body)
+  "Records dynamically bound variables in the compoenent dynamic-environment"
+  (with-gensyms (proceed)
+    (let ((gensyms (mapcar #'gensym vars)))
+      `(let
+	   ,(loop for var in vars
+	       for gensym in gensyms
+	       collect `(,gensym ,var))
+	 (component-dynamic-wind ,proceed
+         	 (let
+		     ,(loop for var in vars
+			 for gensym in gensyms
+			 collect `(,var ,gensym)))
+		 (,proceed ,@@body))))))
+
+(defmacro with-dtransaction (&rest body)
+  `(with-transaction
+       (record-vars (rucksack::*transaction*)
+		    ,@@body)))
+
+(defmacro with-dactive-layers (&rest body)
+  `(with-active-layers
+       (record-vars (contextl::*active-context*)
+		    ,@@body)))
+@end example
+
+@node Example - Programming a login
+@subsubsection Example - Programming a login
+
+Dynamic extent and user login:
+------------------------------
+
+If we have dynamic-extent reexecution semantics, then we can add a check for the logged user in the continuation, like this:
+
+@example
+(defaction start ((app my-app))
+  (let (person)
+    (block login
+      (loop while t
+	 when person do (return)
+	 do (setf person (call (make-instance 'login-component)))))
+    ;; We begin the session: these ones should be executed once only!! (shouldnt be part of the dynamic-environment)
+    (proceed
+     (begin-session)
+     (set-logged-user person))
+    ;; We make a dynamic check
+    (if (current-session)
+	(call 'main-component)
+	;; else, we want the dialog to appear under the dynamic-extent
+	(call-component 'message-dialog :text "You have to login to do that!"))))
+@end example        
+
+Maybe we should design our own operators to introduce dynamic-environments:
+
+@example
+(defmacro my-handler-case (expr cases)
+  (with-gensyms (new-env proceed)
+    `(with-dynamic-environment ((dynamic-environment (component)))
+       (let ((,new-env
+	      (dynamic-wind ,proceed
+			    (handler-case
+				(,proceed expr)
+			      ,cases))))
+	 (setf (dynamic-environment (component)) new-env)))))
+@end example         
+
+De esta forma, tenemos que todo se ejecuta una sola vez, solo determinadas partes. Además, deberíamos tener un component-dynamic-wind mejor:
+
+@example
+(defmacro component-dynamic-wind (&rest body)
+  `(with-dynamic-environment ((dynamic-environment (component)))
+     (let ((,new-env
+	    (dynamic-wind ,@@body)))
+       (setf (dynamic-environment (component)) new-env))))
+@end example       
+
+Y así nos queda:
+
+@example
+(defmacro dhandler-case (expr cases)
+  (with-gensyms (proceed)
+    `(component-dynamic-wind ,proceed
+			     (handler-case
+				 (,proceed expr)
+			       ,cases))))
+@end example                               
+
+Y el login queda:
+
+@example
+(defaction start ((app my-app))
+  (let (person)
+    (loop while t
+       when person do (return)
+       do (setf person (call (make-instance 'login-component))))
+    ;; We begin the session: these ones should be executed once only!! (shouldnt be part of the dynamic-environment)
+    (begin-session)
+    (set-logged-user person)
+  ;; We make a dynamic check. This dynamic check affects all the components from the main-component ;)
+    (component-dynamic-wind
+     (if (current-session)
+	 (proceed (call 'main-component))
+	 ;; else, we want the dialog to appear under the dynamic-extent
+	 (call 'message-dialog :text "You have to login to do that!")))))
+@end example         
+
 @node Component threads and database transactions
 @subsubsection Component threads and database transactions
 
-This is a subsection...
+@emph{Nested component transactions semantics:}
+
+If the inner transaction commits, then nothing happens. All the changes are commited iff the top level transaction commits.
+
+If the inner transaction raises an error, or rollbacks, the outer transaction remains untouched. The inner transaction can be retried, and the computation resumes. That's why we have nested transactions; a nesting of transaction doesn't form a new bigger transaction, but the transactions hierarchy is preserved.
+
+If the outer transaction rollbacks, then al changes are discarded, including changes made in inner transactions.
+
+If the outer transaction commits, all the inner transactions must have been commited. If one of them is uncommited, then an error is raised (restart with the option to commit the remaining ones). If all of them are commited, then the outer transaction commits too, and all of the changes are made effective.
+Once more, errors should be propagated through the component chain (not through the stack-chain).
 
 @node Context Oriented Programming
 @subsubsection Context Oriented Programming
 
-This is a subsection...
+Once dynamic language constructs are adapted, we can start to use context oriented features for our application.
+
+Example:
+@example
+(deflayer listing-layer () ())
+
+We can layer the controller behaviour:
+
+(def-layered-component :layer listing-layer person-viewer (viewer))
+
+(def-layered-method :layer listing-layer initialize ((viewer person-viewer))
+		    ...)
+@end example                    
+
+After that we can do:
+
+@example
+(add-child
+ (with-active-layers (listing-layer)
+   (call (make-instance 'persons-component))))
+@end example   
+
+It is also possible, and may make sense, to make the template engine context aware:
+
+@example
+<template class="person-viewer"
+          layer="listing-layer">
+   ...
+</template>
+@end example
 
 @node Layered components
 @subsubsection Layered components
