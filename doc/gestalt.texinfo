@@ -86,7 +86,9 @@ This is Gestalt Common Lisp Web Framework documentation
 * Introduction::                What is Gestalt?
 * Web application programming:: What does Web application programming consists of?
 * Programming with Gestalt::    How does Web application programming feel like with Gestalt?
-* System reference::            References to related works
+* Third-party libraries::       Gestalt's third-party libraries
+* System reference::            System reference
+* References::                  Related work
 * Appendix::                    Appendix with references
 * Index::                       Complete index.
 
@@ -145,6 +147,15 @@ Programming with Gestalt
 * Template combinations::      How templates can be combined
 * Custom templates::           How to define your own class of templates
 * Built-in templates classes:: Short reference of the already defined template classes
+
+Third-party libraries
+
+* First-class URLs::       Library that provides first-class URLs management
+* Consistent objects::     consistent-object library reference
+* Dataflow::               Dataflow library reference
+* Utilities::              Utilities library (copying objects, doubly-linked lists, etc)
+
+System References
 
 References
 
@@ -422,6 +433,7 @@ The model in a Gestalt application is based on an object database...
 * Call and answer semantics::   How we control the application flow?
 * Component wrappers::          What are component wrappers
 * Application navigation and bookmarking::  Application navigation and bookmarking
+* URL format::                  How the url is formatted
 @end menu
 
 @node Call and answer semantics
@@ -648,6 +660,31 @@ From the outside, dynamically. It may be useful if we don't want to bookmark cer
        (call it)))
 @end example       
 @end enumerate
+
+@node URL format
+@subsubsection URL format
+
+Syntax:
+@example
+url ::= host/path?[session]&[continuation]&[bookmark]
+session ::= _s=session-id
+continuation ::= _c=continuation-id
+@end example
+
+Arguments and values:
+@example
+@itemize
+session-id -- The session id
+continuation-id -- The continuation id
+bookmark -- @ref{Application navigation and bookmarking}
+@end itemize
+@end example
+
+Semantics:
+
+If the session-id is present, then: if the continuation-id is present, the continuation is executed. If the continuation is not in the server in that session (it may have expired or have been stored as part of a bookmark), then there's an attempt to restore the application state from the bookmark parameters. If that cannot be done, then the request fails.
+
+If the continuation-id is present, but the session-id is not, then there's an attempt to restore the application from the bookmarks.
 
 @node Continuations
 @subsection Continuations
@@ -1374,8 +1411,98 @@ The algorithm to change the way views are assigned to component can be changed c
 + Context oriented templates 
     cop-template-class
 
+@node Third-party libraries
+@chapter Third-party libraries
+@menu
+* Elephant::               The elephant object database
+* First-class URLs::       Library that provides first-class URLs management
+* Consistent object library::     consistent-object library reference
+* Dataflow::               Dataflow library reference
+* Utilities::              Utilities library (copying objects, doubly-linked 
+@end menu
+
+@node Elephant
+@section Elephant
+Embed or link elephant database doc here...
+
+@node First-class URLs
+@section First-class URLs
+
+The problem:
+------------
+
+Some of the problems I see repeatedly in this and other Web frameworks is the URLs handling. URLs are generally represented as simple strings. That is inconvinient in my opinion. When treating them as strings, concatenating them becomes an issue, specially because of the #\\ character. Besides, matching the action corresponding to the URL it too coupled to how the URL strings are. That makes Web applications configuration and deployment more difficult than it should be.
+
+
+Proposal:
+---------
+I propose treating URL as first-class entities, a lot like what CL-FAD http://www.cliki.net/CL-FAD does with pathnames.
+
+
+Implementation sketch:
+----------------------
+
+(help me with the names, I'm not very good at English!)
+
+We can represent URLs with CLOS objects:
+
+@example
+(defmacro generic-url (url)
+  ((protocol :initarg :protocol
+	     :accessor protocol)
+   (hostname :initarg :hostname
+	     :accessor hostname)
+   (path :initarg :hostname
+	 :accessor hostname)
+   (program :initarg :program
+	    :accessor program)
+   (parameters :initarg :parameters
+	       :accessor parameters
+	       :documentation "Property list from ?a1=v1&a2=v2&...&an=vn")
+   (fragment :initarg :fragment
+	     :accessor fragment))
+  (:documentation "A typical URL. Example: protocol://hostname:port/path/program?a1=v1&a2=v2&...&an=vn#fragment"))
+
+(defun concatenate-urls (&rest urls)
+  "URLs concatenation (corrent handling of the #\\ character)")
+
+(defun read-url (str)
+  "Create a url from a string (used by reader-syntax)")
+@end example  
+
+We can also define some protocols:
+
+@example
+(defvar *url-protocols*
+  (make-hash-table :test #'equal))
+
+(defmacro define-url-protocol (name &optional (str `(symbol-name ',name)))
+  `(setf (gethash ',name *url-protocols*) ,str))
+
+(define-url-protocol :http)
+(define-url-protocol :ftp)
+@end example
+
+And finally provide some reader syntax:
+
+@example
+#url"http://localhost/myapp/main.do"
+@end example
+
+@node Consistent object library
+@section Consistent object library
+
+@node Dataflow
+@section Dataflow
+
+@node Utilities
+@section Utilities
+
 @node System reference
 @chapter System reference
+
+@node References
+@chapter References
 @cindex reference
 
  [Common Lisp Directory]
