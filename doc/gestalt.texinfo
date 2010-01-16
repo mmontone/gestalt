@@ -281,6 +281,7 @@ Web application programming with Gestalt is like that...
 @node Gestalt programming overview
 @section Gestalt programming overview
 @cindex gestalt, programming in
+@cindex gestalt, overview
 
    Gestalt applications follow a MVC architecture. At the model layer, the framework is designed to work with an optimistic object database; that's because implicit saving of objects and long transactions are needed by the rest of the parts of the framework.
    
@@ -290,6 +291,7 @@ Web application programming with Gestalt is like that...
 
 @node MVC in Gestalt
 @section MVC in Gestalt
+@cindex mvc
 
 MVC in Gestalt is like this...
 
@@ -325,6 +327,7 @@ The model in a Gestalt application is based on an object database...
 
 @node Objects validation
 @subsection Objects validation
+@cindex validation
 
 @example
 (defmethod validate ((person person))
@@ -336,6 +339,7 @@ The model in a Gestalt application is based on an object database...
 
 @node Consistent objects
 @subsection Consistent objects
+@cindex consistent objects
 
 @example
 (defclass person ()
@@ -396,6 +400,7 @@ The model in a Gestalt application is based on an object database...
 
 @node Objects that require arguments
 @subsection Objects that require arguments
+@cindex required arguments
 
 @example
 (defclass person ()
@@ -424,6 +429,8 @@ The model in a Gestalt application is based on an object database...
 
 @node The Elephant object database
 @subsection The Elephant object database
+@cindex elephant database
+@cindex object database
 
 @node The controller
 @section The controller
@@ -441,9 +448,11 @@ The model in a Gestalt application is based on an object database...
 
 @node Controller overview
 @subsection Controller overview
+@cindex controller
 
 @node Programming with components
 @subsection Programming with components
+@cindex components
 @menu
 * Application composition::     How to embed components inside other
 * Call and answer semantics::   How we control the application flow?
@@ -454,6 +463,9 @@ The model in a Gestalt application is based on an object database...
 
 @node Call and answer semantics
 @subsubsection Call and answer semantics
+@cindex call
+@cindex answer
+
 When an active component calls another, it loses its control and passes it to the called component. The called component becomes the active one.
 
 If an unactive component answers, then an error is raised (although proper restarts are available).
@@ -481,6 +493,7 @@ If a child component answers an object, then it desappears from the screen. The 
 
 @node Application composition
 @subsubsection Application composition
+@cindex composition
 
 Wow!! add-child doen't take a component, it is a macro and takes a block of code (that corresponds to the concurrent control flow). It is the fork equivalent!! Great...
 
@@ -561,6 +574,8 @@ Other example, is the semantics of call when adding child components.
 
 @node Component wrappers
 @subsubsection Component wrappers
+@cindex wrappers
+
 Implement component-wrappers (should be the equivalent of :after :before :around and other method combinations for methods).
 
 component-wrappers should alter the behaviour of a component (for example, its rendering), but should remain transparent to some machinery (for example, the templating engine assignment policy should be independent of component-wrappers. component-wrappers are invisible to the template-engine).
@@ -635,6 +650,11 @@ Finally, under this scheme, the editor component should commit anything on accep
 
 @node Application navigation and bookmarking
 @subsubsection Application navigation and bookmarking
+@cindex navigation
+@cindex bookmarking
+@cindex bookmarks
+@cindex url
+
 The bookmarking problem is difficult to solve in the context of a complex Web application. In particular, it is not clear how to obtain a particular state of the application from a simple bookmarking string. Besides, there are some states of the application that cannot and should not be reached by bookmarking. That's the case of a user session navigation (content that is available to a logged user only) or a commercial transaction, for example. So, first, we must identify the parts of the application that are reachable by bookmarking. Second, we must provide a framework that allows us to do that as simply and naturally as possible.
 
 One approach to solve the problem, would be to map the application as a state transition machine, identify the navigational paths, and apply a tag to each one of them. But we've already seen that determine each of the states is not desirable in complex Web applications. So we'd better find a better approach.
@@ -679,6 +699,7 @@ From the outside, dynamically. It may be useful if we don't want to bookmark cer
 
 @node URL format
 @subsubsection URL format
+@cindex url
 
 Syntax:
 @example
@@ -704,6 +725,8 @@ If the continuation-id is present, but the session-id is not, then there's an at
 
 @node Continuations
 @subsection Continuations
+@cindex continuation
+
 @menu
 * Continuations and web applications programming:: How are continuations used in web applications development
 * Continuations and components::                   How are continuations and components related
@@ -717,9 +740,11 @@ If the continuation-id is present, but the session-id is not, then there's an at
 
 @node Model objects validation
 @subsection Model objects validation
+@cindex validation
 
 @node View updates
 @subsection View updates
+@cindex update, view
 
 @menu
 * View update overview::                           An overview of how the view gets updated
@@ -730,17 +755,22 @@ If the continuation-id is present, but the session-id is not, then there's an at
 
 @node Dataflow extensions
 @subsection Dataflow extensions
+@cindex dataflow
+
 @menu
 * Dataflow and memory management::                              A brief description on how the memory in managed under dataflow
 @end menu
 
 @node Dataflow and memory management
 @subsubsection Dataflow and memory management
+@cindex memory management, dataflow and
 
 I have thought dataflow extensions to be used with a garbage collector. That means, you should use weak-references most of the time, and strong-referencing and explicit memory deallocation in exceptional cases. For example, you may want to respond to some event in some object, but you may not be interested in that object itself. So you want to reference the object strongly because it would be gone otherwise. REVISE THIS PREVIOUS SENTECES.
 
 @node The dynamic environment
 @subsection The dynamic environment
+@cindex environment
+@cindex dynamic environment
 
 @menu
 * Component threads::                              What component threads are
@@ -752,6 +782,7 @@ I have thought dataflow extensions to be used with a garbage collector. That mea
 
 @node Component threads
 @subsubsection Component threads
+@cindex threads, component
 
 Child threads are aborted if the parent is aborted. For example, if the user hits the logout button of the root component, all of the child components are aborted before aborting the root component.
 
@@ -911,6 +942,7 @@ Problema: cómo tratar a with-transaction bajo extensión dinámica??: No querem
 
 @node Example - Programming a login
 @subsubsection Example - Programming a login
+@cindex login
 
 Dynamic extent and user login:
 ------------------------------
@@ -991,6 +1023,8 @@ Y el login queda:
 
 @node Component threads and database transactions
 @subsubsection Component threads and database transactions
+@cindex transactions, component threads and database
+@cindex nested transactions
 
 @emph{Nested component transactions semantics:}
 
@@ -1005,6 +1039,8 @@ Once more, errors should be propagated through the component chain (not through 
 
 @node Context Oriented Programming
 @subsubsection Context Oriented Programming
+@cindex cop
+@cindex context oriented programming
 
 Once dynamic language constructs are adapted, we can start to use context oriented features for our application.
 
@@ -1064,6 +1100,7 @@ It is also possible, and may make sense, to make the template engine context awa
 
 @node Defining a template
 @subsection Defining a template
+@cindex templates
 
 To define a template, we use the xml template element syntax:
 @itemize
@@ -1117,6 +1154,7 @@ The template xml element defines a template for a certain component class.
 
 @node Container elements
 @subsubsection Container elements
+@cindex container elements
 Container elements refer to a model slot. The component slot is supposed to refer to a component or be null. If no component is begin referenced by the slot, then nothing is displayed. If the slot references a component, then a view is searched for it, attached to it, and displayed in the place the container element is found.
 @subsubsection Container definition
 @itemize
@@ -1150,6 +1188,7 @@ Container elements refer to a model slot. The component slot is supposed to refe
 
 @node Container classes
 @subsubsection Container classes
+@cindex container classes
 @itemize
 @emph{Motivation}
 When we use a container element to embed a component, the described algorithm is used to match the component view. But what we are trying to embed is a widget, things get a little too rigid. Let's take the following example to see this:
@@ -1248,6 +1287,7 @@ instead of:
 
 @node Collection elements
 @subsubsection Collection elements
+@cindex collection elements
 
 Collection elements are a special kind of container elements. They are used to display collections of components.
 
@@ -1325,6 +1365,7 @@ Example:
 
 @node Templates and scope
 @subsection Templates and scope
+@cindex scope, templates and
     Some templates elements introduce new scopes. That means we can declare templates that are relevant in the scope of that element only. The most common examples of those elements are template and collection. Those elements may have a list of template definitions in the beggining of their body, before any other type of xml element.
 
 Examples:
@@ -1359,6 +1400,7 @@ Implementation: XML elements that introduce new scopes are inherited from the sc
 
 @node Template combinations
 @subsection Template combinations
+@cindex combinations, template
 
 @menu
 * Template combinations overview::         A brief summary of what template combinations are
@@ -1374,6 +1416,7 @@ In order to improve templates composition we provide template combinations. Temp
 
 @node Standard template combination
 @subsubsection Standard template combination
+@cindex standard template combination
     The standard template combination recognizes AROUND, ABOVE  and BELOW qualifiers, corresponding to AROUND, BEFORE and AFTER of standard method combination.
 
 @itemize
@@ -1414,6 +1457,7 @@ ABOVE templates are displayed above the PRIMARY template.
 
 @node Custom templates
 @subsection Custom templates
+@cindex custom templates
 
 It is possible to define custom templates through a MOP.
 
@@ -1421,6 +1465,7 @@ The algorithm to change the way views are assigned to component can be changed c
 
 @node Built-in templates classes
 @subsection Built-in templates classes
+@cindex built-in template classes
 
 + Standard templates 
     standard-template-class
@@ -1439,10 +1484,12 @@ The algorithm to change the way views are assigned to component can be changed c
 
 @node Elephant
 @section Elephant
+@cindex elephant
 Embed or link elephant database doc here...
 
 @node First-class URLs
 @section First-class URLs
+@cindex url
 
 The problem:
 ------------
@@ -1507,15 +1554,19 @@ And finally provide some reader syntax:
 
 @node Consistent object library
 @section Consistent object library
+@cindex consistent object
 
 @node Dataflow
 @section Dataflow
+@cindex dataflow
 
 @node Utilities
 @section Utilities
+@cindex utilities
 
 @node Standard applications
 @chapter Standard applications
+@cindex standard applications
 
 @menu
 * Application login::         How to program the application login?
@@ -1526,18 +1577,23 @@ And finally provide some reader syntax:
 
 @node Application login
 @section Application login
+@cindex login
 
 @node Access control
 @section Access control
+@cindex access control
 
 @node Standard widgets
 @section Standard widgets
+@cindex widgets
 
 @node Objects meta editors
 @section Objects meta editors
+@cindex meta editors
 
 @node Tools
 @chapter Tools
+@cindex tools
 @menu
 * Configuration::             How to configure a Gestalt application
 * Debugging::                 How to debug Gestalt applications
@@ -1548,19 +1604,23 @@ And finally provide some reader syntax:
 
 @node Configuration
 @section Configuration
+@cindex configuration
 
 @node Debugging
 @section Debugging
+@cindex debugging
 
 @node Inspector
 @section Inspector
+@cindex inspector
 
 @node Profiling
 @section Profiling
+@cindex profiling
 
 @node Deployment
 @section Deployment
-
+@cindex deployment
 
 @node System reference
 @chapter System reference
