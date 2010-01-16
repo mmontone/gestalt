@@ -1578,6 +1578,7 @@ And finally provide some reader syntax:
 @node Application login
 @section Application login
 @cindex login
+@ref{Example - Programming a login}
 
 @node Access control
 @section Access control
