@@ -87,6 +87,8 @@ This is Gestalt Common Lisp Web Framework documentation
 * Web application programming:: What does Web application programming consists of?
 * Programming with Gestalt::    How does Web application programming feel like with Gestalt?
 * Third-party libraries::       Gestalt's third-party libraries
+* Standard applications::       Gestalt's resources for programming standard applications
+* Tools::                       Tools that help with Gestalt applications development
 * System reference::            System reference
 * References::                  Related work
 * Appendix::                    Appendix with references
@@ -138,7 +140,7 @@ Programming with Gestalt
 * Component threads and database transactions::    Component threads and database transactions overview
 * Context Oriented Programming::                   Context Oriented Programming overview
 * Layered components::                             Layered components overview
-* The view::                              The Web application view in Gestalt
+* The view::                   The Web application view in Gestalt
 * View overview::              An overview of how the view is approached in Gestalt
 * Defining a template::        The Gestalt template system overview
 * Template assignation::       How templates get assigned to components
@@ -149,11 +151,25 @@ Programming with Gestalt
 * Built-in templates classes:: Short reference of the already defined template classes
 
 Third-party libraries
-
 * First-class URLs::       Library that provides first-class URLs management
 * Consistent objects::     consistent-object library reference
 * Dataflow::               Dataflow library reference
 * Utilities::              Utilities library (copying objects, doubly-linked lists, etc)
+
+Standard applications
+
+* Application login::         How to program the application login?
+* Access control::            How to do permission checking
+* Standard widgets::          The standard widgets
+* Objects meta editors::      Generating objects editors reflectively
+
+Tools
+
+* Configuration::             How to configure a Gestalt application
+* Debugging::                 How to debug Gestalt applications
+* Inspector::             The web inspector
+* Profiling::                 How to profile Gestalt applications
+* Deployment::                How to deploy a Gestalt application
 
 System References
 
@@ -1497,6 +1513,54 @@ And finally provide some reader syntax:
 
 @node Utilities
 @section Utilities
+
+@node Standard applications
+@chapter Standard applications
+
+@menu
+* Application login::         How to program the application login?
+* Access control::            How to do permission checking
+* Standard widgets::          The standard widgets
+* Objects meta editors::      Generating objects editors reflectively
+@end menu
+
+@node Application login
+@section Application login
+
+@node Access control
+@section Access control
+
+@node Standard widgets
+@section Standard widgets
+
+@node Objects meta editors
+@section Objects meta editors
+
+@node Tools
+@chapter Tools
+@menu
+* Configuration::             How to configure a Gestalt application
+* Debugging::                 How to debug Gestalt applications
+* Inspector::                 The web inspector
+* Profiling::                 How to profile Gestalt applications
+* Deployment::                How to deploy a Gestalt application
+@end menu
+
+@node Configuration
+@section Configuration
+
+@node Debugging
+@section Debugging
+
+@node Inspector
+@section Inspector
+
+@node Profiling
+@section Profiling
+
+@node Deployment
+@section Deployment
+
 
 @node System reference
 @chapter System reference
