@@ -1583,6 +1583,15 @@ And finally provide some reader syntax:
 @section Access control
 @cindex access control
 
+@example
+(add-component 'button (make-instance 'button :action #'some-action)
+     :when (let ((model (model self)))
+              (df
+                 (can-do-some-action model))))
+@end example
+
+In this case, the @emph{model} library in the @emph{df} form is free, so it is assumed to be a dataflow variable: whenever the model changes the @emph{can-do-some-action} condition is rechecked  and the component is enabled or disabled accordingly.
+
 @node Standard widgets
 @section Standard widgets
 @cindex widgets
