@@ -126,8 +126,11 @@ Programming with Gestalt
 * Controller overview::                            The application controller in Gestalt overview
 * Programming with components::                    How programming with components feels like.
 * Application composition::     How to embed components inside other
+* Widgets::                     Widgets overview
 * Call and answer semantics::   How we control the application flow?
 * Component wrappers::          What are component wrappers
+* Javascript components::       Components that have javascript
+* Components and libraries::    Components and libraries
 * Continuations::                                  What continuations are
 * Continuations and web applications programming:: How are continuations used in web applications development
 * Continuations and components::                   How are continuations and components related
@@ -455,41 +458,14 @@ The model in a Gestalt application is based on an object database...
 @cindex components
 @menu
 * Application composition::     How to embed components inside other
+* Widgets::                     Widgets overview
 * Call and answer semantics::   How we control the application flow?
 * Component wrappers::          What are component wrappers
+* Javascript components::       Components that have javascript
+* Components and libraries::    Components and libraries
 * Application navigation and bookmarking::  Application navigation and bookmarking
 * URL format::                  How the url is formatted
 @end menu
-
-@node Call and answer semantics
-@subsubsection Call and answer semantics
-@cindex call
-@cindex answer
-
-When an active component calls another, it loses its control and passes it to the called component. The called component becomes the active one.
-
-If an unactive component answers, then an error is raised (although proper restarts are available).
-
-If an unactive component calls another, then an error is raised (although proper restarts are available).
-
-If a child component calls another, then it loses focus, and the called one gains control.
-
-If a child component answers an object, then it desappears from the screen. The parent can set a callback on it to intercept the child component answer. Child components multiply the flow of control. Continuation passing doesn't hold anymore in their presence. Example:
-
-@example
-(defmethod initialize :after ((component my-component) &rest initargs)
-  (declare (ignore initargs))
-  (add-child (component first-child)
-   (format t "This is the first flow of control")
-   (let ((answer (call (make-instance 'my-child-component)))) ;; This embeds and sets the child component
-     ;; The answer
-     (format t "The first child component answered ~A" answer)))
-  (add-child (component second-child)
-   (format t "This is the second flow of control")
-   (let ((answer (call (make-instance 'my-child-component)))) ;; This embeds and sets the child component
-     ;; The answer
-     (format t "The second child component answered ~A" answer))))
-@end example
 
 @node Application composition
 @subsubsection Application composition
@@ -572,6 +548,39 @@ For example, to declare the main component, we could have:
 
 Other example, is the semantics of call when adding child components.
 
+@node Widgets
+@subsubsection Widgets
+
+@node Call and answer semantics
+@subsubsection Call and answer semantics
+@cindex call
+@cindex answer
+
+When an active component calls another, it loses its control and passes it to the called component. The called component becomes the active one.
+
+If an unactive component answers, then an error is raised (although proper restarts are available).
+
+If an unactive component calls another, then an error is raised (although proper restarts are available).
+
+If a child component calls another, then it loses focus, and the called one gains control.
+
+If a child component answers an object, then it desappears from the screen. The parent can set a callback on it to intercept the child component answer. Child components multiply the flow of control. Continuation passing doesn't hold anymore in their presence. Example:
+
+@example
+(defmethod initialize :after ((component my-component) &rest initargs)
+  (declare (ignore initargs))
+  (add-child (component first-child)
+   (format t "This is the first flow of control")
+   (let ((answer (call (make-instance 'my-child-component)))) ;; This embeds and sets the child component
+     ;; The answer
+     (format t "The first child component answered ~A" answer)))
+  (add-child (component second-child)
+   (format t "This is the second flow of control")
+   (let ((answer (call (make-instance 'my-child-component)))) ;; This embeds and sets the child component
+     ;; The answer
+     (format t "The second child component answered ~A" answer))))
+@end example
+
 @node Component wrappers
 @subsubsection Component wrappers
 @cindex wrappers
@@ -647,6 +656,267 @@ And with transaction should expand to something similar to:
 THIS IS WHY WE NEED TO ADAPT DYNAMIC LANGUAGE CONSTRUCTS TO COMPONENT CHAINING!!
 
 Finally, under this scheme, the editor component should commit anything on accept, and raise a signal (versioning-error, etc) on error.
+
+@node Javascript components
+@subsubsection Javascript components
+@cindex javascript
+
+Now we apply free-variables detection to build a javascript-server comunication library
+
+@example
+
+(defcomponent my-object-deleter ()
+  ()
+  (:initialize ()
+	       (let ((object (model self)))
+		 (add-action-link :name "delete-object"
+				  :default-display "Delete object"
+				  :action
+				  (client
+				   ;; The free variable "object" is passed to the client
+				   (if (open-dialog 'question-dialog :text (format nil "Are you sure you want to delete ~A?" object))
+				       (server
+					;; Now the free variable "object" refers to the client proxy. The client passes de object id
+					(delete-object object))))
+				)
+	       )
+  ))
+
+;; Different identifyable lambdas should be created in both sides, in the client and the server. We assign an id to each of them and call them distributely (RPC)
+
+;; For example, for the above example, we have two lambdas:
+
+  In the client:
+  (create-lambda (object)
+		 (if (open-dialog 'question-dialog :text (format nil "Are you sure you want to delete ~A?" object))
+		     (call-server :session 4 :id 44 :params object)))
+
+  In the server:
+  (create-lambda (object)
+		 (delete-object object))
+
+  And the resulting action is:
+  (let ((object (model self)))
+		 (add-action-link :name "delete-object"
+				  :default-display "Delete object"
+				  :action (call-client :session *session* :id 33 :params object)))
+
+  Besides, the javascript to create lambdas is dynamically transferred when the component is active
+		
+  |#
+
+(defclass component ()
+  ((children :accessor children :initform '()))
+  )
+
+(defclass widget ()
+  ()
+  )
+
+(defclass action-link (widget)
+  ((name :accessor name :initarg :name)
+   (default-display :accessor default-display :initarg :default-display)
+   (action :accessor action :initarg :action)))
+
+(defvar *server-entry-counter* 1)
+(defvar *server-entries* (make-hash-table :test #'equal))
+
+(defvar *client-entry-counter* 1)
+(defvar *client-entries* (make-hash-table :test #'equal))
+
+
+(defun register-server-entrypoint (exp)
+  (let ((entry-id *server-entry-counter*)
+	(freevars (list-free-vars (list exp))))
+    (incf *server-entry-counter*)
+    (values
+     entry-id
+     freevars
+    `(setf (gethash ,entry-id *server-entries*)
+	  (lambda ,freevars ,exp)))))
+
+(defun register-client-entrypoint (exp)
+  (let ((entry-id *client-entry-counter*)
+	(freevars (list-free-vars (list exp))))
+    (incf *client-entry-counter*)
+    (values
+     entry-id freevars
+     `(setf (gethash ,entry-id *client-entries*)
+				     (lambda ,freevars, exp)))))
+
+(defvar *in-server-context* t)
+(defvar *client-lambdas* '())
+(defvar *server-lambdas* '())
+
+(defun process-action (code)
+  (labels
+	((process-tree (exp)
+	   (if (atom exp)
+	       exp
+	       (let ((operation (car exp))
+		     (args (cdr exp)))
+		 (case operation
+		   (server
+		     (if *in-server-context*
+			 `(progn
+			    ,@@(mapcar #'process-tree args))
+			 (call-server `(progn ,@@args))))
+		   (client
+		    (if *in-server-context*
+			(call-client `(progn ,@@args))
+			`(progn
+			   ,@@(mapcar #'process-tree args))))
+		   (let
+		       (let
+			   ((bindings (car args))
+			    (body (cdr args)))
+			 `(let
+			      ,(loop for binding in bindings
+				  for form = (cadr binding)
+				  collect
+				    (list (car binding) (process-tree form)))
+			    ,(process-tree `(progn ,@@body)))))
+		   (let*
+		       (let
+			   ((bindings (car args))
+			    (body (cdr args)))
+			 `(let*
+			     ,(loop for binding in bindings
+				 for form = (cadr binding)
+				 collect (list (car binding) (process-tree form)))
+			 ,(process-tree `(progn ,@@body)))))
+		   (flet
+		       (let
+			   ((bindings (car args))
+			    (body (cdr args)))
+			 `(flet
+			      ,(loop for binding in bindings
+				  for fbody = (nth 2 binding)
+				  collect (list (car binding) (cadr binding) (process-tree `(progn ,@@fbody))))
+			    ,(process-tree `(progn ,@@body)))))
+		   (labels
+		       (let
+			   ((bindings (car args))
+			    (body (cdr args)))
+			 `(labels
+			      ,(loop for binding in bindings
+				  for fbody = (nth 2 binding)
+				  collect (list (car binding) (cadr binding) (process-tree `(progn ,@@fbody))))
+			    ,(process-tree `(progn ,@@body)))))
+		   (return-from
+		    (error "Unimplemented"))
+		   (t
+		    `(,operation ,@@(mapcar #'process-tree args)))))))
+	 (call-server (code)
+	   (let ((*in-server-context* t))
+	     ;; Register a server-entry-point from the code
+	     (multiple-value-bind (id parameters lambdas-code)
+		 (register-server-entrypoint (process-tree code))
+	       (push lambdas-code *server-lambdas*)
+	       ;; Return the code that calls it
+	       `(server-call ,id ,@@parameters))))
+	 (call-client (code)
+	   (let ((*in-server-context* nil))
+	     (multiple-value-bind (id parameters lambdas-code)
+		 (register-client-entrypoint (process-tree code))
+	       (push lambdas-code *client-lambdas*)
+	       ;; Return the code that calls it
+	       `(client-call ,id ,@@parameters)))))
+	 (process-tree code)))
+
+(defun process-action-2 (code)
+  (let
+      ((*in-server-context* nil)
+       (*client-lambdas* '())
+       (*server-lambdas* '())
+       (*client-entry-counter* 1)
+       (*server-entry-counter* 1))
+    (let ((action-code (process-action code)))
+      (values action-code
+	      `(progn ,@@*server-lambdas*)
+	      (compile-script `(progn ,@@*client-lambdas*))))))
+
+;; Test
+
+;; (process-action-2 '(progn (let ((chau "chau")) (client (print "hola" obj) (server (print "hola" chau) (client (print "hi")))))))
+
+(defmacro add-action-link (c &key name default-display action)
+  (multiple-value-bind
+	(action-code server-lambdas client-lambdas)
+      (process-action-2 (macroexpand action))
+    `(progn
+       (push (make-instance 'action-link :name ,name :default-display ,default-display :action (lambda () ,(compile-script action-code))) (children ,c))
+       ,server-lambdas
+       ,client-lambdas)))
+
+#| Test:
+
+
+(add-action-link my-component
+		 :name "my-component"
+		 :default-display "My Component"
+		 :action (progn (print "hola" obj) (server (let ((chau "chau")) (print "hola" chau) (client (print "hi") (print chau))))))
+@end example
+
+Problema con esta version de add-action-link: es estrictamente necesario hacer una conversión CPS por cada operacion server y client. Esto es así ya que, en el caso de un rendering standard, el código a continuar debe ir en un atributo onLoad del tag body. En el caso de Ajax, el codigo a continuar debe ir de forma similar atacheado a un objeto HttpRequest en forma de callback. Una particularidad de esta conversión es que debe tener en cuenta las variables libres para saber exactamente que variables vamos pasando del servidor al cliente y del cliente al servidor (no tenemos ni un stack reificado (interprete) ni un stack implícito con bindings en memoria (lambdas + frames))
+
+@node Components and libraries
+@subsubsection Components and libraries
+@example
+;; First-class libraries.
+
+;; Libraries are first class objects in the framework. They should have a unique name. We don't implement dependencies between them yet.
+;; You can declare component library dependencies per component
+
+(defvar *libraries* (make-hash-table :test #'equalp) "Defined libraries mapped by name")
+
+
+(defclass library ()
+  ((url :accessor url :initform (error "Provide the library URL") :documentation "The URL to access the library")
+   (dependencies :accessor dependencies :initform '() :documentation "Others libraries this depends on")
+   ))
+
+(defclass library-class (standard-class)
+  ()
+  )
+
+(defmacro deflibrary (name &rest options)
+  `(defclass ,name ()
+     ,@@options
+     (:metaclass 'library-class)))
+
+(defmethod shared-initialize ((library library) &rest initargs)
+  (declare (ignore initargs))
+  ;; Register the defined library
+  (setf (class-name ))
+  
+  )
+
+
+;; Example:
+
+(deflibrary prototype
+    :url "/lib/prototype.js")
+
+(deflibrary scriptaculous
+    :url "/lib/scriptaculous.js"
+    :dependencies '(prototype))
+
+;; And then we can use it in our components
+
+;; scriptaculous-component mixin
+(defcomponent-mixin scriptaculous-component-mixin ()
+  (:libraries '(scriptaculous)))
+
+;; defcomponentmixin should create a non instanciable class and append its libraries to its subclasses
+;; so we can do
+
+(defcomponent my-scriptaculous-component (scriptaculous-component-mixin)
+  ...
+  )
+
+;; Besides, we should get rid of circularities and repetition when building the main page. The main page required scripts are determined from the components handling repetition and circularity.
+@end example
 
 @node Application navigation and bookmarking
 @subsubsection Application navigation and bookmarking
@@ -778,6 +1048,7 @@ I have thought dataflow extensions to be used with a garbage collector. That mea
 * Component threads and database transactions::    Component threads and database transactions overview
 * Context Oriented Programming::                   Context Oriented Programming overview
 * Layered components::                             Layered components overview
+* A COP example::                                  An example of COP in action
 @end menu
 
 @node Component threads
@@ -1075,6 +1346,111 @@ It is also possible, and may make sense, to make the template engine context awa
 
 @node Layered components
 @subsubsection Layered components
+
+@node A COP example
+@subsubsection A COP example
+
+For example, let's consider the "promotions" problem. A product promotion is available to certain users for a period of time. Let's try to model it with context layers. So, we have a promotions-layer. When it is active, we want a special promotion component to be displayed on the main-page. So we have:
+
+@example
+(defclass main-page ()
+  ((banner :component t
+	   :initform (make-instance 'label :text "Hello!!. This is the main page")))
+  (:metaclass component-class))
+
+(defclass promotion-widget ()
+  ((product :initarg :product
+	    :reader product))
+  (:metaclass component-class))
+
+(contextl:deflayer promotion-layer ()
+  ())
+@end example  
+
+In the promotion-layer, the main-page displays the promotion-widget:
+
+@example
+(defclass main-page ()
+  ((promotion-widget :component t
+		     :initform (make-instance 'promotion-widget :product *product*)))
+  (:metaclass component-class)
+  (:layer promotion-layer))
+
+<template class="main-page">
+  <container id="banner"/>
+</template>
+@end example
+
+We place the promotion-widget at the top, when the promotions-layer is active. Note the interaction between templates combinations and template options. That should be configurable throgh a MOP. For example, how layered templates behave in presence of template combinations.
+
+@example
+<template class="main-page"
+          combination="above"
+          layer="promotion-layer">
+  <container id="promotion-widget"/>
+</template>
+
+<template class="promotion-widget">
+  ...
+</template>
+@end example
+
+And the code sketch for activating the layers:
+
+@example
+(defun begin-user-session ()
+  (dynamic-wind
+    (if (active-promotions-for-user-p *user*)
+	(contextl:ensure-active-layer 'promotions-layer)
+	(contextl:ensure-inactive-layer 'promotions-layer))
+    (proceed
+     (go-on))))
+@end example     
+
+We could define a volatile-layer to improve the code:
+
+@example
+(deflayer volatile-layer ()
+  ()
+  (:documentation "This kind of layers are volatile. That means, they are active for some period.
+                   We have to implement the valid-layer-p method"))
+
+(defgeneric valid-layer-p (layer &optional period)
+  (:documentation "Tells whether a volatile-layer is valid in a period of time")
+  (:method ((layer volatile-layer) &optional period)
+    (declare (ignore layer period))
+    ;; not valid by default
+    nil))
+
+(deflayer period-layer (volatile-layer)
+  ((from-date-time :initarg :from
+		   :reader from-date-time
+		   :initform (error "Supply the from date-time"))
+   (to-date-time :initarg :to
+		 :reader to-date-time))
+  (:documentation "A volatile-layer that is valid for a period of time"))
+
+(defmethod valid-layer-p (layer &optional (period (date-time-now)))
+  (in-period-p period (cons (from-date-time layer)
+			    (to-date-time layer))))
+
+(defmacro with-volatile-layers (layers &body body)
+  (with-unique-names (valid-layers invalid-layers)
+    `(let (,valid-layers ,invalid-layers)
+       (loop for layer in ,layers
+	    if (valid-layer-p (find-layer layer))
+	      do (push layer ,valid-layers)
+	    else do (push layer ,invalid-layers))
+        (call-with-active-layers ,valid-layers           ; we need to implement call-with-active-layers in contextl
+	  (lambda ()
+	    (call-with-inactive-layers ,invalid-layers   ; we need to implement call-with-inactive-layers in contextl
+		(lambda ()		       
+	           ,@@body)))))))
+	  
+(defun begin-user-session ()
+  (with-volatile-layers ('promotions-layer)
+    (go-on)))
+@end example
 
 @node The view
 @section The view
