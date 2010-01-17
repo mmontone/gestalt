@@ -161,10 +161,10 @@ Third-party libraries
 
 Standard applications
 
-* Application login::         How to program the application login?
-* Access control::            How to do permission checking
-* Standard widgets::          The standard widgets
-* Objects meta editors::      Generating objects editors reflectively
+* Authenticated applications:: How to program the application login?
+* Access control::             How to do permission checking
+* Standard widgets::           The standard widgets
+* Objects meta editors::       Generating objects editors reflectively
 
 Tools
 
@@ -1945,16 +1945,30 @@ And finally provide some reader syntax:
 @cindex standard applications
 
 @menu
-* Application login::         How to program the application login?
-* Access control::            How to do permission checking
-* Standard widgets::          The standard widgets
-* Objects meta editors::      Generating objects editors reflectively
+* Authenticated applications:: How to program the application login?
+* Access control::             How to do permission checking
+* Standard widgets::           The standard widgets
+* Objects meta editors::       Generating objects editors reflectively
 @end menu
 
-@node Application login
-@section Application login
+@node Authenticated applications
+@section Authenticated applications
 @cindex login
 @ref{Example - Programming a login}
+
+One thing we would like our authenticated application apart from preventing not logged users from accessing it, is to redirect to the intended url after the user logs in. So, let's suppose the user enters a bookmark, but he should not be able to access the content until he is logged in. We can program that like this:
+
+@example
+(defmethod handle-url ((application standard-application))
+   ; standard url handling and dispatching)
+
+(defmethod handle-url ((application authenticated-application))
+    (loop while (not (logged-in-user))
+      do (call 'login))
+    (call-next-method)) ;; handle the url after the user has been logged-in
+@end example
+
+Note that the original url is handled; that is good! And that it is necessary to start a new session even before the user has logged in; that's because we need to keep track of control flow (the loop continuation), and that needs an active session.
 
 @node Access control
 @section Access control
