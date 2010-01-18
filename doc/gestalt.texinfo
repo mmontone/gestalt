@@ -88,6 +88,7 @@ This is Gestalt Common Lisp Web Framework documentation
 * Programming with Gestalt::    How does Web application programming feel like with Gestalt?
 * Third-party libraries::       Gestalt's third-party libraries
 * Standard applications::       Gestalt's resources for programming standard applications
+* Examples::                    Gestalt applications examples
 * Tools::                       Tools that help with Gestalt applications development
 * System reference::            System reference
 * References::                  Related work
@@ -135,6 +136,10 @@ Programming with Gestalt
 * Continuations and web applications programming:: How are continuations used in web applications development
 * Continuations and components::                   How are continuations and components related
 * Model objects validation::                       How the controller deals with model objects validation errors
+* Interaction modes::                              The three interaction modes
+* Synchronous interaction mode::                   The synchronous interaction mode
+* Asynchronous interaction mode::                  The asynchronous interaction mode
+* Bidirectional interaction mode::                   The bidirectional interaction mode
 * View updates::                                   How the view gets updated
 * View update overview::                           An overview of how the view gets updated
 * Dataflow extensions::                            Summary of the dataflow programming extensions in Gestalt
@@ -152,6 +157,10 @@ Programming with Gestalt
 * Template combinations::      How templates can be combined
 * Custom templates::           How to define your own class of templates
 * Built-in templates classes:: Short reference of the already defined template classes
+* GUI types::                  The types of GUI
+* HTML GUI type::              The HTML GUI type
+* XUL GUI type::               The XUL GUI type
+* GTK GUI type::               The GTK GUI type
 
 Third-party libraries
 * First-class URLs::       Library that provides first-class URLs management
@@ -166,11 +175,14 @@ Standard applications
 * Standard widgets::           The standard widgets
 * Objects meta editors::       Generating objects editors reflectively
 
+Examples
+
 Tools
 
+* Database administrator::    Manage the application's model
 * Configuration::             How to configure a Gestalt application
 * Debugging::                 How to debug Gestalt applications
-* Inspector::             The web inspector
+* Inspector::                 The web inspector
 * Profiling::                 How to profile Gestalt applications
 * Deployment::                How to deploy a Gestalt application
 
@@ -444,6 +456,7 @@ The model in a Gestalt application is based on an object database...
 * Programming with components::                    How programming with components feels like.
 * Continuations::                                  What continuations are
 * Model objects validation::                       How the controller deals with model objects validation errors
+* Interaction modes::                              The three interaction modes
 * View updates::                                   How the view gets updated
 * Dataflow extensions::                            Summary of the dataflow programming extensions in Gestalt
 * The dynamic environment::                        Section about the dynamic environment and what we can do with it
@@ -1012,6 +1025,33 @@ If the continuation-id is present, but the session-id is not, then there's an at
 @subsection Model objects validation
 @cindex validation
 
+@node Interaction modes
+@subsection Interaction modes
+@cindex interaction modes
+@menu
+* Synchronous interaction mode::                   The synchronous interaction mode
+* Asynchronous interaction mode::                  The asynchronous interaction mode
+* Bidirectional interaction mode::                 The bidirectional interaction mode
+@end menu
+
+@node Synchronous interaction mode
+@subsubsection Synchronous interaction mode
+@cindex synchronous interaction mode
+
+This is the standard interaction mode
+
+@node Asynchronous interaction mode
+@subsubsection Asynchronous interaction mode
+@cindex asynchronous interaction mode
+
+This is the AJAX mode
+
+@node Bidirectional interaction mode
+@subsubsection Bidirectional interaction mode
+@cindex bidirection interaction mode
+
+This is the COMET mode
+
 @node View updates
 @subsection View updates
 @cindex update, view
@@ -1465,6 +1505,7 @@ We could define a volatile-layer to improve the code:
 * Template combinations::      How templates can be combined
 * Custom templates::           How to define your own class of templates
 * Built-in templates classes:: Short reference of the already defined template classes
+* GUI types::                  The types of GUI
 @end menu
 
 @node View overview
@@ -1848,8 +1889,29 @@ The algorithm to change the way views are assigned to component can be changed c
 + Context oriented templates 
     cop-template-class
 
+@node GUI types
+@subsection GUI types
+@menu
+* HTML GUI type::              The HTML GUI type
+* XUL GUI type::               The XUL GUI type
+* GTK GUI type::               The GTK GUI type
+@end menu
+
+@node HTML GUI type
+@subsubsection HTML GUI type
+@cindex html
+
+@node XUL GUI type
+@subsubsection XUL GUI type
+@cindex xul
+
+@node GTK GUI type
+@subsubsection GTK GUI type
+@cindex gtk
+
 @node Third-party libraries
 @chapter Third-party libraries
+@cindex libraries, third-party
 @menu
 * Elephant::               The elephant object database
 * First-class URLs::       Library that provides first-class URLs management
@@ -1991,16 +2053,26 @@ In this case, the @emph{model} library in the @emph{df} form is free, so it is a
 @section Objects meta editors
 @cindex meta editors
 
+@node Examples
+@chapter Examples
+@cindex examples
+
 @node Tools
 @chapter Tools
 @cindex tools
 @menu
+* Database administrator::    Manage the application's model
 * Configuration::             How to configure a Gestalt application
 * Debugging::                 How to debug Gestalt applications
 * Inspector::                 The web inspector
 * Profiling::                 How to profile Gestalt applications
 * Deployment::                How to deploy a Gestalt application
 @end menu
+
+@node Database administrator
+@section Database administrator
+@cindex administrator
+@cindex administration
 
 @node Configuration
 @section Configuration
