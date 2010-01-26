@@ -1,0 +1,7 @@
+Note: note that both the formula as a dependent, and the formula arguments are bound weakly...is that correct? Yes..formulas are supposed to bind arguments; if no arguments are to be bound, then use a function. Functions are used when, for example, we want to display a message independently of the changing object. Example:
+
+(add-dependent some-cell 'changed (lambda (event)
+				    (declare (ignore event))
+				    (print "hola")))
+
+In this case, we cannot bind the lambda function weakly, because it would get lost. Formulas are different, because they simply calculate a value, and are not supposed to produce a side effect. So, we want them to get lost if we do not bind them from somewhere else than the changing cell.

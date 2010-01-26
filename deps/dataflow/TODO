@@ -1,0 +1,185 @@
+Value models and our dataflow extension
+---------------------------------------
+
+We need at least two different macros. One that creates a value-cell (value-holder) from syntax.
+Another that creates a aspect-cell (aspect-adaptor) from syntax.
+
+Value holders:
+-------------
+
+The first:
+
+(df (:value)      ; note the :value keyword
+     (let*	
+	 ((value 44)
+	  (suma (+ slot value)))
+       (format t "Getting value of suma2!!~%")
+       (* suma value)))
+
+ Should generate:
+ (make-instance 'value-cell
+    ...)
+    
+
+
+Aspect adaptors: (Adapts on an object method)
+-------------
+
+So we need to generate appropiate dataflow-cell's.
+
+
+(df (:aspect)
+  (name person))
+  
+Should generate:
+
+(make-cell :setter (lambda (arg) (setf (name person) arg))
+           :getter (lambda () (name person)))
+
+And we need (setf name) ((p person) value) to be defined. It throws an error otherwise.
+
+Anyway we had better use dataflow-class metaclass.
+
+
+(df
+     (let*	
+	 ((value 44)
+	  (suma (+ slot value)))
+       (format t "Getting value of suma2!!~%")
+       (* suma value)))
+
+Other cases:
+-----------
+
+We can treat other cases explicetly (no macro syntax support). For example, we can build our own aspect cells explicetly
+providing the setter and getter lambdas.
+
+General refactoring:
+-------------------
+
+Nota: en este momento el algoritmo de dataflow se encuentra
+en los wlambda creados. Para desacoplar el algoritmo habria que transformar el codigo de forma tal de crear lambdas que bindeen con nuevas variables todas las variables libres. Además, cada celda debería contener una tabla weak a las variables libres. Para ejecutar, habria que pasar esas variables al nuevo lambda generado.
+
+Implementation sketch:
+
+Example:
+
+(let
+   ((x (make-instance 'value-cell :value 23))
+    (y (make-instance 'formula-cell
+                       :arguments x
+		       :formula (lambda (x) (+ 3 x)))))
+		       ...)
+
+(defmethod initialize-instance :after ((cell formula-cell) &rest initargs)
+   ;; Keep weak-references to the bindings only
+   (setf (arguments cell)
+       (for arg in (arguments cell)
+            collect (make-weak-pointer arg))
+	    do (add-dependent cell arg :changed))) ;; register as a dependent of the argument
+	    
+(defmethod evaluate ((cell formula-cell))
+    "cell evaluation
+    use the values of the weakly bound arguments. if one of them is not bound, returns nil
+    returns 2 values: the evaluated value, and T or NIL if the cell could be evaluated or not"
+    (let ((args (loop for arg in (arguments cell)
+                      for c = (weak-pointer-value arg)
+		      when (null c) do (return-from evaluate (values nil nil))
+		      collect (value c))))
+        (values (apply (formula cell) args)
+		t)))
+
+(defmethod propagate (event cell)
+   (loop for dependent in (dependents-on :changed cell)
+         do (multiple-value-bind (value evaluated-p) (evaluate dependent)
+	      (if evaluated-p
+	          (propagate event dependent)))))
+
+(defvar *propagating* nil "t when we are propagating changes")
+
+(define-condition trigger-event-signal ()
+    ()
+    (:documentation "This condition is meant to be caught by the propagation algorithm when an event ocurrs"))
+
+(defun trigger-event (event triggerer &rest args)
+    (if *propagating*
+        (signal 'trigger-event-signal :event event
+	                              :triggerer triggerer
+				      :args args)
+	;else
+	(apply #'propagate-event event triggerer args)))
+
+(defun propagate-event (event triggerer &rest args)
+  (flet ((propagate-events (events)
+	   (loop for (event triggerer args) in events
+	      do (handler-bind ((trigger-event-signal (lambda (signal)
+							; enqueue the recently ocurred event
+							(push events (list (event signal) (triggerer signal) (args signal)))
+							(continue))))
+		   
+		   (loop for dependent in (dependents-on event triggerer)
+			do (evaluate dependent))))))
+  (let ((*propagating* t))
+    (propagate-events (list (list event triggerer args))))))
+    
+
+TODO: consider adding runtime type checking to dataflow syntax
+--------------------------------------------------
+
+For example,
+
+(let ((a (make-value-cell :value 23))
+      (b 33))
+  (df   
+    (+ a b)))
+    
+should macroexpand to:
+(let
+  ((a (make-value-cell :value 23))
+   (b 33))
+   (let ((arguments-gensym (loop
+                   for var-name in '(a b) ;; free-vars
+                   for var-value in (list a b) ;; free-vars
+                   when (typep var-value 'cell)
+		     collect (cons var-name var-value)))) 
+    (make-instance 'formula-cell	   
+       :arguments arguments-gensym
+       ;; we do dynamic-compilation: we don't know which our arguments are until runtime (because we need the dynamic type of them)
+       ;; we take into account the type of the arguments only once, at creation time. once the function is compiled, we are done.
+       :formula (compile nil
+		   `(lambda ,arguments-gensym
+		         (symbol-macrolet
+		      ,(loop for (var-name . var-value) in ,arguments-gensym
+			      collect (list var-name var-value))
+			      (+ a b)))))))
+
+Now, we don't need declarations to know which of the free variables are cells and which are not
+
+All of the following expressions work as expected:
+
+(let ((a (make-value-cell :value 23))
+      (b 33))
+  (df   
+    (+ a b)))
+
+(let ((a (make-value-cell :value 23))
+      (b (make-value-cell :value 33)))
+  (df   
+    (+ a b)))
+
+(let ((a 23)
+      (b (make-value-cell :value 33)))
+  (df   
+    (+ a b)))
+
+Updating suspensions:
+--------------------
+
+(suspending-subscriptions (:subs :all) my-cell
+   (do-something))
+
+(suspending-subscriptions (:subs subscriber1 subscriber2) my-cell
+   (do-something))
+
+(suspending-subscriptions (:event :changed) my-cell
+   (do-something))
