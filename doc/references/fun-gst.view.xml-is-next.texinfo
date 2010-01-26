@@ -1,0 +1,5 @@
+@anchor{Function gst.view.xml:is-next}
+@deffn {Function} gst.view.xml:is-next other-child child
+@findex gst.view.xml:is-next
+Tells if child is at the right of other-child
+@end deffn

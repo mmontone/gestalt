@@ -1,0 +1,5 @@
+@anchor{Generic-Function gst.view.xml:insert-child-before}
+@deffn {Generic Function} gst.view.xml:insert-child-before node child reference-child
+@findex gst.view.xml:insert-child-before
+Inserts a child node before the reference-child
+@end deffn

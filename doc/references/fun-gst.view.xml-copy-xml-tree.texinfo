@@ -1,0 +1,5 @@
+@anchor{Generic-Function gst.view.xml:copy-xml-tree}
+@deffn {Generic Function} gst.view.xml:copy-xml-tree tree &rest args
+@findex gst.view.xml:copy-xml-tree
+Copy an xml tree
+@end deffn

@@ -1,0 +1,14 @@
+@anchor{Class gst.view.xml:append-child-modification}
+@deftp {Class} gst.view.xml:append-child-modification
+@tindex gst.view.xml:append-child-modification
+Class precedence list: @code{@w{append-child-modification}, @w{xml-node-modification}, @w{standard-object}, @w{t}}
+
+Slots:
+@itemize
+@item @code{child} --- initarg: @code{@w{:child}}; reader: @code{@w{gst.view.xml:child}}; writer: @code{@w{(setf gst.view.xml:child)}}
+
+The child node appended
+@end itemize
+
+This modification means a child node was appended
+@end deftp

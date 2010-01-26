@@ -1,0 +1,5 @@
+@anchor{Generic-Function gst.view.xml:insert-child}
+@deffn {Generic Function} gst.view.xml:insert-child node child place reference-child
+@findex gst.view.xml:insert-child
+Inserts the child :after or :before (place) the reference child
+@end deffn

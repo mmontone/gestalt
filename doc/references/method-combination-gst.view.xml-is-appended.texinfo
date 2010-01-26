@@ -1,0 +1,4 @@
+@anchor{Method-Combination gst.view.xml:is-appended}
+@deffn {Method Combination} gst.view.xml:is-appended node
+@findex gst.view.xml:is-appended
+@end deffn

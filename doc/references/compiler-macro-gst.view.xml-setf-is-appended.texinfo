@@ -1,0 +1,4 @@
+@anchor{Compiler-Macro (setf gst.view.xml:is-appended)}
+@deffn {Compiler Macro} (setf gst.view.xml:is-appended)
+@findex (setf gst.view.xml:is-appended)
+@end deffn

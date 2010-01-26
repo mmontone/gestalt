@@ -1,0 +1,14 @@
+@anchor{Class gst.view.xml:xml-node-modification}
+@deftp {Class} gst.view.xml:xml-node-modification
+@tindex gst.view.xml:xml-node-modification
+Class precedence list: @code{@w{xml-node-modification}, @w{standard-object}, @w{t}}
+
+Slots:
+@itemize
+@item @code{target} --- initarg: @code{@w{:target}}; reader: @code{@w{gst.view.xml:target}}; writer: @code{@w{(setf gst.view.xml:target)}}
+
+Holds the modification's affected node
+@end itemize
+
+A modification of a xml-node
+@end deftp

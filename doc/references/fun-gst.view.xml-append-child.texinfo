@@ -1,0 +1,5 @@
+@anchor{Generic-Function gst.view.xml:append-child}
+@deffn {Generic Function} gst.view.xml:append-child node child
+@findex gst.view.xml:append-child
+Append a child node to other node
+@end deffn

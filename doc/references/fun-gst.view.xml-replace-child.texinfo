@@ -1,0 +1,5 @@
+@anchor{Generic-Function gst.view.xml:replace-child}
+@deffn {Generic Function} gst.view.xml:replace-child node child replacement
+@findex gst.view.xml:replace-child
+Replace a child of a node
+@end deffn

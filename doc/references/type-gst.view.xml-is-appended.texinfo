@@ -1,0 +1,4 @@
+@anchor{Type gst.view.xml:is-appended}
+@deftp {Type} gst.view.xml:is-appended
+@tindex gst.view.xml:is-appended
+@end deftp

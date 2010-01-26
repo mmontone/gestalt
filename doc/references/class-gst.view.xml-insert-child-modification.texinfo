@@ -1,0 +1,22 @@
+@anchor{Class gst.view.xml:insert-child-modification}
+@deftp {Class} gst.view.xml:insert-child-modification
+@tindex gst.view.xml:insert-child-modification
+Class precedence list: @code{@w{insert-child-modification}, @w{xml-node-modification}, @w{standard-object}, @w{t}}
+
+Slots:
+@itemize
+@item @code{child} --- initarg: @code{@w{:child}}; reader: @code{@w{gst.view.xml:child}}; writer: @code{@w{(setf gst.view.xml:child)}}
+
+The child node appended
+@item @code{reference-position} --- initarg: @code{@w{:reference-position}}; reader: @code{@w{gst.view.xml::reference-position}}; writer: @code{@w{(setf gst.view.xml::reference-position)}}
+
+The position in the tree we reference
+                                       to position the inserted child
+@item @code{place} --- initarg: @code{@w{:place}}; reader: @code{@w{gst.view.xml:place}}; writer: @code{@w{(setf gst.view.xml:place)}}
+
+Tells where to insert the child.
+                          One of :after o :before (the reference child)
+@end itemize
+
+This modification means a child node was appended
+@end deftp

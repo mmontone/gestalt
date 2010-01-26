@@ -1,0 +1,4 @@
+@anchor{Variable gst.view.xml:is-appended}
+@defvr {Variable} gst.view.xml:is-appended
+@vindex gst.view.xml:is-appended
+@end defvr

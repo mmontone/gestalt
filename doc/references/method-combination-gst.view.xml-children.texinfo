@@ -1,0 +1,4 @@
+@anchor{Method-Combination gst.view.xml:children}
+@deffn {Method Combination} gst.view.xml:children object
+@findex gst.view.xml:children
+@end deffn

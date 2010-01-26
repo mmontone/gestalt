@@ -19,6 +19,7 @@
 (require :xmlisp)   ; templates syntax
 (require :ironclad)  ; url encryption
 (require :cl-base64)  ; url codification
+(require :trivial-garbage) ; weak references
 ;(require :uri-template) ; uri syntax
 ;(require :df) ; dataflow
 

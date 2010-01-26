@@ -1,0 +1,4 @@
+@anchor{Compiler-Macro gst.view.xml:is-appended}
+@deffn {Compiler Macro} gst.view.xml:is-appended node
+@findex gst.view.xml:is-appended
+@end deffn

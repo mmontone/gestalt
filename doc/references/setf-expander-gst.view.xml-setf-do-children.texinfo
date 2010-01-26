@@ -1,0 +1,3 @@
+@anchor{Setf-Expander (setf gst.view.xml:do-children)}
+@deffn {Setf Expander} (setf gst.view.xml:do-children)
+@end deffn

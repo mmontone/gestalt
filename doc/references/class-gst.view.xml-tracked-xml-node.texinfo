@@ -1,0 +1,21 @@
+@anchor{Class gst.view.xml:tracked-xml-node}
+@deftp {Class} gst.view.xml:tracked-xml-node
+@tindex gst.view.xml:tracked-xml-node
+Class precedence list: @code{@w{tracked-xml-node}, @w{standard-object}, @w{t}}
+
+Slots:
+@itemize
+@item @code{parent-modification} --- reader: @code{@w{gst.view.xml::parent-modification}}; writer: @code{@w{(setf gst.view.xml::parent-modification)}}
+
+The modification made to the
+                                        node's to add this node as a child
+@item @code{modifications} --- reader: @code{@w{gst.view.xml::modifications}}; writer: @code{@w{(setf gst.view.xml::modifications)}}
+
+Node modifications list.
+                                  @code{todo}?@code{:} hold modifications with a dlist??
+@end itemize
+
+This class is meant to be used as a mixin (see xml-node definition).
+    When *register-modifications* is active, changes to the node are
+    registered in the modifications slot
+@end deftp

@@ -1,0 +1,4 @@
+@anchor{Method-Combination (setf gst.view.xml:do-children)}
+@deffn {Method Combination} (setf gst.view.xml:do-children)
+@findex (setf gst.view.xml:do-children)
+@end deffn

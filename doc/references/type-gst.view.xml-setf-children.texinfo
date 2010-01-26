@@ -1,0 +1,4 @@
+@anchor{Type (setf gst.view.xml:children)}
+@deftp {Type} (setf gst.view.xml:children)
+@tindex (setf gst.view.xml:children)
+@end deftp

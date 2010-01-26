@@ -1,0 +1,17 @@
+@anchor{Class gst.view.xml:replace-child-modification}
+@deftp {Class} gst.view.xml:replace-child-modification
+@tindex gst.view.xml:replace-child-modification
+Class precedence list: @code{@w{replace-child-modification}, @w{xml-node-modification}, @w{standard-object}, @w{t}}
+
+Slots:
+@itemize
+@item @code{child} --- initarg: @code{@w{:child}}; reader: @code{@w{gst.view.xml:child}}; writer: @code{@w{(setf gst.view.xml:child)}}
+
+The child node replaced
+@item @code{replacement} --- initarg: @code{@w{:replacement}}; reader: @code{@w{gst.view.xml:replacement}}; writer: @code{@w{(setf gst.view.xml:replacement)}}
+
+The replacement node
+@end itemize
+
+This modification means a child node was replaced
+@end deftp

@@ -1,0 +1,20 @@
+@anchor{Class gst.view.xml:xml-node}
+@deftp {Class} gst.view.xml:xml-node
+@tindex gst.view.xml:xml-node
+Class precedence list: @code{@w{xml-node}, @w{xml-serializer}, @w{standard-object}, @w{t}}
+
+Slots:
+@itemize
+@item @code{parent} --- initarg: @code{@w{:parent}}; reader: @code{@w{gst.view.xml:parent}}; writer: @code{@w{(setf gst.view.xml:parent)}}
+
+The node's parent
+@item @code{parent-link} --- initarg: @code{@w{:parent-link}}; reader: @code{@w{gst.view.xml::parent-link}}; writer: @code{@w{(setf gst.view.xml::parent-link)}}
+
+The node's link in parent's children (the dlist's dlink)
+@item @code{base-tree-member-p} --- reader: @code{@w{gst.view.xml:base-tree-member-p}}; writer: @code{@w{(setf gst.view.xml:base-tree-member-p)}}
+
+Flag that tells whether the node belongs to the base tree or not
+@end itemize
+
+An xml node
+@end deftp

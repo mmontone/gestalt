@@ -1,0 +1,5 @@
+@anchor{Function gst.view.xml:comes-before}
+@deffn {Function} gst.view.xml:comes-before other-child child
+@findex gst.view.xml:comes-before
+Tells if child is one of the nodes at the left of other-child
+@end deffn

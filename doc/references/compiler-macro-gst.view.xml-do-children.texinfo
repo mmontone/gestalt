@@ -1,0 +1,4 @@
+@anchor{Compiler-Macro gst.view.xml:do-children}
+@deffn {Compiler Macro} gst.view.xml:do-children (var node) &body body
+@findex gst.view.xml:do-children
+@end deffn

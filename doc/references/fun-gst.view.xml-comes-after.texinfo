@@ -1,0 +1,5 @@
+@anchor{Function gst.view.xml:comes-after}
+@deffn {Function} gst.view.xml:comes-after other-child child
+@findex gst.view.xml:comes-after
+Tells if child is one of the nodes after other-child
+@end deffn

@@ -1,0 +1,5 @@
+@anchor{Generic-Function gst.view.xml:xml-node-equal}
+@deffn {Generic Function} gst.view.xml:xml-node-equal tree1 tree2
+@findex gst.view.xml:xml-node-equal
+t when two nodes are equal
+@end deffn

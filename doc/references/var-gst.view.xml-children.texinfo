@@ -1,0 +1,4 @@
+@anchor{Variable gst.view.xml:children}
+@defvr {Variable} gst.view.xml:children
+@vindex gst.view.xml:children
+@end defvr

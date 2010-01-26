@@ -1,0 +1,8 @@
+To build the manual:
+
+To generate from scratch, customize make.lisp and the do:
+sbcl --load make.lisp
+
+To build the manual that comes in the distribution:
+HTML: texi2html --css=gestalt.css gestalt.texinfo
+PDF:  texi2pdf gestalt.texinfo

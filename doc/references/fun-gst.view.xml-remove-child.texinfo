@@ -1,0 +1,5 @@
+@anchor{Generic-Function gst.view.xml:remove-child}
+@deffn {Generic Function} gst.view.xml:remove-child node child
+@findex gst.view.xml:remove-child
+Remove a child from a node
+@end deffn

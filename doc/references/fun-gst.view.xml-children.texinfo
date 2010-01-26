@@ -1,0 +1,8 @@
+@anchor{Generic-Function gst.view.xml:children}
+@deffn {Generic Function} gst.view.xml:children object
+@findex gst.view.xml:children
+@end deffn
+@anchor{Method gst.view.xml:children ((xml-container xml-container))}
+@deffn {Method} gst.view.xml:children (xml-container xml-container)
+automatically generated reader method
+@end deffn

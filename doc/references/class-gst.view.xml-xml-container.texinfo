@@ -1,0 +1,7 @@
+@anchor{Class gst.view.xml:xml-container}
+@deftp {Class} gst.view.xml:xml-container
+@tindex gst.view.xml:xml-container
+Class precedence list: @code{@w{xml-container}, @w{xml-node}, @w{xml-serializer}, @w{standard-object}, @w{t}}
+
+An @code{html} element that contains other @code{html} elements. Use as a mixin
+@end deftp

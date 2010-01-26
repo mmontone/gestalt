@@ -1,0 +1,3 @@
+@anchor{Package gst.view.xml}
+@defvr {Package} gst.view.xml
+@end defvr

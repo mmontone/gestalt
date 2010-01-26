@@ -1,0 +1,4 @@
+@anchor{Function gst.view.xml:is-appended}
+@deffn {Function} gst.view.xml:is-appended node
+@findex gst.view.xml:is-appended
+@end deffn

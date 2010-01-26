@@ -1,0 +1,4 @@
+@anchor{Compiler-Macro (setf gst.view.xml:do-children)}
+@deffn {Compiler Macro} (setf gst.view.xml:do-children)
+@findex (setf gst.view.xml:do-children)
+@end deffn

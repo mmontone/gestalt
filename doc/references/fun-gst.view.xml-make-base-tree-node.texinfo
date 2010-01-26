@@ -1,0 +1,5 @@
+@anchor{Generic-Function gst.view.xml:make-base-tree-node}
+@deffn {Generic Function} gst.view.xml:make-base-tree-node node &rest args
+@findex gst.view.xml:make-base-tree-node
+Declare a node to be part of the base tree
+@end deffn

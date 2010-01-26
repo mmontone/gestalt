@@ -1,0 +1,3 @@
+@anchor{Nil (setf gst.view.xml:is-appended)}
+@deffn {Nil} (setf gst.view.xml:is-appended)
+@end deffn

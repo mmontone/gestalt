@@ -1,0 +1,5 @@
+@anchor{Variable gst.view.xml:*register-modifications*}
+@defvr {Variable} gst.view.xml:*register-modifications*
+@vindex gst.view.xml:*register-modifications*
+When this is active, node modifications are registered in the modifications slot
+@end defvr

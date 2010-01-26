@@ -1,0 +1,8 @@
+@anchor{Generic-Function (setf gst.view.xml:children)}
+@deffn {Generic Function} (setf gst.view.xml:children)
+@findex (setf gst.view.xml:children)
+@end deffn
+@anchor{Method (setf gst.view.xml:children) (new-value (xml-container xml-container))}
+@deffn {Method} (setf gst.view.xml:children) new-value (xml-container xml-container)
+automatically generated writer method
+@end deffn

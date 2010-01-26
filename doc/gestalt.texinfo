@@ -92,7 +92,6 @@ This is Gestalt Common Lisp Web Framework documentation
 * Tools::                       Tools that help with Gestalt applications development
 * System reference::            System reference
 * References::                  Related work
-* Appendix::                    Appendix with references
 * Index::                       Complete index.
 
 @detailmenu
@@ -190,9 +189,7 @@ System References
 
 References
 
-Appendix
-
-* System reference::                      Reference of system definitions
+Index
 
 @end detailmenu
 @end menu
@@ -1556,6 +1553,15 @@ The template xml element defines a template for a certain component class.
 </template>
 @end example
 
+It is also possible to use non-xml syntax:
+
+@example
+(template (:class "person")
+  (:p Name:) (:label (:slot "name")) 
+  (:p Lastname) (:label (:slot "lastname"))
+  (next-template))
+@end example
+
 @node Template assignation
 @subsection Template assignation
 
@@ -2097,6 +2103,68 @@ In this case, the @emph{model} library in the @emph{df} form is free, so it is a
 @node System reference
 @chapter System reference
 
+@include references/class-gst.view.xml-append-child-modification.texinfo
+@include references/class-gst.view.xml-insert-child-modification.texinfo
+@include references/class-gst.view.xml-remove-child-modification.texinfo
+@include references/class-gst.view.xml-replace-child-modification.texinfo
+@include references/class-gst.view.xml-tracked-xml-node.texinfo
+@include references/class-gst.view.xml-xml-container.texinfo
+@include references/class-gst.view.xml-xml-node-modification.texinfo
+@include references/class-gst.view.xml-xml-node.texinfo
+@include references/compiler-macro-gst.view.xml-children.texinfo
+@include references/compiler-macro-gst.view.xml-do-children.texinfo
+@include references/compiler-macro-gst.view.xml-is-appended.texinfo
+@include references/compiler-macro-gst.view.xml-setf-children.texinfo
+@include references/compiler-macro-gst.view.xml-setf-do-children.texinfo
+@include references/compiler-macro-gst.view.xml-setf-is-appended.texinfo
+@include references/fun-gst.view.xml-append-child.texinfo
+@include references/fun-gst.view.xml-children.texinfo
+@include references/fun-gst.view.xml-comes-after.texinfo
+@include references/fun-gst.view.xml-comes-before.texinfo
+@include references/fun-gst.view.xml-copy-xml-tree.texinfo
+@include references/fun-gst.view.xml-insert-child-after.texinfo
+@include references/fun-gst.view.xml-insert-child-before.texinfo
+@include references/fun-gst.view.xml-insert-child.texinfo
+@include references/fun-gst.view.xml-is-appended.texinfo
+@include references/fun-gst.view.xml-is-next.texinfo
+@include references/fun-gst.view.xml-is-previous.texinfo
+@include references/fun-gst.view.xml-make-base-tree-node.texinfo
+@include references/fun-gst.view.xml-make-base-tree.texinfo
+@include references/fun-gst.view.xml-remove-child.texinfo
+@include references/fun-gst.view.xml-replace-child.texinfo
+@include references/fun-gst.view.xml-setf-children.texinfo
+@include references/fun-gst.view.xml-xml-node-equal.texinfo
+@include references/fun-gst.view.xml-xml-tree-equal.texinfo
+@include references/macro-gst.view.xml-do-children.texinfo
+@include references/method-combination-gst.view.xml-children.texinfo
+@include references/method-combination-gst.view.xml-do-children.texinfo
+@include references/method-combination-gst.view.xml-is-appended.texinfo
+@include references/method-combination-gst.view.xml-setf-children.texinfo
+@include references/method-combination-gst.view.xml-setf-do-children.texinfo
+@include references/method-combination-gst.view.xml-setf-is-appended.texinfo
+@include references/nil-gst.view.xml-setf-do-children.texinfo
+@include references/nil-gst.view.xml-setf-is-appended.texinfo
+@include references/package-gst.view.xml.texinfo
+@include references/setf-expander-gst.view.xml-children.texinfo
+@include references/setf-expander-gst.view.xml-do-children.texinfo
+@include references/setf-expander-gst.view.xml-is-appended.texinfo
+@include references/setf-expander-gst.view.xml-setf-children.texinfo
+@include references/setf-expander-gst.view.xml-setf-do-children.texinfo
+@include references/setf-expander-gst.view.xml-setf-is-appended.texinfo
+@include references/type-gst.view.xml-children.texinfo
+@include references/type-gst.view.xml-do-children.texinfo
+@include references/type-gst.view.xml-is-appended.texinfo
+@include references/type-gst.view.xml-setf-children.texinfo
+@include references/type-gst.view.xml-setf-do-children.texinfo
+@include references/type-gst.view.xml-setf-is-appended.texinfo
+@include references/var-gst.view.xml-children.texinfo
+@include references/var-gst.view.xml-do-children.texinfo
+@include references/var-gst.view.xml-is-appended.texinfo
+@include references/var-gst.view.xml-setf-children.texinfo
+@include references/var-gst.view.xml-setf-do-children.texinfo
+@include references/var-gst.view.xml-setf-is-appended.texinfo
+@include references/var-gst.view.xml-star-register-modifications-star.texinfo
+
 @node References
 @chapter References
 @cindex reference
@@ -2116,15 +2184,33 @@ In this case, the @emph{model} library in the @emph{df} form is free, so it is a
   [Common Lisp Wiki]: http://www.cliki.net
   [Cells - A Common Lisp dataflow extension]: http://common-lisp.net/project/cells
 
-@node Appendix
-@chapter Appendix
-@cindex appendix
-
-This is the appendix...
-
 @node Index
-@unnumbered Index
+@chapter Index
+@menu
+* Concept Index::          The concept index
+* Class Index::            The classes index
+* Function / Macro Index:: The functions and macros index
+* Variable Index::         The variables index
+@end menu
+
+@node Concept Index
+@section Concept Index
 
 @printindex cp
+
+@node Class Index
+@section Class Index
+
+@printindex tp
+
+@node Function / Macro Index
+@section Function / Macro Index
+     
+@printindex fn
+
+@node Variable Index
+@section Variable Index
+     
+@printindex vr
 
 @bye

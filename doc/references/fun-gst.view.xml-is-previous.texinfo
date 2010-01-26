@@ -1,0 +1,5 @@
+@anchor{Function gst.view.xml:is-previous}
+@deffn {Function} gst.view.xml:is-previous other-child child
+@findex gst.view.xml:is-previous
+Tells if child is at the left of other-child
+@end deffn
