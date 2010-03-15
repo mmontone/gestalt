@@ -8,6 +8,11 @@
 	:parenscript
 	:closer-mop)
   (:shadowing-import-from :alexandria #:switch)
+  (:shadowing-import-from :json #:with-object)
+  (:shadowing-import-from :closer-mop
+			  #:defmethod
+			  #:defgeneric
+			  #:standard-generic-function)
   (:export #:xml-node
 	   #:parent
 	   #:children
@@ -110,6 +115,10 @@
 	:closer-mop
 	:alexandria)
   (:shadowing-import-from :xml #:container)
+  (:shadowing-import-from :closer-mop
+			  #:defmethod
+			  #:defgeneric
+			  #:standard-generic-function)
   (:export #:template
 	   #:container))
 

@@ -1,6 +1,5 @@
 (progn
 (progn
-  (require :xmlisp)
   (require :fiveam)
   (require :gst.util)
   (require :cl-json)
@@ -8,7 +7,8 @@
   (require :alexandria)
   (require :closer-mop)
   (require :cl-who)
-  (require :arnesi))
+  (require :arnesi)
+  (require :xmlisp))
 
 (progn
   (load #p"/home/marian/src/lisp/gestalt/src/view/package.lisp")
