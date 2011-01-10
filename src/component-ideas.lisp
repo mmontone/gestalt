@@ -610,3 +610,46 @@ Y el login queda:
 	 (proceed (call 'main-component))
 	 ;; else, we want the dialog to appear under the dynamic-extent
 	 (call 'message-dialog :text "You have to login to do that!")))))
+
+Component nesting and modality
+------------------------------
+
+Components are supposed to be modal in the sense that they replace other components when are displayed. Now, how to determine the components that should be replaced. That is to say, what is the extent of a modal component? We can determine that with component nesting (or, in our case, with dynamic extent control, that is supposed to be equivalent in our framework).
+
+Sketch:
+
+Top level expansion handler:
+(defmethod initialize :around ((component my-component) &rest initargs)
+  (if (not (parent component))
+      ;; This is the root component. Handle and accept the expansion
+      (handler-bind
+	  ((expand-component-request
+	    (lambda (request)
+	      (invoke-restart 'expand-component-with-limit component))))
+	(call-next-method))
+      ; else
+      (call-next-method)))
+  
+Setting up expansion limits when initializing parent component (adding subcomponents):
+(defmethod initialize ((component my-component) &rest initargs)
+  (handler-bind
+    ((expand-component-request (request)
+       (if (equalp (component-class request) component)
+	   (invoke-restart 'expand-component-with-limit component)
+	   (signal request))))
+  (add-component 'my-other-component)))
+
+With macrology:
+
+(defmacro with-expansion-limit ((component))
+  (once-only (component)
+    (with-gensym (request)
+      `(handler-bind
+	   ((expand-component-request (,request)
+	      (if (equalp (component-class ,request) ,component)
+		  (invoke-restart 'expand-component-with-limit ,component)
+		  (signal ,request))))))))
+
+(defmethod initialize ((component my-component) &rest initargs)
+  (with-expansion-limit (component)
+      (add-component component 'my-other-component)))
