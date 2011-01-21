@@ -14,7 +14,6 @@
 @set MAINTAINERCONTACT @uref{mailto:marianomontone at gmail dot com,contact the maintainer}
 @c %**end of header
 
-@ignore
 @ifinfo
 @format
 START-INFO-DIR-ENTRY
@@ -22,7 +21,6 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 @end format
 @end ifinfo
-@end ignore
 
 @c Subheadings inside a table.
 @macro tsubheading{text}
@@ -1084,7 +1082,7 @@ I have thought dataflow extensions to be used with a garbage collector. That mea
 @menu
 * Component threads::                              What component threads are
 * Example - Programming a login::                  A login example
-* Component expansion                              Component expansion
+* Component expansion::                            Component expansion
 * Component threads and database transactions::    Component threads and database transactions overview
 * Context Oriented Programming::                   Context Oriented Programming overview
 * Layered components::                             Layered components overview
