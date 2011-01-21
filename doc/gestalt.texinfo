@@ -178,6 +178,8 @@ Examples
 
 Tools
 
+* SLIME::                     The Superior Lisp Interaction Mode for Emacs
+* LSB::                       Domain Specific Lisp System Browser for Emacs
 * Database administrator::    Manage the application's model
 * Configuration::             How to configure a Gestalt application
 * Debugging::                 How to debug Gestalt applications
@@ -2119,6 +2121,8 @@ In this case, the @emph{model} library in the @emph{df} form is free, so it is a
 @chapter Tools
 @cindex tools
 @menu
+* SLIME::                     The Superior Lisp Interaction Mode for Emacs
+* LSB::                       Domain Specific Lisp System Browsing for Emacs
 * Database administrator::    Manage the application's model
 * Configuration::             How to configure a Gestalt application
 * Debugging::                 How to debug Gestalt applications
@@ -2126,6 +2130,26 @@ In this case, the @emph{model} library in the @emph{df} form is free, so it is a
 * Profiling::                 How to profile Gestalt applications
 * Deployment::                How to deploy a Gestalt application
 @end menu
+
+@node SLIME
+@section SLIME
+@cindex slime
+
+@node LSB
+@section LSB
+@cindex lsb
+
+LSB is a Domain Specific System Browser for Emacs. That means, you can browse an application in different ways depending on the application.
+
+LSB uses application's metadata to define its views and interfaces. For example, a typical application will contain a configuration section where the user can set configuration parameters, a class browser, a function browser, a macros browser. A web application may contain, a controller, a model and view browser; a database view too. A more advanced application will contain an aspect's browser, a context layers browser, etc.
+
+LSB lets the user get acquainted with the system in less time and makes it easy for the developer to browse the different parts of the system.
+
+Typical views include: a config view, a design view, an implementation view, a ``recent changes'' view, a versioning management view. The user can also define custom views.
+
+The motivation for LSB is that, in general, the different sections and aspects of an application are hidden inside folders and files and classes of an application. LSB makes the different aspects immediatly visible and easily modifiable. For example, Smalltalk browser work at the class level, while LSB works at the application aspect level.
+
+Configuring an application with LSB is a lot easier than with a normal browser as you get specific editors for each of the application's configuration parameters (this also applies to other system's sections).
 
 @node Database administrator
 @section Database administrator
