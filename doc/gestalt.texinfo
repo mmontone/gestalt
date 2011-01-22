@@ -2158,6 +2158,80 @@ Configuring an application with LSB is a lot easier than with a normal browser a
 @section Configuration
 @cindex configuration
 
+We provide a Domain Specific Language for configuration, so that can it can be read and edited with for example LSB or from a Web interface.
+It is the same approach as for meta models.
+
+Example:
+
+@example
+(define-configuration 'database-configuration ()
+   (:title "Database configuration")
+   (:documentation "Database configuration")
+   (:section "Database configuration"
+      (:documentation "Section for configuring the database")
+      (:connection-type "Connection type"
+          (one-of (:socket "Socket"
+                       (:configuration 'db-socket-configuration))
+                  (:tcp "TCP"
+                       (:configuration 'db-tcp-configuration))))
+      (:username "Username" :text)
+      (:password "Password" :text)
+      (:database-parameters :text :advanced)))
+
+(define-configuration 'db-socket-configuration ()
+    (:title "Socket configuration")
+    (:section "Socket configuration"
+        (:path "Socket" :text
+               :default "/tmp/socket.soc")))
+
+(define-configuration 'db-tcp-configuration ()
+    (:title "TCP configuration")
+    (:section "TCP configuration"
+        (:url "URL" :text
+              :default "localhos")))
+
+(define-configuration webapp-configuration (logging-configuration)
+    (:title "Web application configuration")
+    (:documentation "Web application configuration")
+    (:section "Web application configuration"
+        (:documentation "Web application configuration")
+        (:http-server "HTTP server"
+            (one-of (:apache "Apache" (:configuration 'apache-configuration))
+                    (:hunchentoot "Hunchentoot" (:configuration 'hunchentoot-configuration))))
+        (:host "Host" :text :default "localhost")))                    
+
+(define-configuration logging-configuration ()
+    (:title "Logging configuration")
+    (:documentation "Logging configuration")
+    (let-configuration*
+        ((output-logging ()
+            (output-location "Output location"
+                    (one-of (:standard-output "Standard output" :value '*standard-output*)
+                            (:file "File" :text :default "/tmp/log.log"))))
+        (debugging-layer (output-logging)
+            (debugging-levels "Debuggin levels" (list (:info "Info")
+                                                      (:warning "Warning")
+                                                      (:profile "Profile"))))
+        (database-layer (output-logging)
+           ...)))
+    (:section "Logging configuration"
+        (:documentation "Logging configuration")
+        (:backend "Backend"
+            (:one-of (:log5 "Log5")))
+        (:active-layers "Active layers" (list (:debugging "Debugging" (:configuration debugging-layer))
+                                              (:database "Database" (:configuration database-layer))
+                                              (:control-flow "Control flow")
+                                              (:system "System"))))))
+@end example
+
+The typical attributes types are, :text, where the user fill text in; :one-of options*, where the user chooses one of the options in options*; :list list*, where the user selects one or more of the items of the list *list; :bool, a boolean, :maybe option, where the user can disable or enable option, etc.
+
+Configurations can inherit from several configurations (that act like mixins). The same as with classes or models or templates. So, for example, web-app-configuration inherits from logging-configuration. That means the web-app-configuration will have the sections defined in logging-configuration too.
+
+Documentation is used as a section or configuration help from the UI. From the UI, each section is shown collapsable and there's and option for showing/hiding advanced fields, and the help button.
+
+The user can define several configuration schemes for an application and switch between the configurations. For example, there will probably be a ``development configuration'', a ``deployment configuration'', a ``testing configuration'', and so on.
+
 @node Debugging
 @section Debugging
 @cindex debugging
