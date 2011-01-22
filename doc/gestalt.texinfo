@@ -2110,6 +2110,18 @@ In this case, the @emph{model} library in the @emph{df} form is free, so it is a
 @node Objects meta editors
 @section Objects meta editors
 @cindex meta editors
+@example
+(defclass person ()
+   ((name :type :text :validation :required)
+    (lastname :type :text :required)
+    (birthdate :type :date)
+    (age :type :number)
+    (friends :type (:collection 'person)))
+   (:metaclass model-metaclass)
+   (:documentation "A person"))
+@end example
+
+From that definition, we can have validation (required arguments) and ad-hoc editors and creators, that is inferred from the types of the fields, and database storing too.
 
 @node Examples
 @chapter Examples
