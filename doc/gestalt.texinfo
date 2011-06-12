@@ -154,10 +154,16 @@ Programming with Gestalt
 * Template combinations::      How templates can be combined
 * Custom templates::           How to define your own class of templates
 * Built-in templates classes:: Short reference of the already defined template classes
-* GUI types::                  The types of GUI
-* HTML GUI type::              The HTML GUI type
-* XUL GUI type::               The XUL GUI type
-* GTK GUI type::               The GTK GUI type
+* Template backends::              Template backends overview
+* Built-in template backends::     The built-in template backends
+* SEXP template backend::          The SEXP template backend
+* HTML template backend::          The HTML template backend
+* TRFM template backend::          The TRFM  template backend
+* User defined template backends:: How to define your own template backends
+* GUI types::                      The types of GUI
+* HTML GUI type::                  The HTML GUI type
+* XUL GUI type::                   The XUL GUI type
+* GTK GUI type::                   The GTK GUI type
 
 Third-party libraries
 * First-class URLs::       Library that provides first-class URLs management
@@ -1554,6 +1560,7 @@ We could define a volatile-layer to improve the code:
 * Template combinations::      How templates can be combined
 * Custom templates::           How to define your own class of templates
 * Built-in templates classes:: Short reference of the already defined template classes
+* Template backends::          Template backends overview
 * GUI types::                  The types of GUI
 @end menu
 
@@ -1946,6 +1953,58 @@ The algorithm to change the way views are assigned to component can be changed c
     standard-template-class
 + Context oriented templates 
     cop-template-class
+
+@node Template backends
+@subsection Template backends
+@menu
+* Built-in template backends::     The built-in template backends
+* User defined template backends:: How to define your own template backends
+* SEXP template backend::          The SEXP template backend
+* HTML template backend::          The HTML template backend
+* TRFM template backend::          The TRFM  template backend
+* User defined template backends:: How to define your own template backends
+@end menu
+
+There are different template backends (or engines). There's an SEXPressions based backend; an HTML bakend; and a transformations backend.
+
+@node Built-in template backends
+@subsubsection Built-in template backends
+
+@node SEXP template backend
+@subsubsection SEXP template backend
+
+@example
+(deftemplate my-component (:backend :sexp
+                           :depends-on (:calendar.js))
+  (<div
+     (<p (str title))))
+@end example
+
+@node HTML template backend
+@subsubsection HTML template backend
+
+@example
+(deftemplate my-component (:backend (:html #p"./templates/my-component.tpl")
+                           :depends-on (:calendar-js)))
+
+--- my-component.tpl ---
+<div>
+  <p>{title}</p>
+</div>
+
+@end example
+
+@node TRFM template backend
+@subsubsection TRFM template backend
+@example
+(deftemplate my-component (:backend (:trfm #p"./templates/page.html")
+                           :depends-on (:calendar-js))
+      (:crop ``/div/div/div[2]'')
+      (:replace ``/p[1]/{text}'' title))
+@end example
+
+@node User defined template backends
+@subsubsection User defined template backends
 
 @node GUI types
 @subsection GUI types
