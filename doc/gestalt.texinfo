@@ -157,6 +157,7 @@ Programming with Gestalt
 * Template backends::              Template backends overview
 * Built-in template backends::     The built-in template backends
 * SEXP template backend::          The SEXP template backend
+* XMLisp template backend::        The XMLisp template backend
 * HTML template backend::          The HTML template backend
 * TRFM template backend::          The TRFM  template backend
 * User defined template backends:: How to define your own template backends
@@ -1960,6 +1961,7 @@ The algorithm to change the way views are assigned to component can be changed c
 * Built-in template backends::     The built-in template backends
 * User defined template backends:: How to define your own template backends
 * SEXP template backend::          The SEXP template backend
+* XMLisp template backend::        The XMLisp template backend
 * HTML template backend::          The HTML template backend
 * TRFM template backend::          The TRFM  template backend
 * User defined template backends:: How to define your own template backends
@@ -1980,6 +1982,18 @@ There are different template backends (or engines). There's an SEXPressions base
      (<p (str title))))
 @end example
 
+@node XMLisp template backend
+@subsubsection XMLisp template backend
+@example
+(deftemplate my-component (:backend :xmlisp
+                           :depends-on (:calendar.js))
+  <div>
+     <p>
+       (str title)
+     </p>
+  </div>)
+@end example
+
 @node HTML template backend
 @subsubsection HTML template backend
 
@@ -1989,7 +2003,7 @@ There are different template backends (or engines). There's an SEXPressions base
 
 --- my-component.tpl ---
 <div>
-  <p>{title}</p>
+  <p>@{title@}</p>
 </div>
 
 @end example
