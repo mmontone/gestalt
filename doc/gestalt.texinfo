@@ -1597,6 +1597,7 @@ To define a template, we use the xml template element syntax:
 @emph{template-metaclass-name} -- The template metaclass. The template metaclass defines the way the templates qualifiers are interpreted and how the templates are attached to the component. Important restriction: all the templates defined for a particular class of component (you can have different definitions for the same class of component through templates qualifiers) must have the same template-metaclass. If this attribute is not specified, then the template-metaclass used is standard-template-metaclass. This attribute is optional.
 
 @emph{options} -- The options are arbitrary strings consumed by the template-metaclass.
+                  The standard templates metaclass supports defining and assigning templates taking into account a component's static context. A component static context is its position in the component tree. For example: given the context @emph{(standard-list person-editor)}, the template engine would assign templates with that context only to standard-lists inside a person-editor. Or, @emph{(standard-list < person-editor)} templates would be assigned to standard-lists that are direct children of a person-editor.
 @end itemize
 @end itemize
 
