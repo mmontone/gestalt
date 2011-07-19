@@ -23,6 +23,43 @@
 	    collect (cons (car form)
 			  (cons object (cdr form)))))))
 
+(defmacro nval ((value &optional (var '_)) &body body)
+  "Macro for modifying a value repeatedly"
+  `(let ((,var ,value))
+     ,@(loop for sentence in body
+	  collect `(setf ,var ,sentence))
+     ,var))
+
+(defmacro $ (&rest args)
+  "nval alias"
+  `(nval ,@args))
+
+(defmacro mod-object ((object) &body body)
+  "Macro for modifying an object through its setfable accessors
+   Example: (-> (obj)
+	        (name \"Foo\")
+                (lastname \"Bar\"))"
+  `($ (,object)
+     ,@(loop for form in body
+	    collect `(setf (,(car form) _) ,@(cdr form)))))
+
+(defmacro -> (&rest args)
+  "mod-object alias"
+  `(mod-object ,@args))
+
+(defmacro with-obj (obj &body body)
+  "Syntax for writting and reading an object attributes.
+   Example: (with-obj *p*
+	              (<- title (format nil \"~A, ~A\" (-> name) (-> lastname)))
+	               )"
+  (with-gensyms (o)
+  `(let ((,o ,obj))
+     (macrolet ((<- (accessor value)
+		`(setf (,accessor ,',o) ,value))
+		(-> (accessor)
+		  `(,accessor ,',o)))
+     ,@body))))
+
 ;; Free variables manipulation
 ;; See dataflow package for examples
 
