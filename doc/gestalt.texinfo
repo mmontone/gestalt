@@ -568,6 +568,77 @@ Other example, is the semantics of call when adding child components.
 @node Widgets
 @subsubsection Widgets
 
+In Gestalt, components control the navigation flow and set up connections to the view and application model. Views are HTML or XML depending of the type of view, plus some references to widgets. We can have different kind of widget for the same connections; the API is respected. So, for example, suppose we want user input from an integer range. Then, we set up the connections:
+
+@example
+(defcomponent range-component ()
+   ((model :initarg :model
+           :documentation "An integer adaptor")
+   (:initialize ()
+        (<- set-child :range (make-widget-adaptor 'range-adaptor
+                                  :range '(1 10)
+                                  :model (-> model))))))
+@end example
+
+So, a range-adaptor was created. Now, from the view, we can select the widget we want to use for that adaptor. The widget has to be compatible with the adaptor, and implement the correct api. A widget behaves differently depending on the adaptor it is being used with.
+
+@example
+(defview range-component ()
+   (:p (str "The range component"))
+   (widget :range :slider))
+@end example
+
+And we get a javascript slider, from 1 to 10.
+
+We can set options to the widgets, for example, if we want the slider to be vertical instead of horizontal, or setup some options:
+@example
+(defview range-component ()
+   (:p (str "The range component"))
+   (widget :range :slider
+           :color :blue
+           :orientation :horizontal))
+@end example
+
+Or, we may want to use a text input. The text input semantics under the range-adaptor is to prevent input other that the numbers in the range (by javascript). As we have already said, widgets behave differently depending on the adaptor attached.
+
+@example
+(defview range-component ()
+   (:p (str "The range component"))
+   (widget :range :text-input
+           :style "background:blue"))
+@end example
+
+So, what matters to the component is setting up the right connections (adaptors); what widgets are going to be used and where, that goes in the view.
+
+Another example could be a multiselection:
+@example
+(defcomponent multiselect-component ()
+   ((source :initarg :source
+            :documentation "A list")
+    (model :initarg :model
+           :documentation "A list adaptor")
+   (:initialize ()
+        (<- set-child :multiselect (make-widget-adaptor 'multiselect-adaptor
+                                     :source (-> source)
+                                     :model (-> model))))))
+@end example
+
+And then we choose the widget. The standard way, and HTML select with multiselect on (multiselect is activated automatically when the select widget works with a multiselect adaptor). Again, widgets behave differently depending on the adaptor they are attached to.
+
+@example
+(defview multiselect-component ()
+   (:p (str "The multiselect component"))
+   (widget :multiselect :select))
+@end example
+
+Or a more complex widget:
+
+@example
+(defview multiselect-component ()
+   (:p (str "The multiselect component"))
+   (widget :multiselect :jquery.ui-multiselect))
+@end example
+
 @node Call and answer semantics
 @subsubsection Call and answer semantics
 @cindex call
