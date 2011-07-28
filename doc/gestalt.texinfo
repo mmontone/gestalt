@@ -616,11 +616,11 @@ Another example could be a multiselection:
    ((source :initarg :source
             :documentation "A list")
     (model :initarg :model
-           :documentation "A list adaptor")
+           :documentation "A list adaptor"))
    (:initialize ()
         (<- set-child :multiselect (make-widget-adaptor 'multiselect-adaptor
                                      :source (-> source)
-                                     :model (-> model))))))
+                                     :model (-> model)))))
 @end example
 
 And then we choose the widget. The standard way, and HTML select with multiselect on (multiselect is activated automatically when the select widget works with a multiselect adaptor). Again, widgets behave differently depending on the adaptor they are attached to.
@@ -637,6 +637,41 @@ Or a more complex widget:
 (defview multiselect-component ()
    (:p (str "The multiselect component"))
    (widget :multiselect :jquery.ui-multiselect))
+@end example
+
+Another example is a simple item selection:
+
+@example
+(defcomponent select-component ()
+   ((source :initarg :source    
+            :documentation "A list")
+    (model :initarg :model
+           :documentation "Contains the selected element of the list"))
+   (:initialize ()
+        (<- set-child :select (make-widget-adaptor 'select-adaptor
+                                  :source (-> source)
+                                  :model (-> model)))))
+@end example
+
+And then in the view we can use a tranditional select box:
+@example
+(defview select-component ()
+   (:p (str "The select component"))
+   (widget :select :select))
+@end example
+
+Or a list box:
+@example
+(defview select-component ()
+   (:p (str "The select component"))
+   (widget :select :list-box))
+@end example
+
+Or text input. Under a select-adaptor, the text-input autocompletes the available options through AJAX:
+@example
+(defview select-component ()
+   (:p (str "The select component"))
+   (widget :select :text-input))
 @end example
 
 @node Call and answer semantics
