@@ -148,7 +148,7 @@ Programming with Gestalt
 * The view::                   The Web application view in Gestalt
 * View overview::              An overview of how the view is approached in Gestalt
 * Defining a template::        The Gestalt template system overview
-* Template assignation::       How templates get assigned to components
+* Template assignment::        How templates get assigned to components
 * Template elements::          Template elements
 * Templates and scope::        Scope and template definitions
 * Template combinations::      How templates can be combined
@@ -348,12 +348,100 @@ The model in a Gestalt application is based on an object database...
 @subsection Objects validation
 @cindex validation
 
+Ideally, all validation should be done at the model level, not in the view or the controller.
+So, first, every model object is supposed to have a validate method. For example:
+
 @example
 (defmethod validate ((person person))
-  (check (and (stringp (name person))
+  (check (name person)
+         (and (stringp (name person))
 	      (> (length (name person)) 0)))
-  (check (and (stringp (lastname person))
+  (check (lastname person)
+         (and (stringp (lastname person))
 	      (> (length (lastname person)) 0))))
+@end example
+
+That provides some server side validation for model objects, and is necesary to ensure objects are consistent (See model object consistency section).
+
+But a more complex validation framework is provided by means of rules, extensible types, some syntax and client and server side validation implementation.
+
+@example
+(defmodel user ()
+   ((username :initarg :username
+              :required t
+              :error-msg (lambda (user)
+                             (format nil "Username should be provided for ~A" user))
+              :type :string
+              :validate (:unique :error-msg (lambda (user username)
+                                                (format nil "~A is already taken" username))))))
+@end example
+
+Or maybe, we should provide validation spec, directly in the type. Example:
+
+@example
+(defmodel user ()
+   ((username :initarg :username
+              :required t
+              :error-msg (lambda (user)
+                             (format nil "Username should be provided for ~A" user))
+              :type (:string (:unique :error-msg (lambda (user username)
+                                                (format nil "~A is already taken" username)))))))
+@end example
+
+@emph{:unique} is a defined validator, like this:
+
+@example
+(define-validator unique (value)
+   (check-attribute-value-unique-in-db value))
+@end example
+
+Validators can be configured from the components (controllers). So, if we want a simple validation, we don't have to do anything. When the user tries to create or save a user object, the validation fails, so it has to display the errors and let the user correct them. But we can also validate through ajax, when the user leaves the userame input. For example:
+
+@example
+(defcomponent user-creator ()
+   ((model :initarg :model
+           :accessor model))
+   (:initialize ()
+       (-> add-component (make-instance 'text-input-adaptor :model (username (-> model))
+                                                            :on-lose-focus (let ((username-validator (attribute-validator (-> model) 'username)))
+                                                                                (funcall username-validator (-> model) 'username))))))
+@end example
+
+And it is also posible to validate attributes on the client side. For example:
+@example
+(defmodel person ()
+   ((age :initarg :age
+         :required nil
+         :type (:range 1 120))
+    (email :initarg :email
+           :required t
+           :type :email)))
+@end example         
+
+Both, @emph{:range} and @emph{:email} types have client-side vaidation implementations:
+
+@example
+;; Server side validation implementation
+(define-validator :range (value type)
+     (and (> (from type) value)
+          (< value (to type))))
+
+;; Client side validation implementation
+(define-client-validator :range (value type)
+     ;; javascript generation here
+     (ps (and (> (from type) value)
+          (< value (to type)))))
+@end example
+
+The @emph{:email} validators implementation is very similar.
+
+Then, we can specify client side validation in our components:
+
+@example
+(defcomponent person-creator ()
+   ((model :accessor model))
+   (:initialize ()
+     (-> add-component :age (make-instance 'range-input-adaptor :validation :client))))
 @end example
 
 @node Consistent objects
@@ -1661,7 +1749,7 @@ We could define a volatile-layer to improve the code:
 @menu
 * View overview::              An overview of how the view is approached in Gestalt
 * Defining a template::        The Gestalt template system overview
-* Template assignation::       How templates get assigned to components
+* Template assignment::        How templates get assigned to components
 * Template elements::          Template elements
 * Templates and scope::        Scope and template definitions
 * Template combinations::      How templates can be combined
@@ -1729,8 +1817,8 @@ It is also possible to use non-xml syntax:
   (next-template))
 @end example
 
-@node Template assignation
-@subsection Template assignation
+@node Template assignment
+@subsection Template assignment
 
 @node Template elements
 @subsection Template elements
