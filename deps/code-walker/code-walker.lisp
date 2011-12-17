@@ -4,12 +4,12 @@
     ()
   "Category for logging code-walker actions")
 
-(start-sender 'cw  
-  (stream-sender :location *error-output*)  
+(start-sender 'cw
+  (stream-sender :location *error-output*)
   :category-spec '(cw)
   :output-spec '(message))
 
-	       
+
 (defvar *code-walker-patterns* '() "Defined code walker patterns")
 
 (defclass code-walker ()
@@ -17,7 +17,7 @@
 	 :accessor name
 	 :required t
 	 :documentation "The walker's name")
-   (cases :initform '()  ;; TODO:  Use a generic-hash-table instead, with :test #'typep on the cases patterns?? 
+   (cases :initform '()  ;; TODO:  Use a generic-hash-table instead, with :test #'typep on the cases patterns??
 	  :accessor code-walker-cases
 	  :documentation "The cases the walker handles")
    (parent :initform nil
@@ -111,7 +111,7 @@
 
 (defun inject-arguments (code-walker-pattern form function)
   (funcall (inject-function code-walker-pattern) function form))
-  
+
 (defun get-code-walker-pattern (spec &optional (errorp t))
   (loop for code-walker-pattern in *code-walker-patterns*
      when (matches-spec code-walker-pattern spec)

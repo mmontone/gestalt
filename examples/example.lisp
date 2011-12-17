@@ -48,8 +48,8 @@
 (log5:defcategory status)
 (log5:defcategory info)
 
-(log5:start-sender 'info  
-  (log5:stream-sender :location *error-output*)  
+(log5:start-sender 'info
+  (log5:stream-sender :location *error-output*)
   :category-spec '(info)
   :output-spec '(log5:message))
 
@@ -201,7 +201,7 @@
 				  :signal (lambda (obj)
 					    (declare (ignore obj))
 					    (error 'application-exists :application-name (name app))))
-			(log5:log-for info "Application registered: ~A" app)  
+			(log5:log-for info "Application registered: ~A" app)
 			(setf (gethash (name app) *applications*) app))))
 
 (defmethod register-application ((app application) &key (if-exists nil if-exists-provided))
@@ -414,12 +414,12 @@
   ())
 
 (defmethod navigate-entry-point ((entry-point application-entry-point))
-  
+
 
 (defmethod initialize-instance :after ((admin applications-admin))
   (
-						  
-    
+
+
 
 (defapplication hola
     :entry-point (make-instance 'folder-entry-point :name "example/")
@@ -453,7 +453,7 @@
 
 (defmethod (setf parent) ((component component) parent)
   (setf (parent (component-holder component)) parent))
-				   
+
 (defclass component-holder ()
   ((parent :initarg :parent
 	   :accessor parent
@@ -472,7 +472,7 @@
 	    :initform (lambda () t)
 	    :documentation "Specifies when the widget is allowed to be displayed"))
   (:documentation "A widget"))
-  
+
 (defclass value-widget ()
   ((value :accessor value
 	  :initarg :value
@@ -602,7 +602,7 @@
 		  (make-instance 'continuation :function (lambda/cc ,args ,@body))))
 
 (defvar *session* nil "The current session")
-  
+
 (defun register-action (action &optional (session *session*))
   (dynamic-wind
     (let ((*actions* (cons action *actions*)))  ; The current control-flow transaction actions
@@ -623,7 +623,7 @@
 
 (defun/cc call-component (caller callee)
   (call/cc (cont)
-	   ;; Set up the continuation  
+	   ;; Set up the continuation
 	   (setf (continuation callee)
 		 (make-instance 'continuation
 				:function cont))
@@ -648,7 +648,7 @@
 
 (defclass url ()
   ((location :initarg :location
-	     :accessor location 
+	     :accessor location
 	     :initform (error "Provide the location")
 	     :documentation "The URL location")
    (resource-type :initarg :resource-type
@@ -673,7 +673,7 @@
 (defmethod initialize-instance :after ((ss style-sheet) &rest initargs)
   (setf (resource-type ss) :css)
   (register-style-sheet ss))
-	   
+
 (defvar *system-libraries* '() "The libraries available in the system")
 
 (defclass library ()
@@ -692,7 +692,7 @@
 	       :initform '()
 	       :documentation "The other libraries this library depends on"))
   (:documentation "A framework's library"))
-   
+
 (make-instance 'url
     :location "/example-style.css"
     :resource-type 'css)
@@ -718,7 +718,7 @@
 				    :resource-type 'js))
     :dependents '(prototype-library)
     :description "The Scriptaculous javascript library")
- 
+
 
 ;; TODO: provide syntax for URLs (like we should do for entry-points). Example: #\#url"http:/localhost/my-lib.css"
 
@@ -731,7 +731,7 @@
 (defaction initialize-main-component (comp)
   (let ((person (make-instance 'person)))
     (add-child (comp)
-	(loop while t       
+	(loop while t
 	     do (progn
 		  (call (make-instance 'person-component :on person))
 		  (call 'message-dialog :text (print-string person)))))))
@@ -800,7 +800,7 @@
 ;; 		(sessions (application session))
 ;; 		session))
 
-    
+
 (defun cont-to-str (cont)
   (let ((*package* (find-package "KEYWORD"))
         (*print-circle* t))
@@ -828,7 +828,7 @@
 
 (defun session-lock ()
   (unless (gethash *session* *session-locks*)
-    (setf (gethash *session* *session-locks*) 
+    (setf (gethash *session* *session-locks*)
           (bordeaux-threads:make-lock (format nil "session lock for session ~S" *session*))))
   (gethash *session* *session-locks*))
 
@@ -846,13 +846,13 @@
 (defvar *request-timeout* 10
   "Seconds until we abort a request because it took too long.
   This prevents threads from hogging the CPU indefinitely.
-  
+
   You can set this to NIL to disable timeouts (not recommended).")
 
 
 
 
-(push (hunchentoot:create-prefix-dispatcher 
+(push (hunchentoot:create-prefix-dispatcher
        "/test/"
        (make-continuation-handler 'test ; begin with test if URL
                                   "/test/" ; == this
@@ -960,7 +960,7 @@
   (sb-ext:octets-to-string
    (decrypt
     (cl-base64:base64-string-to-usb8-array url-value :uri t))))
-  
+
 (defun url-session (url-value)
   (destructuring-bind (session found-p)
       (gethash (parse-integer (decode-url-value url-value)) *sessions*)
@@ -974,5 +974,5 @@
     (when (not found-p)
       (error 'invalid-action :url-value url-value))
     action))
-  
+
 (hunchentoot:start (make-instance 'gestalt-acceptor :port 8080))

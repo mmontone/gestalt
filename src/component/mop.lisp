@@ -48,7 +48,7 @@
 	  (add-component obj
 			 slot-symbol
 			 (slot-value obj slot-symbol)))))
-		 
+
 (defmethod (setf slot-value-using-class) (new-value
 					  (class standard-component-class)
 					  object

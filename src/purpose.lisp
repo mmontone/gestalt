@@ -30,7 +30,7 @@
 ;; generates the following code:
 
 (rpc-server-call 'delete-object :args (serialize object)
-		 :callback (lambda (object) 
+		 :callback (lambda (object)
 			     (call (make-instance 'notification-dialog :notification "The object was successfully deleted"))
 			     (return object)))
 
@@ -99,7 +99,7 @@
 
 ;; Explicit client components:
 ;; Some components may be declared client-side-only or server-side-only. Maybe some aspect oriented (separate) declarations (dynamic binding when compiling).
- 
+
 ;; Server and client control-flow synchronization
 ;; COOL IDEA: pass a stack around!! Do it conservatively, but may contain certain dynamic variables, serialized continuations, etc
 ;; That way we can simultate being in one machine to a certain extent.

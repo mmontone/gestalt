@@ -53,7 +53,7 @@
 	      (> (length (name person)) 0)))
   (check (and (stringp (lastname person))
 	      (> (length (lastname person)) 0))))
-  
+
 ;; Example:
 ;; The following fails:
 (make-instance 'person)
@@ -68,7 +68,7 @@
     (setf (name person) "Mariano")
     (setf (lastname person) "Montone"))
 
-;; The following works:  
+;; The following works:
 (with-modification-transaction (person)
   (let ((person (make-instance 'person)))
     (setf (name person) "Mariano")

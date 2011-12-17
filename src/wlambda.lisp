@@ -35,23 +35,23 @@
 (defcategory none)
 
 #|
-(start-sender 'mop  
-  (stream-sender :location *error-output*)  
+(start-sender 'mop
+  (stream-sender :location *error-output*)
   :category-spec '(mop)
   :output-spec '(message))
 
-(start-sender 'df  
-  (stream-sender :location *error-output*)  
+(start-sender 'df
+  (stream-sender :location *error-output*)
   :category-spec '(df)
   :output-spec '(message))
 
 (start-sender 'all
-  (stream-sender :location *error-output*)  
+  (stream-sender :location *error-output*)
   :category-spec '(all)
   :output-spec '(message))
 
 (start-sender 'none
-  (stream-sender :location *error-output*)  
+  (stream-sender :location *error-output*)
   :category-spec '(none)
   :output-spec '(message))
 
@@ -226,7 +226,7 @@ Tests:
 |#
 
 (defun list-free-vars (body)
-  (let 
+  (let
       ((freevars (make-hash-table :test #'equal))
        (freevars-list '()))
     (mapcar (lambda (body-form)
@@ -247,7 +247,7 @@ Tests:
 
 
 (defun list-free-vars-non-external (body)
-  (let 
+  (let
       ((freevars (make-hash-table :test #'equal))
        (freevars-list '())
        (external-vars
@@ -323,13 +323,13 @@ Tests:
 					(sym (gensym (string freevar))))
 				   (setf (gethash freevar table) sym)
 				   (list sym `(make-weakref ,freevar))))
-			       freevars-list)  
+			       freevars-list)
 		   (lambda ,args
 		     ,@non-external-declarations
 		     (let ,(mapcar (lambda (fv)
 			  (let ((gen-lexvar (cdr fv)))
 			    (list gen-lexvar nil)))
-			  freevars-list)  
+			  freevars-list)
 		       (when (and ,@(mapcar (lambda (fv)
 					      (let ((freevar (car fv))
 						    (weakref (cdr fv))
@@ -361,7 +361,7 @@ Tests:
        (body (macroexpand body)))
     (multiple-value-bind (body non-external-declarations external-vars)
 	(prune-externals body)
-      (let 
+      (let
 	  ((new-body (mapcar (lambda (body-form)
 			  (replace-freevars (list-lambda-list-vars args)
 					    body-form
@@ -398,7 +398,7 @@ Tests:
 	       (let ,(mapcar (lambda (fv)                       ;; local vars referencing wekref vars
 			       (let ((gen-lexvar (cdr fv)))
 				 (list gen-lexvar nil)))
-			     freevars-list)  
+			     freevars-list)
 		 (when (and ,@(mapcar (lambda (fv)           ;; weakvars checking before executing the body
 					(let* ((freevar (car fv))
 					       (weakref (cdr fv))
@@ -481,7 +481,7 @@ Tests:
   ((test :initarg :test :initform #'eql :accessor test)
    (grow-table :initarg :grow-table :accessor grow-table)
    (table :accessor table)
-   
+
    ))
 
 (defmethod initialize-instance :after ((ght growable-hash-table) &rest initargs)
@@ -703,7 +703,7 @@ Ignores bindings in block, return-from, go, quote, throw"
 
 
 (defvar *stmfuns* (make-hash-table :test #'equal))
-  
+
 (defmacro stm (&rest body)
   (let ((new-body (loop for body-form in body
 		     collect
@@ -718,7 +718,7 @@ Ignores bindings in block, return-from, go, quote, throw"
 						     ;; else
 						     (cons (car form) (funcall cont (cdr form))))))))))))
     `(progn ,@new-body)))
-    
+
 (defmacro defunstm (name args &rest body)
   `(progn
      (setf (gethash ',name *stmfuns*) t)
@@ -751,7 +751,7 @@ Test:
   ((dataflow-slots :initform (make-hash-table :test #'equal)
 		   :accessor dataflow-slots)
    (listeners :initform (make-hash-table :test #'equal) :accessor listeners))
-  
+
   )
 
 
@@ -938,7 +938,7 @@ Tests:
 
 (with-slots (money) *ba*
   (setf money 3))
-	       
+
 |#
 
 #|
@@ -981,7 +981,7 @@ Now we apply free-variables detection to build a javascript-server comunication 
 				  :action (call-client :session *session* :id 33 :params object)))
 
   Besides, the javascript to create lambdas is dynamically transferred when the component is active
-		
+
   |#
 
 (defclass component ()
@@ -1141,7 +1141,7 @@ Problema con esta version de add-action-link: es estrictamente necesario hacer u
 
 |#
 
-  
+
 
 ;; Thought. The MOP provides similar advantages than monads. A uniform interface.
 ;; If we implement metaclasses with method combinations, then we may be able to combine two or more
@@ -1189,15 +1189,15 @@ Problema con esta version de add-action-link: es estrictamente necesario hacer u
 	       (print person)
 	       (print friend))))
 	 |#
-	 
+
 	 (defun client-lambda-2 (server-proxy)
 	   (alert "Hello again!!")
 	   (alert (print server-proxy))
 	   (call-server *session-id* "server-lambda-2" "This is a message from the client"))))))
 
 
-	 
-	 
+
+
      (:body :on-load "client-lambda-1()" ;; The function to on load is updated with each response from the server. In case of AJAX, we need a XML Command to perform the dispatch
 
       (:p "Action test page")))
@@ -1259,7 +1259,7 @@ Problema con esta version de add-action-link: es estrictamente necesario hacer u
     (setf (children new-node) (children node)
 	  (parent new-node) (parent node))
     new-node))
-  
+
 (defmethod copy-node :around ((node value-node-mixin))
   (let
       ((new-node (call-next-method)))

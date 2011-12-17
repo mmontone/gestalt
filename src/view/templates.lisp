@@ -95,7 +95,7 @@
 	((emptyp qualifier)
 	 (setf (primary-template combination-slot) template))
 	((string-equal qualifier "PRIMARY")
-	 (setf (primary-template combination-slot) template)) 
+	 (setf (primary-template combination-slot) template))
 	((string-equal qualifier "ABOVE")
 	 (setf (above-template combination-slot) template))
 	((string-equal qualifier "BELOW")
@@ -179,7 +179,7 @@
 				    class)
   (template-combination-register-template (template-combination class)
 				 template))
-		 
+
 (defun register-template (template)
   (template-class-register-template (class-of template)
 				    template))
@@ -298,7 +298,7 @@
       (register-template template)
       (let ((parent-template (first *template*)))
 	(register-local-template parent-template template))))
-	      
+
 (defmethod register-local-template ((template standard-template)
 				    (local-template standard-template))
   (let ((component-class (component-class local-template)))
@@ -407,7 +407,7 @@
           <p>Chaoooo!!</p>
        </template>
      </div>
-   </body>  
+   </body>
 </template>)
 
 (swank:inspect-in-emacs
@@ -458,7 +458,7 @@ And then we can do:
           <p>Chaoooo!!</p>
        </template>
      </div>
-   </body>  
+   </body>
 </cop-template>)
 
 |#

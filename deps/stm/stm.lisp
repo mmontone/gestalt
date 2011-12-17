@@ -79,7 +79,7 @@ If the transaction is nil, then we throw an error."
   (let ((value (value (var stm-var))))
     (log-for stm "Reading value of: ~A from: ~A. Value: ~A" stm-var stm-transaction value)
     value))
-  
+
 (define-condition no-transaction-error (serious-condition)
   ()
   (:documentation "This error is thrown when we try to set a transactional variable value and there's no transaction running"))
@@ -216,7 +216,7 @@ Ignores bindings in block, return-from, go, quote, throw"
 				   replace-fn)) args)))))))
 
 (defvar *stmfuns* (make-hash-table :test #'equal))
-  
+
 (defmacro stm (&rest body)
   (let ((new-body (loop for body-form in body
 		     collect
@@ -231,7 +231,7 @@ Ignores bindings in block, return-from, go, quote, throw"
 						     ;; else
 						     (cons (car form) (funcall cont (cdr form))))))))))))
     `(progn ,@new-body)))
-    
+
 (defmacro defunstm (name args &rest body)
   `(progn
      (setf (gethash ',name *stmfuns*) t)

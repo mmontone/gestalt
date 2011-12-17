@@ -21,7 +21,7 @@
 		 (format stream "~A is inconsistent. Reasons: ~A" (target error) (messages error))
 		 (format stream "Inconsistency error. Reasons: ~A" (messages error)))))
   (:documentation "Error that is raised when a model object consistency error occurs"))
-  
+
 (defun consistency-error (target datum &rest args)
   (with-simple-restart (continue "Continue in spite of consistency error")
     (error 'consistency-error :target target
@@ -98,7 +98,7 @@
 	       (when occurred-error-p
 		 (consistency-error object "~{~a~^ and ~}" messages))
 	       result))))
-  
+
 (defun ensure (flag datum &rest initargs)
   (if (not flag)
       (apply #'consistency-error nil datum initargs)

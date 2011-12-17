@@ -153,8 +153,8 @@
 
 
 ;; Syntax sugar
-      
-	 
+
+
 (defdynamic value 42)
 
 (defun foo () (print (dynamic value)))
@@ -182,8 +182,8 @@
 
 ;; Question to pascal regarding continuations and bindings:
 
- with-dynamic-mark can bind both lexical and special variables,  
-so it can be used both for lexically and dynamically scoped partial  
+ with-dynamic-mark can bind both lexical and special variables,
+so it can be used both for lexically and dynamically scoped partial
 continuations.
 
 Isn't it true that continuation implementations based on code transformation already bind lexical variables correctly??

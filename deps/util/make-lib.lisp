@@ -60,7 +60,7 @@
      name : The name of the generated macro. The name of the macro has the form with-<name>.
      let-macro : The name of the let-macro to use.
      using-macro : The name of the using-macro to use. "
-  
+
   (let
       ((let-macro (if (null let-macro)
 		      (intern (concatenate 'string "LET-" (symbol-name name)))

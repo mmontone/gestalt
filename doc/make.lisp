@@ -8,18 +8,18 @@
 
 (in-package :gestalt.doc)
 
-(defparameter +references-dir-path+ 
-  (merge-pathnames 
+(defparameter +references-dir-path+
+  (merge-pathnames
    #p"doc/references/"
    (asdf:component-pathname (asdf:find-system 'gestalt))))
 
 (defparameter +docstrings-path+
-  (merge-pathnames 
+  (merge-pathnames
    #p"doc/docstrings.lisp"
    (asdf:component-pathname (asdf:find-system 'gestalt))))
 
 (defparameter +docs-path+
-  (merge-pathnames 
+  (merge-pathnames
    #p"doc/"
    (asdf:component-pathname (asdf:find-system 'gestalt))))
 

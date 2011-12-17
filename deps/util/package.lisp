@@ -14,11 +14,11 @@
    #:one-of
    #:foldl
    #:with-object
-   
+
    ;; required-slots-class
    #:required-slots-class
    #:required-slot-error
-   
+
    ;; make-lib
    #:make-let
    #:make-using

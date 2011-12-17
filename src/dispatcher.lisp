@@ -7,7 +7,7 @@
 	 (when matchp
 	   (return-from dispatch response))))
   (error 'url-dispatch-error :error "Could not dispatch the url ~s" url))
-       
+
 (defmacro defurl-handler (name args &body body)
   "URL handlers take an URL string and return two values. The first, t or nil, depending on if the url match the handler. The second, the server response."
   `(progn
@@ -16,7 +16,7 @@
 
 (defurl-handler default-url-handler (url)
   "This is the default url handler. We suppose the url represents a continuation request. We try to build one and execute it"
-  (handler-case 
+  (handler-case
       (let ((request (build-request-from-url url)))
 	(values t (execute request)))
     (build-request-error (e)

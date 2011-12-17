@@ -44,7 +44,7 @@
 	  (apply #'call-next-method class
 		 :direct-superclasses
 		 (append direct-superclasses (list (find-class 'transactional-object))) initargs))
-      
+
       ;; if direct superclasses are not explicitly passed
       ;; we _must_ not change anything
       (call-next-method)))

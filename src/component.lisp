@@ -144,7 +144,7 @@
   (:documentation "Means that children have been modified"))
 
 (defmethod render-ajax-response-command ((mod child-modifications-xml-node-modification))
-  (let ((xml "")) 
+  (let ((xml ""))
     (loop for child-mod in (modifications mod)
 	 do (setf xml (concatenate 'string xml (render child-mod))))))
 
@@ -211,7 +211,7 @@
   (:documentation "There's an append to a child modification"))
 
 (defmethod render-ajax-response-command ((mod append-child-xml-node-modification))
-  
+
   )
 
 

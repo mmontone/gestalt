@@ -2,7 +2,7 @@
 
 (defcomponent tracking-map ()
   ((map :component t :type 'gmap))
-  
+
   )
 
 
@@ -19,8 +19,8 @@
 			; The path changed, we have to refresh the panel
 			(remove self)
 			(render self))))
-			
-  
+
+
 
 (defmethod render ((self recording-panel))
   (:div :id "path-table"
@@ -64,7 +64,7 @@
 
 (defmethod render ((self recording-panel))
   (let ((path-table
-	 (:div 
+	 (:div
 	  (:anchor :text "Click here to begin recording"
 		 :on-click (:js
 		      ; Hide the playing panel
@@ -104,7 +104,7 @@
 
     Possible implementation:
 
-1) Each html structure is assigned an id so that we have a way to reference it. The id is automatically generated (gensym). 
+1) Each html structure is assigned an id so that we have a way to reference it. The id is automatically generated (gensym).
 2) Each time we bind a variable through a let in our language, we put that variable name in a lexical scoped hash table (so that we take into account let nesting), together with the id of the bound structure.
 3) We we reference a variable, that variable reference is replaced by (document.get-element-by-id (get-hash ,variable-name *structures*)), using symbol-macrolet probably
 
@@ -114,7 +114,7 @@
 
     (defmethod render ((self recording-panel))
       (let ((path-table
-	 (mk-container 
+	 (mk-container
 	  (mk-button :text "Click here to begin recording"
 		 :on-click (:js
 		      ; Hide the playing panel
@@ -140,7 +140,7 @@
 										       (path.remove row2)
 										       (trigger-event "changed" path)))
 						     ...
-						     
+
 ;; Of course, the same could be achieved providing new "html tags". Those may represent our widgets (like UCW does)
 
 ;; And another level of refinement would be to integrate that with client/server calling syntax, and dataflow support for automatic html structures updating.
@@ -156,7 +156,6 @@
 
 	;; One drawback of this is that, if an element is added at the end of path, the whole :table is redrawn. We can leave that to the for implementation. For example, :tr could be made dependent on path using "add-last" "remove-last events, so that it is able to act accordingly. That is to say, we don't have an imperative for; we transform it in a smart event attaching.
 
-						     
-						     
 
-						     
+
+

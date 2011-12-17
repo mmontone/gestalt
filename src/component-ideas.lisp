@@ -14,7 +14,7 @@
 ;;;   (let ((new-def (list (car slotdef))))
 ;;;     (doplist (k v) (cdr slotdef)
 ;;;       (addlast k new-def)
-;;;       (addlast 
+;;;       (addlast
 ;;;        (if (equal k :initform)
 ;;; 	   `(make-instance 'dfvaluecell :value ,v)
 ;;; 	   v)
@@ -32,8 +32,8 @@
 ;;; 		     (setf (value (slot-value component ',name)) new-value)))))
 
 ;;; (defclass model-class (standard-class) ;; We need a combination of persistent-class and dataflow-class   ala monad-transformers
-  
-  
+
+
 ;;;   )
 
 ;;; (defmacro defmodel (name direct-superclasses direct-slots &rest options)
@@ -82,7 +82,7 @@ Each model object implements a validate method. Each model accessor checks for v
 	      (> (length (name person)) 0)))
   (check (and (stringp (lastname person))
 	      (> (length (lastname person)) 0))))
-  
+
 ;; Example:
 ;; The following fails:
 (make-instance 'person)
@@ -97,12 +97,12 @@ Each model object implements a validate method. Each model accessor checks for v
     (setf (name person) "Mariano")
     (setf (lastname person) "Montone"))
 
-;; The following works:  
+;; The following works:
 (with-modification-transaction (person)
   (let ((person (make-instance 'person)))
     (setf (name person) "Mariano")
     (setf (lastname person) "Montone")))
-   
+
 
 Idea:
 -----
@@ -423,7 +423,7 @@ Suppose we have A as the parent of B. B calls C for performing some operation.
 
 (defmethod initialize-instance :after ((comp A) &rest initargs)
   (add-child comp
-	...     
+	...
    (call comp 'B)
      ...
    ))
@@ -502,7 +502,7 @@ Entonces, cada vez que el usuario hace click en un elemento, se corre el thread 
 	       (lambda (element)
 		 (add-child comp 'element-editor
 			    (with-transaction
-				(handler-case 
+				(handler-case
 				    (call (make-instance 'element-editor :on element))
 				  (abort-thread (e)
 				    (when (call (make-instance 'message-box :text "Cancelar edición del elemento?"))
@@ -629,7 +629,7 @@ Top level expansion handler:
 	(call-next-method))
       ; else
       (call-next-method)))
-  
+
 Setting up expansion limits when initializing parent component (adding subcomponents):
 (defmethod initialize ((component my-component) &rest initargs)
   (handler-bind

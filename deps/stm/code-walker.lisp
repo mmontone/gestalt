@@ -49,10 +49,10 @@
 	 do (augment-lexenv lexenv var)))
 
   (define-code-walker-case (stm-f args) (code-walker form lexenv)
-    
+
     (walk
      `(funcall (get-stm-function ',stm-f ,code-walker)
-	       
+
      lexenv))
 
   (define-code-walker-case ())
