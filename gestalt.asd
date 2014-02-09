@@ -52,10 +52,4 @@ OTHER DEALINGS IN THE SOFTWARE."
      :cl-who
      :parenscript
      :css-lite
-     :cl-cont
-     :contextl
-     :gst.util
-     :dataflow
-     :build-tree
-     :code-walker
-     :elephant))
+     :closer-mop))

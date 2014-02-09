@@ -3,10 +3,7 @@
   (:use
    :cl
    :anaphora
-   :gst.util
-   :closer-mop
-   ;:rucksack
-   ;:dataflow
+   ;:closer-mop
    ))
 
 (defpackage :gestalt.dispatch
