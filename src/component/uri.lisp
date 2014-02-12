@@ -1,9 +1,15 @@
 (in-package :gestalt)
 
-(defun compress (string)
+#-zlib(defun compress (string)
+  (salza2:compress-data (sb-ext:string-to-octets string) 'salza2:zlib-compressor))
+
+#-zlib(defun inflate (ub8s)
+  (sb-ext:octets-to-string (chipz:decompress nil 'chipz:zlib ub8s)))
+
+#+zlib(defun compress (string)
   (zlib:compress (sb-ext:string-to-octets string) :fixed))
 
-(defun inflate (ub8s)
+#+zlib(defun inflate (ub8s)
   (sb-ext:octets-to-string (zlib:uncompress ub8s)))
 
 (defvar *key* nil)

@@ -61,5 +61,7 @@ OTHER DEALINGS IN THE SOFTWARE."
      :css-lite
      :closer-mop
      :ironclad
-     :zlib
-     :cl-base64))
+     :cl-base64
+     #+zlib :zlib
+     #-zlib :salza2
+     #-zlib :chipz))
