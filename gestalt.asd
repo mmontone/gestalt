@@ -43,11 +43,14 @@ OTHER DEALINGS IN THE SOFTWARE."
 	       (:file "start")
 	       (:module component
 			:components
-			((:file "component")
+			((:file "application")
+			 (:file "component")
+			 (:file "action")
 			 (:file "mop")
 			 (:file "uri")
 			 (:file "counter")
-			 (:file "list"))
+			 (:file "list")
+			 (:file "hunchentoot"))
 			:serial t))
 	      :serial t))
     :serial t

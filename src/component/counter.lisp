@@ -13,8 +13,8 @@
 		(:a :href (action-link 'decrement-counter)
 		    "Decrement"))))
 
-(define-action increment-counter (counter)
+(define-action increment-counter (counter &rest args)
   (incf (value counter)))
 
-(define-action decrement-counter (counter)
+(define-action decrement-counter (counter &rest args)
   (decf (value counter)))

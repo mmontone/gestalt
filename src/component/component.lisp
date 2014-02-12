@@ -3,16 +3,6 @@
 (defparameter *component* nil)
 (defparameter *http-stream* nil)
 (defparameter *session* nil)
-(defparameter *application* nil)
-
-(defclass application ()
-  ((root :accessor root
-	 :initarg :root
-	 :initform (error "Provide the root component"))))
-
-(defmethod render ((application application))
-  (with-output-to-string (*http-stream*)
-    (render (root application))))
 
 (defclass component ()
   ((parent :initarg :parent
@@ -53,7 +43,7 @@
        (path
 	(component-path it)
 	(get-component-key it component))
-       (path)))
+       (path 'root)))
 
 (defun path-string (path)
   (format nil "~{~a~^.~}"
@@ -79,6 +69,12 @@
        when (equalp path arg)
        do (return-from find-argument value))
   nil)
+
+(defun get-component-in-path (path &optional (application *application*))
+  (let ((component application))
+  (loop for slot in path
+       do (setf component (slot-value component slot)))
+  component))
 
 (defmacro defcomponent (name supers slots &rest options)
   (let (class-options component-options)
@@ -233,11 +229,6 @@
 	       slot-value)))
   component)
 
-(defun unserialize-application-from-uri (uri)
-  "Unserialize application"
-  (let ((root (unserialize-component-from-uri uri (path 'root))))
-    (make-instance 'application :root root)))
-
 (defun unserialize-component-from-uri (uri path)
   "Unserialize a component"
   (let ((component-type (find-argument (append path (list 'type)) uri)))
@@ -280,35 +271,3 @@
 		   component)))
       component-holder)))
 
-(defmacro define-action (name-and-options args &body body)
-  (if (listp name-and-options)
-      (destructuring-bind (name &key toplevel) name-and-options
-	`(progn
-	   (defun ,name ,args ,@body)
-	   (setf (get ',name :toplevel) ,toplevel)
-	   (setf (get ',name :action-p) t)))
-      `(progn
-	 (defun ,name-and-options ,args ,@body)
-	 (setf (get ',name-and-options :action-p) t))))
-
-(defmethod serialize-to-uri ((x string) path)
-  (cons path x))
-
-(defmethod serialize-to-uri ((x integer) path)
-  (cons path x))
-
-(defmethod serialize-to-uri ((application application) path)
-  "Serializes the current application state"
-  (let ((root-component (root application)))
-    (serialize-to-uri root-component (path 'root))))
-
-(defun action-link (action &rest args)
-  (check-type action symbol)
-  (when (not (get action :action-p))
-    (error "~A is not an action" action))
-  (let ((app-state
-	 (or (get action :toplevel)
-	     (serialize-to-uri *application* nil))))
-    (format nil "/~A?_a=~A&_z=~A" action
-	    (encode-string (prin1-to-string args))
-	    (encode-string app-state))))
