@@ -109,9 +109,10 @@
 (defgeneric render (component))
 
 (defmethod render :around ((component component))
-  (with-html-output (*http-stream*)
-    (htm (:div :id (component-path-string component)
-	       (call-next-method)))))
+  (let ((*component* component))
+    (with-html-output (*http-stream*)
+      (htm (:div :id (component-path-string component)
+		 (call-next-method))))))
 
 (defmacro define-renderer (args &body body)
   `(defmethod render ,args
@@ -123,9 +124,8 @@
      ,@body))
 
 (defmacro define-unserialization (component-type &body body)
-  (let ((fname (intern "UNSERIALIZE-~A-FROM-URI" component-type)))
-    `(defun ,fname (uri path)
-       ,@body)))
+  `(defmethod unserialize-from-uri (uri path (component ,component-type))
+     ,@body))
 
 (defun add-component (self slot component)
   (format t "Adding ~A to ~A in ~A~%" component self slot)
@@ -280,16 +280,16 @@
 		   component)))
       component-holder)))
 
-(defmacro define-command (name-and-options args &body body)
+(defmacro define-action (name-and-options args &body body)
   (if (listp name-and-options)
       (destructuring-bind (name &key toplevel) name-and-options
 	`(progn
 	   (defun ,name ,args ,@body)
 	   (setf (get ',name :toplevel) ,toplevel)
-	   (setf (get ',name :command-p) t))
-	`(progn
-	   (defun ,name-and-options ,args ,@body)
-	   (setf (get ',name :command-p) t)))))
+	   (setf (get ',name :action-p) t)))
+      `(progn
+	 (defun ,name-and-options ,args ,@body)
+	 (setf (get ',name-and-options :action-p) t))))
 
 (defmethod serialize-to-uri ((x string) path)
   (cons path x))
@@ -302,21 +302,13 @@
   (let ((root-component (root application)))
     (serialize-to-uri root-component (path 'root))))
 
-(defun serialize-command-to-uri (command &rest args)
-  (check-type command symbol)
-  (when (not (get command :command-p))
-    (error "~A is not a command" command))
-  (let ((uri-args
-	 (append
-	  (loop for args in args
-	     appending (serialize-to-uri arg))
-	  (or (not (get command :toplevel))
-	      (serialize-to-uri *application*)))))
-    (make-uri :base command
-	      :args uri-args)))
-
-(defun make-uri (&key base args)
-  (format nil "~A?~{~A=~A&~}" base args))
-
-(defun input (&key type label command)
-  )
+(defun action-link (action &rest args)
+  (check-type action symbol)
+  (when (not (get action :action-p))
+    (error "~A is not an action" action))
+  (let ((app-state
+	 (or (get action :toplevel)
+	     (serialize-to-uri *application* nil))))
+    (format nil "/~A?_a=~A&_z=~A" action
+	    (encode-string (prin1-to-string args))
+	    (encode-string app-state))))
