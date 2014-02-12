@@ -38,9 +38,36 @@
 	      :accessor serialize-p
 	      :initform t)))
 
+(defun get-component-key (component child)
+  (loop for holder being the hash-values of (children component)
+     using (hash-key key)
+     when (eql (active-component holder) child)
+     do (return key)))
+
 ;; Path handling
 (defun path (&rest args)
   (alexandria:flatten (append (mapcar #'list args))))
+
+(defun component-path (component)
+  (aif (parent component)
+       (path
+	(component-path it)
+	(get-component-key it component))
+       (path)))
+
+(defun path-string (path)
+  (format nil "~{~a~^.~}"
+	  (mapcar (lambda (s)
+		    (string-downcase (symbol-name s)))
+		  path)))
+
+(defun component-path-string (component)
+  (path-string (component-path component)))
+
+(defun path-from-string (string)
+  (mapcar (lambda (s)
+	    (intern (string-upcase s)))
+	  (split-sequence:split-sequence #\. string)))
 
 (defun prefixed-uri-arguments (prefix uri)
   (loop for (arg . value) in uri

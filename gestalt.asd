@@ -60,6 +60,7 @@ OTHER DEALINGS IN THE SOFTWARE."
      :parenscript
      :css-lite
      :closer-mop
+     :split-sequence
      :ironclad
      :cl-base64
      #+zlib :zlib

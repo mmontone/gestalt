@@ -46,11 +46,9 @@
      first-page
      last-page)))
 
-(defcomponent list ()
+(defcomponent list-component ()
   ((value :accessor value
-	  :initform nil
-	  :component nil
-	  :serializable nil
+	  :initform nil	  
 	  :initarg :value
 	  :documentation "The list")
    (page :accessor page
@@ -60,32 +58,29 @@
 	 ;; and consider it the default value (good option!)
 	 :default 1
 	 :type integer
-	 :serializable t
+	 :serialize t
 	 :component nil
 	 :initarg :page
 	 :documentation "The current page")
    (page-size :accessor page-size
-	      :serializable t
-	      :component nil
+	      :serialize t
 	      ;; Declaring a default value, we know we have to serialize it only if the slot value
 	      ;; is different form the default value (potentially shorter serialization)
-	      :default 10
+	      ;:default 10
 	      :initarg :page-size
 	      :documentation "The list page size")
    (navigator-size :accessor navigator-size
 		   :initarg :navigator-size
 		   :initform 10
-		   :component nil
-		   :serializable t
+		   :serialize t
 		   :documentation "The list navigator size"))  
   (:render (list)
-	   (with-html-output (*http-output*)
-	     (htm (:ul
-		   (loop for item in (value list) do
-			(html (:li
-			       (esc (funcall (item-renderer list) item))))))
-		  (:div :id (gensym "NAV-")
-			(
+	   (htm (:ul
+		  (loop for item in (value list) do
+		       (html (:li
+			       (funcall (item-renderer list) item)))))
+		(:div :id (component-path-string component)
+		      (
 
 
 	      
