@@ -25,11 +25,13 @@
 	 (or (get action :toplevel)
 	     (serialize-to-uri *application* nil)))
 	(action-args (append `(:_C ,(component-path *component*)) args)))
+    ;(break "Action: serializing component path ~A ~A" *component* (component-path *component*))
     (format nil "/~A?_a=~A&_z=~A" action
 	    (encode-string action-args)
 	    (encode-string app-state))))
 
 (defun unserialize-action (action args)
+  ;(break "Unserializaing action component: ~A" (getf args :_C)) 
   (lambda ()
     (funcall (symbol-function action)
 	     (get-component-in-path (getf args :_C))

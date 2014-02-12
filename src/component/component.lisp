@@ -70,6 +70,7 @@
   (let ((component (root application)))
     (loop for slot in (subseq path 1)
        do (setf component (get-component component slot)))
+    ;(break "Component in path: ~A ~A" path component)
     component))
 
 (defmacro defcomponent (name supers slots &rest options)
@@ -185,7 +186,7 @@
     ;; Serialize its children
    (loop for component-holder being the hash-values of (children component)
       using (hash-key slot)
-      collect
+      appending
 	(serialize-to-uri component-holder (path path slot)))))
 
 (defmethod serialize-to-uri ((component-holder component-holder) path)
@@ -212,22 +213,23 @@
 
 (defmethod unserialize-from-uri (uri path (component component))
   (loop for slot in (serializable-slots (class-of component))
-       do
+     do
        (let* ((slot-path (path path (serialization-name slot)))
-	      (slot-value (if (component-slot-p slot)
-	     ;; Unserialize the component
-	     (unserialize-component-holder-from-uri
-	      uri
-	      slot-path)
-	     ;; else
-	     (aif (find-argument (path slot-path 'type) uri)
-		  ;; We assume it is a class
-		  (unserialize-from-uri uri slot-path (make-instance it))
-		  ;; A primitive type?
-		  (or (find-argument slot-path uri)
-		      (error "Couldn't unserialize slot ~A from ~A" slot-path uri))))))
+	      (slot-value (aif (find-argument (path slot-path 'type) uri)
+			       ;; We assume it is a class
+			       (unserialize-from-uri uri slot-path (make-instance it))
+			       ;; A primitive type?
+			       (or (find-argument slot-path uri)
+				   (error "Couldn't unserialize slot ~A from ~A" slot-path uri)))))
+	 ;(break "Unserializing: ~A ~A to ~A" component (closer-mop:slot-definition-name slot) slot-value)
 	 (setf (slot-value component (closer-mop:slot-definition-name slot))
 	       slot-value)))
+  (loop for key being the hash-keys of (children component)
+       do
+       (let ((holder
+	      (unserialize-component-holder-from-uri uri (path path key))))
+	 (setf (parent (active-component holder)) component)
+	 (setf (gethash key (children component)) holder)))
   component)
 
 (defun unserialize-component-from-uri (uri path)
