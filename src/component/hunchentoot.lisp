@@ -30,13 +30,12 @@
         (cons host (hunchentoot:acceptor-port acceptor)))))
 
 (defun gestalt-dispatch-request (acceptor request)
-  (let ((*application* (application acceptor)))
-    (if (equalp (hunchentoot:script-name request) "/")
-	;; Render the application root component
-	(aif (hunchentoot:get-parameter "_z")
-	     (let ((state (read-from-string (decode-string it))))
-	       (let ((application
-		      (unserialize-application-from-uri state)))
+  (if (equalp (hunchentoot:script-name request) "/")
+      ;; Render the application root component
+      (aif (hunchentoot:get-parameter "_z")
+	   (let ((state (read-from-string (decode-string it))))
+	     (let ((application
+		    (unserialize-application-from-uri state)))
 		 (render application)))
 	     ;; else, there's no state to unserialize,
 	     ;; render the root component
@@ -55,7 +54,7 @@
 		    ;; Render the resulting application
 		    (render application))))
 	      ;; else, error, no matching action
-	      (error "No matching action"))))))
+	      (error "No matching action")))))
   
 (defmethod hunchentoot:acceptor-dispatch-request ((acceptor gestalt-acceptor) request)
   (gestalt-dispatch-request acceptor request))

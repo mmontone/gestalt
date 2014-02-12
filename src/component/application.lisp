@@ -11,8 +11,9 @@
 	 :initform (error "Provide the root component"))))
 
 (defmethod render ((application application))
-  (with-output-to-string (*http-stream*)
-    (render (root application))))
+  (let ((*application* application))
+    (with-output-to-string (*http-stream*)
+      (render (root application)))))
 
 (defun unserialize-application-from-uri (uri)
   "Unserialize application"
