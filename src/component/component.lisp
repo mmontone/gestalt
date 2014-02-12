@@ -125,7 +125,7 @@
   (let ((comp (gethash slot (children component))))
     ;; If a component already exists in that slot, remove it
     (when comp
-      (remove-component slot component))
+      (remove-component component slot))
     (setf (gethash slot (children self))
 	  (make-instance 'component-holder :active-component component))
     (setf (parent component) self)))
