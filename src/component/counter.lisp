@@ -24,11 +24,3 @@
 
 (defun decrement-counter (counter)
   (decf (value counter)))
-
-(defcomponent counters ()
-  ())
-
-(defmethod initialize-instance :after ((counters counters) &rest initargs)
-  (add-component counters (gensym) (make-instance 'counter :value 1))
-  (add-component counters (gensym) (make-instance 'counter :value 2))
-  (add-component counters (gensym) (make-instance 'counter :value 3))) 
