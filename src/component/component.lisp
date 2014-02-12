@@ -108,6 +108,11 @@
 
 (defgeneric render (component))
 
+(defmethod render :around ((component component))
+  (with-html-output (*http-stream*)
+    (htm (:div :id (component-path-string component)
+	       (call-next-method)))))
+
 (defmacro define-renderer (args &body body)
   `(defmethod render ,args
      (with-html-output (*http-stream*)

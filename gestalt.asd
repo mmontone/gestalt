@@ -46,7 +46,8 @@ OTHER DEALINGS IN THE SOFTWARE."
 			((:file "component")
 			 (:file "mop")
 			 (:file "uri")
-			 (:file "counter"))
+			 (:file "counter")
+			 (:file "list"))
 			:serial t))
 	      :serial t))
     :serial t

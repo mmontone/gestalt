@@ -56,7 +56,7 @@
 	 ;; is different form the default value (potentially shorter serialization). That's
 	 ;; the difference from :initform. Another option is to interecept :initform in the metaclass
 	 ;; and consider it the default value (good option!)
-	 :default 1
+	 ;;:default 1
 	 :type integer
 	 :serialize t
 	 :component nil
@@ -77,12 +77,5 @@
   (:render (list)
 	   (htm (:ul
 		  (loop for item in (value list) do
-		       (html (:li
-			       (funcall (item-renderer list) item)))))
-		(:div :id (component-path-string component)
-		      (
-
-
-	      
-	      
-   
+		       (htm (:li (str (prin1-to-string item))))))
+		(:div :id (format nil "~A:nav" (component-path-string list))))))
