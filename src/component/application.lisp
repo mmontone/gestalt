@@ -1,6 +1,9 @@
 (in-package :gestalt)
 
 (defparameter *application* nil)
+(defparameter *component* nil)
+(defparameter *http-stream* nil)
+(defparameter *session* nil)
 
 (defclass application ()
   ((root :accessor root

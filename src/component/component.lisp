@@ -1,9 +1,5 @@
 (in-package :gestalt)
 
-(defparameter *component* nil)
-(defparameter *http-stream* nil)
-(defparameter *session* nil)
-
 (defclass component ()
   ((parent :initarg :parent
 	   :accessor parent
@@ -71,10 +67,10 @@
   nil)
 
 (defun get-component-in-path (path &optional (application *application*))
-  (let ((component application))
-  (loop for slot in path
-       do (setf component (slot-value component slot)))
-  component))
+  (let ((component (root application)))
+    (loop for slot in (subseq path 1)
+       do (setf component (get-component component slot)))
+    component))
 
 (defmacro defcomponent (name supers slots &rest options)
   (let (class-options component-options)
@@ -140,9 +136,14 @@
 
 (defun get-component (component slot)
   (aif
-   (gethash (children component) slot)
+   (gethash slot (children component))
    (active-component it)
    (error "Children component ~A not found in ~A" slot component)))
+
+(defun child-components (component)
+  (loop for holder being the hash-values of (children component)
+       collect
+       (active-component holder)))
 
 (defun get-component-holder (component)
   (let ((parent (parent component)))
