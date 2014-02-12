@@ -26,7 +26,7 @@
 	     (serialize-to-uri *application* nil)))
 	(action-args (append `(:_C ,(component-path *component*)) args)))
     (format nil "/~A?_a=~A&_z=~A" action
-	    (encode-string (prin1-to-string action-args))
+	    (encode-string action-args)
 	    (encode-string app-state))))
 
 (defun unserialize-action (action args)

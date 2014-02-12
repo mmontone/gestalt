@@ -40,18 +40,20 @@
 		 (render application)))
 	     ;; else, there's no state to unserialize,
 	     ;; render the root component
-	     (render *application*))
+	     (render (application acceptor)))
 	;; else, try to match an action
 	(let ((action-name (intern (subseq (hunchentoot:script-name request) 1) :gestalt)))
 	  (if (and (ignore-errors (symbol-function action-name))
 		   (get action-name :action-p))
-	      (progn
-		;; We found the action, execute it
-		(funcall (unserialize-action action-name
-					     (read-from-string
-					      (decode-string (hunchentoot:get-parameter "_a")))))
-		;; Render the resulting application
-		(render *application*))
+	      (let ((state (decode-string (hunchentoot:get-parameter "_z"))))
+		(let ((application
+		       (unserialize-application-from-uri state)))
+		  (let ((*application* application))
+		    ;; We found the action, execute it
+		    (funcall (unserialize-action action-name
+						 (decode-string (hunchentoot:get-parameter "_a"))))
+		    ;; Render the resulting application
+		    (render application))))
 	      ;; else, error, no matching action
 	      (error "No matching action"))))))
   
