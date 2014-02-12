@@ -40,7 +40,14 @@ OTHER DEALINGS IN THE SOFTWARE."
 	      ((:file "package")
 	       (:file "conditions")
 	       (:file "dispatcher")
-	       (:file "start"))
+	       (:file "start")
+	       (:module component
+			:components
+			((:file "component")
+			 (:file "mop")
+			 (:file "uri")
+			 (:file "counter"))
+			:serial t))
 	      :serial t))
     :serial t
     :depends-on
@@ -52,4 +59,7 @@ OTHER DEALINGS IN THE SOFTWARE."
      :cl-who
      :parenscript
      :css-lite
-     :closer-mop))
+     :closer-mop
+     :ironclad
+     :zlib
+     :cl-base64))
