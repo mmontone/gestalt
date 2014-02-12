@@ -7,7 +7,7 @@
 (defmethod shared-initialize :around ((class standard-component-class) slot-names &rest args &key direct-superclasses)
   "Ensures we inherit from standard-component"
   (let* ((standard-component-class (find-class 'standard-component-class))
-	 (standard-component (find-class 'standard-component))
+	 (standard-component (find-class 'component))
 	 (not-already-component (loop for superclass in direct-superclasses
 				       never (eq (class-of superclass) standard-component-class))))
     (if (and (not (eq class standard-component)) not-already-component)
@@ -15,63 +15,97 @@
 	       :direct-superclasses (append direct-superclasses (list standard-component)) args)
 	(call-next-method))))
 
-(defmethod validate-superclass ((class standard-component-class)
-				(super standard-class))
+(defmethod closer-mop:validate-superclass ((class standard-component-class)
+					   (super standard-class))
   t)
 
 (defclass component-slot-mixin ()
   ((component-slot-p
     :initarg :component
     :initform nil
-    :accessor component-slot-p)))
+    :accessor component-slot-p)
+   (serialize-p :initarg :serialize
+		:initform nil
+		:accessor serialize-p)
+   (serialization-name :initarg :serialization-name
+		       :initform nil
+		       :accessor serialization-name)))
+
+(defmethod serialization-name ((slot component-slot-mixin))
+  (aif (slot-value slot 'serialization-name)
+       it
+       (closer-mop:slot-definition-name slot)))      
 
 (defmethod print-object ((slot-definition component-slot-mixin) stream)
   (print-unreadable-object (slot-definition stream :type t :identity t)
-    (format stream "name: ~A component: ~A"
-	    (slot-definition-name slot-definition)
-	    (component-slot-p slot-definition))))
+    (format stream "name: ~A component: ~A serialize: ~A (~A)"
+	    (closer-mop:slot-definition-name slot-definition)
+	    (component-slot-p slot-definition)
+	    (serialize-p slot-definition)
+	    (serialization-name slot-definition))))
 
 (defclass component-direct-slot-definition
-    (component-slot-mixin standard-direct-slot-definition)
+    (component-slot-mixin closer-mop:standard-direct-slot-definition)
   ())
 
 (defclass component-effective-slot-definition
-    (component-slot-mixin standard-effective-slot-definition)
+    (component-slot-mixin closer-mop:standard-effective-slot-definition)
   ())
 
-(defmethod shared-initialize :after ((obj standard-component) slot-names &rest initargs)
+(defmethod shared-initialize :after ((obj component) slot-names &rest initargs)
   (declare (ignore initargs))
   (loop
-     for slot in (class-slots (class-of obj))
-     when (component-slot-p slot)
-     do (let ((slot-symbol (read-from-string (slot-definition-name slot))))
-	  (add-component obj
-			 slot-symbol
-			 (slot-value obj slot-symbol)))))
+     for slot in (component-slots (class-of obj))
+     for component = (slot-value obj (closer-mop:slot-definition-name slot))
+     when (typep component 'component)
+     do (add-component obj
+		       (closer-mop:slot-definition-name slot)
+		       component)))
 		 
-(defmethod (setf slot-value-using-class) (new-value
-					  (class standard-component-class)
-					  object
-					  slot-definition)
-  (remove-component object (slot-definition-name slot-definition))
-  (add-component object (slot-definition-name) new-value)
+(defmethod (setf closer-mop:slot-value-using-class) (new-value
+						     (class standard-component-class)
+						     object
+						     slot-definition)
+  (when (and (component-slot-p slot-definition)
+	     (typep new-value 'component))
+    (add-component object (closer-mop:slot-definition-name slot-definition) new-value))
   (call-next-method))
 
-(defmethod direct-slot-definition-class ((class standard-component-class)
-                                         &rest initargs)
+(defmethod closer-mop:direct-slot-definition-class ((class standard-component-class)
+						    &rest initargs)
   (declare (ignore initargs))
   (find-class 'component-direct-slot-definition))
 
-(defmethod effective-slot-definition-class ((class standard-component-class)
-                                            &rest initargs)
+(defmethod closer-mop:effective-slot-definition-class ((class standard-component-class)
+						       &rest initargs)
   (declare (ignore initargs))
   (find-class 'component-effective-slot-definition))
 
-(defmethod compute-effective-slot-definition ((class standard-component-class) name direct-slots)
-   (let ((effective-slot (call-next-method)))
+(defmethod closer-mop:compute-effective-slot-definition ((class standard-component-class) name direct-slots)
+  (let ((effective-slot (call-next-method)))
      (setf (component-slot-p effective-slot)
            (some #'component-slot-p direct-slots))
+     (setf (serialize-p effective-slot)
+	   (some #'serialize-p direct-slots))
+     (setf (serialization-name effective-slot)
+	   (some #'serialization-name direct-slots))
      effective-slot))
 
-(defmethod component-slot-p ((object slot-definition))
+(defmethod component-slot-p ((object closer-mop:slot-definition))
   nil)
+
+(defmethod serialize-p ((object closer-mop:slot-definition))
+  nil)
+
+(defmethod serialization-name ((object closer-mop:slot-definition))
+  nil)
+
+(defmethod serializable-slots ((class standard-component-class))
+  (loop for slot in (closer-mop:class-slots class)
+       when (serialize-p slot)
+       collect slot))
+
+(defmethod component-slots ((class standard-component-class))
+  (loop for slot in (closer-mop:class-slots class)
+       when (component-slot-p slot)
+       collect slot))
