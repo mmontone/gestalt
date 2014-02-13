@@ -17,23 +17,26 @@
 (defmethod serialize-to-uri ((x integer) path)
   (cons path x))
 
-(defun action-link (action &rest args)
+(defun action-link% (action component &rest args)
   (check-type action symbol)
   (when (not (get action :action-p))
     (error "~A is not an action" action))
   (let ((app-state
 	 (or (get action :toplevel)
 	     (serialize-to-uri *application* nil)))
-	(action-args (append `(:_C ,(component-path *component*)) args)))
+	(action-args (append `(:_C ,(component-path component)) args)))
     ;(break "Action: serializing component path ~A ~A" *component* (component-path *component*))
     (format nil "/~A?_a=~A&_z=~A" action
 	    (encode-string action-args)
 	    (encode-string app-state))))
 
+(defmacro action-link (action component &rest args)
+  `(action-link% ',action ,component ,@args))
+
 (defun unserialize-action (action args)
-  ;(break "Unserializaing action component: ~A" (getf args :_C)) 
+  ;(break "Unserializaing action component: ~A" (getf args :_C))
   (lambda ()
-    (funcall (symbol-function action)
-	     (get-component-in-path (getf args :_C))
-	     args)))
+    (apply (symbol-function action)
+	   (get-component-in-path (getf args :_C))
+	   (alexandria:remove-from-plist args :_C))))
 				    

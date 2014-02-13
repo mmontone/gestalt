@@ -25,10 +25,10 @@
 (define-renderer ((self embedded-counter))
   (render (counter self))
   (if (typep (body self) 'empty-component)
-      (htm (:a :href (action-link 'embed-counter)
+      (htm (:a :href (action-link embed-counter self)
 	       "Embed counter"))
       ;; else
       (render (body self))))
 
-(define-action embed-counter (self &rest args)
+(define-action embed-counter (self)
   (setf (body self) (make-instance 'embedded-counter)))
