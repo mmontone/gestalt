@@ -47,9 +47,9 @@
      last-page)))
 
 (defcomponent list-component ()
-  ((value :accessor value
+  ((items :accessor items
 	  :initform nil	  
-	  :initarg :value
+	  :initarg :items
 	  :documentation "The list")
    (page :accessor page
 	 ;; Declaring a default value, we know we have to serialize it only if the slot value
@@ -57,6 +57,7 @@
 	 ;; the difference from :initform. Another option is to interecept :initform in the metaclass
 	 ;; and consider it the default value (good option!)
 	 ;;:default 1
+	 :initform 1
 	 :type integer
 	 :serialize t
 	 :component nil
@@ -66,7 +67,8 @@
 	      :serialize t
 	      ;; Declaring a default value, we know we have to serialize it only if the slot value
 	      ;; is different form the default value (potentially shorter serialization)
-	      ;:default 10
+					;:default 10
+	      :initform 10
 	      :initarg :page-size
 	      :documentation "The list page size")
    (navigator-size :accessor navigator-size
@@ -75,7 +77,42 @@
 		   :serialize t
 		   :documentation "The list navigator size"))  
   (:render (list)
-	   (htm (:ul
-		  (loop for item in (value list) do
-		       (htm (:li (str (prin1-to-string item))))))
-		(:div :id (format nil "~A:nav" (component-path-string list))))))
+	   (let ((items-page (subseq (items list)
+				     (* (page-size list) (page list))
+				     (min (1- (* (page-size list) (1+ (page list))))
+					  (length (items list))))))
+	     (htm (:ul
+		    (loop for item in items-page do
+			 (htm (:li (str (prin1-to-string item))))))))
+	   (multiple-value-bind (pages-number
+				 left-page
+				 right-page
+				 from-result
+				 to-result
+				 previous-page
+				 next-page
+				 first-page
+				 last-page)
+	       (calculate-paginated-list :page (page list)
+					 :total-count (length (items list))
+					 :window-size (navigator-size list)
+					 :page-size (page-size list))
+	     (declare (ignore from-result to-result first-page last-page))
+	     (htm
+	      (:div :id (format nil "~A:nav" (component-path-string list))
+		    (:div :class "pages" (str (prin1-to-string pages-number)))
+		    (when previous-page
+		      (htm
+		       (:a :href (action-link list-goto-page list left-page)
+			   "<")))
+		    (loop for c from left-page to right-page
+		       do
+			 (htm (:a :href (action-link list-goto-page list c)
+				  (str (prin1-to-string c)))))
+		    (when next-page
+		      (htm (:a :href (action-link list-goto-page list next-page)
+			       (str (prin1-to-string next-page))))))))))
+
+(define-action list-goto-page (list page)
+  (setf (page list) page))
+  
