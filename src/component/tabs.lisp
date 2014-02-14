@@ -11,7 +11,8 @@
 		     :component t)))
 
 (defmethod initialize-instance :after ((tabs tabs-component) &rest initargs)
-  (switch-to-tab tabs (car (first (tabs tabs)))))
+  (when (tabs tabs)
+    (switch-to-tab tabs (car (first (tabs tabs))))))
 
 (define-renderer ((tabs tabs-component))
   (htm

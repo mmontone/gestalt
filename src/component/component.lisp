@@ -217,6 +217,7 @@
 			  answer-handler)))))))
 
 (defmethod unserialize-from-uri (uri path (component component))
+  (log-for info "Unserializing: ~A at ~A" component path)
   (loop for slot in (serializable-slots (class-of component))
      do
        (let* ((slot-path (path path (serialization-name slot)))
@@ -229,7 +230,8 @@
 	 (log-for info "Unserializing: ~A ~A to ~A" component (closer-mop:slot-definition-name slot) slot-value)
 	 (setf (slot-value component (closer-mop:slot-definition-name slot))
 	       slot-value)))
-  (loop for key being the hash-keys of (children component)
+  (loop for key in (union (alexandria:hash-table-keys (children component))
+			  (mapcar #'closer-mop:slot-definition-name (component-slots (class-of component))))
        do
        (let ((holder
 	      (unserialize-component-holder-from-uri uri (path path key))))

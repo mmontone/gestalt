@@ -5,16 +5,16 @@
 	   (asdf:system-relative-pathname :gestalt (format nil "src/component/showcase/~A" filename))))
     `((counters . (:label "Counters"
 			  :component counters-showcase
-			  :source  ,(source "counters")))
+			  :source  ,(source "counters.lisp")))
       (lists . (:label "Lists"
 		       :component lists-showcase
-		       :source ,(source "lists")))
+		       :source ,(source "lists.lisp")))
       (tabs . (:label "Tabs"
 		      :component tabs-showcase
-		      :source ,(source "tabs")))
+		      :source ,(source "tabs.lisp")))
       (embedded . (:label "Embedded"
 			  :component showcase
-			  :source ,(source "showcase"))))))
+			  :source ,(source "showcase.lisp"))))))
 
 (defun file-string (path)
   (with-open-file (stream path)
@@ -40,10 +40,15 @@
   (htm (:ul :class "demos"
 	    (loop for demo in *demos*
 		 do
-		 (htm (:li (action-link switch-to-demo showcase (first demo)))
-		      (getf (cdr demo) :label))))
+		 (htm (:li (:a :href (action-link switch-to-demo showcase (first demo))
+			       (str (getf (cdr demo) :label)))))))
        (:div :class "demo"
 	     (render (body showcase)))))
+
+(define-unserialization showcase
+  (let ((showcase (call-next-method)))
+    (switch-to-demo showcase (selected-demo showcase))
+    showcase))
 	    
 (define-action switch-to-demo (showcase demo)
   (let ((demo (cdr (assoc demo *demos*))))
@@ -54,7 +59,7 @@
 
 (defcomponent source-viewer ()
   ((source :initarg :source
-	   :initform (error "Provide the source")
+	   :initform nil
 	   :accessor source))
   (:render (source-viewer)
 	   (htm (:div (str (file-string (source source-viewer)))))))

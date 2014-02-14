@@ -47,7 +47,7 @@
 	      (let ((state (decode-string (hunchentoot:get-parameter "_z"))))
 		(let ((application
 		       (unserialize-application-from-uri state)))
-		  (assert (equalp (serialize-to-uri application nil) state)
+		  #+nil(assert (equalp (serialize-to-uri application nil) state)
 			  nil
 			  "Unserialization error ~A ~A" (serialize-to-uri application nil) state)
 		  (log-for info "Unserialized application: ~A" (serialize-to-uri application nil))
