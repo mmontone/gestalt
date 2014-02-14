@@ -42,4 +42,3 @@
     (apply (symbol-function action)
 	   (get-component-in-path (first args))
 	   (rest args))))
-				    

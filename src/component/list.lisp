@@ -111,7 +111,7 @@
 				  (str (prin1-to-string c)))))
 		    (when next-page
 		      (htm (:a :href (action-link list-goto-page list next-page)
-			       (str (prin1-to-string next-page))))))))))
+			       ">"))))))))
 
 (define-action list-goto-page (list page)
   (setf (page list) page))

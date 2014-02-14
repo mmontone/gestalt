@@ -18,7 +18,7 @@
 (defun unserialize-application-from-uri (uri)
   "Unserialize application"
   (let ((root (unserialize-component-from-uri uri (path 'root))))
-    (make-instance 'application :root root)))
+    (validate-application (make-instance 'application :root root))))
 
 (defmethod serialize-to-uri ((application application) path)
   "Serializes the current application state"
@@ -34,3 +34,18 @@
 
 ;; Debugging
 (setf hunchentoot:*catch-errors-p* nil)
+
+(defun validate-application (application)
+  "Debugging: check application consistency"
+  (log-for info "Validating application")
+  (validate-component (root application))
+  application)
+
+(defun validate-component (component)
+  (loop for holder being the hash-value of (children component)
+       do
+       (progn
+	 (assert (typep holder 'component-holder))
+	 (assert (eql (parent (active-component holder))
+		      component))
+	 (validate-component (active-component holder)))))

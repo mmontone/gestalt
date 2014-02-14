@@ -28,18 +28,23 @@
   (loop for holder being the hash-values of (children component)
      using (hash-key key)
      when (eql (active-component holder) child)
-     do (return key)))
+     do (return-from get-component-key key))
+  (error "~A not found as child of ~A" child component))
 
 ;; Path handling
 (defun path (&rest args)
   (alexandria:flatten (append (mapcar #'list args))))
 
 (defun component-path (component)
-  (aif (parent component)
-       (path
-	(component-path it)
-	(get-component-key it component))
-       (path 'root)))
+  (let ((component-path
+	 (aif (parent component)
+	      (path
+	       (component-path it)
+	       (get-component-key it component))
+	      (path 'root))))
+    (log-for info "~A path: ~A parent: ~A"
+	     component component-path (parent component))
+    component-path))
 
 (defun path-string (path)
   (format nil "~{~a~^.~}"
@@ -273,4 +278,3 @@
 	     (setf (active-component component-holder)
 		   component)))
       component-holder)))
-

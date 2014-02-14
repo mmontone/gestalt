@@ -61,15 +61,26 @@
      do (add-component obj
 		       (closer-mop:slot-definition-name slot)
 		       component)))
+
+(defmethod closer-mop:slot-value-using-class ((class standard-component-class) object slot-definition)
+  "When setting a component slot, a component is added as child instead, and the slot holds its key"
+  (if (component-slot-p slot-definition)
+      ;; If it is a component slot, retrieve the child component
+      (get-component object (closer-mop:slot-definition-name slot-definition))
+      ;; else, get the slot value
+      (call-next-method)))
 		 
 (defmethod (setf closer-mop:slot-value-using-class) (new-value
 						     (class standard-component-class)
 						     object
 						     slot-definition)
-  (when (and (component-slot-p slot-definition)
-	     (typep new-value 'component))
-    (add-component object (closer-mop:slot-definition-name slot-definition) new-value))
-  (call-next-method))
+  (if (component-slot-p slot-definition)
+      (progn
+	(check-type new-value component)
+	;; If we are setting a component slot, then we just add the component
+	(add-component object (closer-mop:slot-definition-name slot-definition) new-value))
+      ;; else, normal assignment
+      (call-next-method)))     
 
 (defmethod closer-mop:direct-slot-definition-class ((class standard-component-class)
 						    &rest initargs)

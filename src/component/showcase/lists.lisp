@@ -22,12 +22,20 @@
 (defparameter *list2* (loop for i from 1 to 50
 			   collect (get-random-string 20 :alphabetic t)))
 
+(defcomponent list-component-1 (list-component)
+  ()
+  (:default-initargs :items *list1*))
+
+(defcomponent list-component-2 (list-component)
+  ()
+  (:default-initargs :items *list2*))
+
 (defcomponent lists-showcase ()
   ((list1 :component t
-	  :initform (make-instance 'list-component :items *list1*)
+	  :initform (make-instance 'list-component-1)
 	  :accessor list1)
    (list2 :component t
-	  :initform (make-instance 'list-component :items *list2*)
+	  :initform (make-instance 'list-component-2)
 	  :accessor list2))
   (:render (self)
 	   (htm (:div
