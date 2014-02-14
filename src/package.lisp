@@ -4,6 +4,7 @@
    :cl
    :anaphora
    :cl-who
+   :log5
    ;:closer-mop
    ))
 

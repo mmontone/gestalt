@@ -25,16 +25,19 @@
 	 (or (get action :toplevel)
 	     (serialize-to-uri *application* nil)))
 	(action-args (cons (component-path component) args)))
-    ;(break "Action: serializing component path ~A ~A" *component* (component-path *component*))
-    (format nil "/~A?_a=~A&_z=~A" action
-	    (encode-string action-args)
-	    (encode-string app-state))))
+    (let ((uri
+	   (format nil "/~A?_a=~A&_z=~A" action
+		   (encode-string action-args)
+		   (encode-string app-state))))
+      (log-for info "Action link: ~A ~A ~A ~A" action action-args app-state
+	       uri)
+      uri)))	       
 
 (defmacro action-link (action component &rest args)
   `(action-link% ',action ,component ,@args))
 
 (defun unserialize-action (action args)
-  ;(break "Unserializaing action component: ~A" (getf args :_C))
+  (log-for info "Unserializaing action component: ~A" (first args))
   (lambda ()
     (apply (symbol-function action)
 	   (get-component-in-path (first args))

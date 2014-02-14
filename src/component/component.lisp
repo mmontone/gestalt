@@ -70,7 +70,7 @@
   (let ((component (root application)))
     (loop for slot in (subseq path 1)
        do (setf component (get-component component slot)))
-    ;(break "Component in path: ~A ~A" path component)
+    (log-for info "Component in path: ~A ~A" path component)
     component))
 
 (defmacro defcomponent (name supers slots &rest options)
@@ -121,7 +121,7 @@
      ,@body))
 
 (defun add-component (self slot component)
-  (format t "Adding ~A to ~A in ~A~%" component self slot)
+  (log-for info "Adding ~A to ~A in ~A~%" component self slot)
   (let ((comp (gethash slot (children component))))
     ;; If a component already exists in that slot, remove it
     (when comp
@@ -221,7 +221,7 @@
 			       ;; A primitive type?
 			       (or (find-argument slot-path uri)
 				   (error "Couldn't unserialize slot ~A from ~A" slot-path uri)))))
-	 ;(break "Unserializing: ~A ~A to ~A" component (closer-mop:slot-definition-name slot) slot-value)
+	 (log-for info "Unserializing: ~A ~A to ~A" component (closer-mop:slot-definition-name slot) slot-value)
 	 (setf (slot-value component (closer-mop:slot-definition-name slot))
 	       slot-value)))
   (loop for key being the hash-keys of (children component)

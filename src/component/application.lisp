@@ -24,3 +24,13 @@
   "Serializes the current application state"
   (let ((root-component (root application)))
     (serialize-to-uri root-component (path 'root))))
+
+;; Logging
+
+(start-sender 'info-messages  
+  (stream-sender :location *error-output*)  
+  :category-spec '(info+)  
+  :output-spec '(category message))
+
+;; Debugging
+(setf hunchentoot:*catch-errors-p* nil)

@@ -50,14 +50,14 @@
 		  (assert (equalp (serialize-to-uri application nil) state)
 			  nil
 			  "Unserialization error ~A ~A" (serialize-to-uri application nil) state)
-		  ;(break "Before: ~A ~A" (serialize-to-uri application nil) state)
+		  (log-for info "Unserialized application: ~A" (serialize-to-uri application nil))
 		  
 		  (let ((*application* application))
 		    ;; We found the action, execute it
 		    (funcall (unserialize-action action-name
 						 (decode-string (hunchentoot:get-parameter "_a"))))
 		    ;; Render the resulting application
-		    ;(break "After: ~A" (serialize-to-uri application nil))
+		    (log-for info "Serialized application: ~A" (serialize-to-uri application nil))
 		    (render application))))
 	      ;; else, error, no matching action
 	      (error "No matching action")))))
