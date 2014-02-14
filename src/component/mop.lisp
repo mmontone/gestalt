@@ -52,16 +52,6 @@
     (component-slot-mixin closer-mop:standard-effective-slot-definition)
   ())
 
-(defmethod shared-initialize :after ((obj component) slot-names &rest initargs)
-  (declare (ignore initargs))
-  (loop
-     for slot in (component-slots (class-of obj))
-     for component = (slot-value obj (closer-mop:slot-definition-name slot))
-     when (typep component 'component)
-     do (add-component obj
-		       (closer-mop:slot-definition-name slot)
-		       component)))
-
 (defmethod closer-mop:slot-value-using-class ((class standard-component-class) object slot-definition)
   "When setting a component slot, a component is added as child instead, and the slot holds its key"
   (if (component-slot-p slot-definition)
