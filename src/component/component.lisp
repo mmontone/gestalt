@@ -62,7 +62,8 @@
 
 (defun prefixed-uri-arguments (prefix uri)
   (loop for (arg . value) in uri
-     when (equalp (subseq arg 0 (length prefix)) prefix)
+     when (and (<= (length prefix) (length arg))
+	       (equalp (subseq arg 0 (length prefix)) prefix))
      collect (cons arg value)))
 
 (defun find-argument (path uri)
@@ -216,8 +217,11 @@
 		    (cons answer-handler-path
 			  answer-handler)))))))
 
+(defmethod unserialize-from-uri :around (uri path thing)
+  (log-for info "Unserializing: ~A at ~A" thing path)
+  (call-next-method))
+
 (defmethod unserialize-from-uri (uri path (component component))
-  (log-for info "Unserializing: ~A at ~A" component path)
   (loop for slot in (serializable-slots (class-of component))
      do
        (let* ((slot-path (path path (serialization-name slot)))
@@ -232,7 +236,7 @@
 	       slot-value)))
   (loop for key in (union (alexandria:hash-table-keys (children component))
 			  (mapcar #'closer-mop:slot-definition-name (component-slots (class-of component))))
-       do
+     do
        (let ((holder
 	      (unserialize-component-holder-from-uri uri (path path key))))
 	 (setf (parent (active-component holder)) component)
