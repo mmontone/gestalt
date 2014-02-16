@@ -45,18 +45,6 @@
        (:div :class "demo"
 	     (render (body showcase)))))
 
-(define-unserialization showcase
-  (let* ((showcase (call-next-method))
-	 (demo (cdr (assoc (selected-demo showcase) *demos*))))
-    (setf (body showcase)
-	  (unserialize-from-uri
-	   uri
-	   (path path 'body)
-	   (make-instance 'tabs-component
-			  :tabs `((demo . ,(make-instance (getf demo :component)))
-				  (source . ,(make-instance 'source-viewer :source (getf demo :source)))))))
-    showcase))
-	    
 (define-action switch-to-demo (showcase demo)
   (let ((demo (cdr (assoc demo *demos*))))
     (setf (body showcase)
@@ -67,7 +55,8 @@
 (defcomponent source-viewer ()
   ((source :initarg :source
 	   :initform nil
-	   :accessor source))
+	   :accessor source
+	   :serialize t))
   (:render (source-viewer)
 	   (htm (:div (str (file-string (source source-viewer)))))))
 

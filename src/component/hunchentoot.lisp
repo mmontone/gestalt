@@ -39,7 +39,10 @@
 		 (render application)))
 	     ;; else, there's no state to unserialize,
 	     ;; render the root component
-	     (render (application acceptor)))
+	   (progn
+	     (log-for info "Serialized application: ~A" (serialize-to-uri (application acceptor) nil))
+	     (render (application acceptor))
+	     ))
 	;; else, try to match an action
 	(let ((action-name (intern (subseq (hunchentoot:script-name request) 1) :gestalt)))
 	  (if (and (ignore-errors (symbol-function action-name))

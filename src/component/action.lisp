@@ -20,6 +20,12 @@
 (defmethod serialize-to-uri ((x symbol) path)
   (cons path x))
 
+(defmethod serialize-to-uri ((x list) path)
+  (cons path (prin1-to-string x)))
+
+(defmethod serialize-to-uri ((p pathname) path)
+  (cons path (princ-to-string p)))
+
 (defun action-link% (action component &rest args)
   (check-type action symbol)
   (when (not (get action :action-p))
