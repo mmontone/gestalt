@@ -48,6 +48,7 @@ OTHER DEALINGS IN THE SOFTWARE."
 		       (:file "action")
 		       (:file "mop")
 		       (:file "uri")
+		       (:file "label")
 		       (:file "counter")
 		       (:file "list")
 		       (:file "tabs")
