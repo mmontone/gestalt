@@ -109,13 +109,13 @@
 
 (defmethod render :around ((component component))
   (let ((*component* component))
-    (with-html-output (*http-stream*)
-      (htm (:div :id (component-path-string component)
-		 (call-next-method))))))
+    (with-html
+      (:div :id (component-path-string component)
+	    (call-next-method)))))
 
 (defmacro define-renderer (args &body body)
   `(defmethod render ,args
-     (with-html-output (*http-stream*)
+     (with-html
        ,@body)))
 
 (defmacro define-serialization (component-type &body body)

@@ -58,8 +58,20 @@
 	   :accessor source
 	   :serialize t))
   (:render (source-viewer)
-	   (htm (:div (str (file-string (source source-viewer)))))))
+	   (htm (:div (:textarea :cols 80
+				 :rows 80
+				 (esc (file-string (source source-viewer))))))))
+
+(defclass showcase-application (application)
+  ()
+  (:default-initargs
+   :name 'showcase
+    :title "Gestalt showcase"
+    :static-directory (asdf:system-relative-pathname :gestalt "src/component/showcase/static/")
+    :stylesheets (list (static "showcase.css"))
+    :root (make-instance 'showcase)))
+    
 
 (defun showcase ()
-  (start-application (make-instance 'application :root (make-instance 'showcase))
+  (start-application (make-instance 'showcase-application)
 		     :port 9090))

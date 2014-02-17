@@ -30,40 +30,50 @@
         (cons host (hunchentoot:acceptor-port acceptor)))))
 
 (defun gestalt-dispatch-request (acceptor request)
-  (if (equalp (hunchentoot:script-name request) "/")
-      ;; Render the application root component
-      (aif (hunchentoot:get-parameter "_z")
-	   (let ((state (read-from-string (decode-string it))))
+  (cond
+    ((and (eq (hunchentoot:request-method request) :get)
+	  (cl-ppcre:scan "/static/(.*)"
+			 (hunchentoot:request-uri request)))
+     (cl-ppcre:register-groups-bind (resource-path) 
+	 ("^/static/(.*)" (hunchentoot:request-uri request))
+       (hunchentoot:handle-static-file
+	(merge-pathnames (pathname resource-path)
+			 (static-directory (application acceptor))))))
+    ((equalp (hunchentoot:script-name request) "/")
+     ;; Render the application root component
+     (aif (hunchentoot:get-parameter "_z")
+	  (let ((state (read-from-string (decode-string it))))
+	    (let ((application
+		   (unserialize-application-from-uri state)))
+	      (render application)))
+	  ;; else, there's no state to unserialize,
+	  ;; render the root component
+	  (progn
+	    (log-for info "Serialized application: ~A" (serialize-to-uri (application acceptor) nil))
+	    (render (application acceptor))
+	    )))
+    (t
+     ;; else, try to match an action
+     (let ((action-name (intern (subseq (hunchentoot:script-name request) 1) :gestalt)))
+       (if (and (ignore-errors (symbol-function action-name))
+		(get action-name :action-p))
+	   (let ((state (decode-string (hunchentoot:get-parameter "_z"))))
 	     (let ((application
 		    (unserialize-application-from-uri state)))
-		 (render application)))
-	     ;; else, there's no state to unserialize,
-	     ;; render the root component
-	   (progn
-	     (log-for info "Serialized application: ~A" (serialize-to-uri (application acceptor) nil))
-	     (render (application acceptor))
-	     ))
-	;; else, try to match an action
-	(let ((action-name (intern (subseq (hunchentoot:script-name request) 1) :gestalt)))
-	  (if (and (ignore-errors (symbol-function action-name))
-		   (get action-name :action-p))
-	      (let ((state (decode-string (hunchentoot:get-parameter "_z"))))
-		(let ((application
-		       (unserialize-application-from-uri state)))
-		  #+nil(assert (equalp (serialize-to-uri application nil) state)
-			  nil
-			  "Unserialization error ~A ~A" (serialize-to-uri application nil) state)
-		  (log-for info "Unserialized application: ~A" (serialize-to-uri application nil))
+	       #+nil(assert (equalp (serialize-to-uri application nil) state)
+			    nil
+			    "Unserialization error ~A ~A" (serialize-to-uri application nil) state)
+	       (log-for info "Unserialized application: ~A" (serialize-to-uri application nil))
 		  
-		  (let ((*application* application))
-		    ;; We found the action, execute it
-		    (funcall (unserialize-action action-name
-						 (decode-string (hunchentoot:get-parameter "_a"))))
-		    ;; Render the resulting application
-		    (log-for info "Serialized application: ~A" (serialize-to-uri application nil))
-		    (render application))))
-	      ;; else, error, no matching action
-	      (error "No matching action")))))
+	       (let ((*application* application))
+		 ;; We found the action, execute it
+		 (funcall (unserialize-action action-name
+					      (decode-string (hunchentoot:get-parameter "_a"))))
+		 ;; Render the resulting application
+		 (log-for info "Serialized application: ~A" (serialize-to-uri application nil))
+		 (render application))))
+	   ;; else, error, no matching action
+	   (error "No matching action"))))))
   
 (defmethod hunchentoot:acceptor-dispatch-request ((acceptor gestalt-acceptor) request)
   (gestalt-dispatch-request acceptor request))
