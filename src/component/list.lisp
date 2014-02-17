@@ -75,7 +75,11 @@
 		   :initarg :navigator-size
 		   :initform 10
 		   :serialize t
-		   :documentation "The list navigator size"))  
+		   :documentation "The list navigator size")
+   (render-item-function :initarg :render-item-function
+			 :initform nil
+			 :accessor render-item-function
+			 :serialize t))  
   (:render (list)
 	   (let ((items-page (subseq (items list)
 				     (* (page-size list) (page list))
@@ -114,9 +118,13 @@
 			       ">"))))))))
 
 (defmethod render-list-item ((list list-component) item)
-  (with-html
-    (str (prin1-to-string item))))
+  (if (render-item-function list)
+      (funcall (symbol-function (render-item-function list))
+	       list
+	       item)
+      ;; else
+      (with-html
+	(str (prin1-to-string item)))))
 
 (define-action list-goto-page (list page)
   (setf (page list) page))
-  

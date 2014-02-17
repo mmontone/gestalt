@@ -66,11 +66,13 @@
 	       (equalp (subseq arg 0 (length prefix)) prefix))
      collect (cons arg value)))
 
-(defun find-argument (path uri)
+(defun find-argument (path uri &optional error-p)
   (loop for (arg . value) in uri
        when (equalp path arg)
-       do (return-from find-argument value))
-  nil)
+       do (return-from find-argument (values value t)))
+  (when error-p
+    (error "Argument ~A not found in ~A" path uri))
+  (values nil nil))
 
 (defun get-component-in-path (path &optional (application *application*))
   (let ((component (root application)))
@@ -229,8 +231,11 @@
 			       ;; We assume it is a class
 			       (unserialize-from-uri uri slot-path (make-instance it))
 			       ;; A primitive type?
-			       (or (find-argument slot-path uri)
-				   (error "Couldn't unserialize slot ~A from ~A" slot-path uri)))))
+			       (multiple-value-bind (slot-value found-p)
+				   (find-argument slot-path uri)
+				 (if found-p
+				     slot-value
+				     (error "Couldn't unserialize slot ~A from ~A" slot-path uri))))))
 	 (log-for info "Unserializing: ~A ~A to ~A" component (closer-mop:slot-definition-name slot) slot-value)
 	 (setf (slot-value component (closer-mop:slot-definition-name slot))
 	       slot-value)))
