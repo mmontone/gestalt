@@ -46,7 +46,7 @@
    (:ul :class "tabs"
 	(loop for (label . component) in (tabs tabs)
 	   do
-	     (htm (:li (:a :href (action-link switch-to-tab tabs label)
+	     (htm (:li (:a :href (action-link (action switch-to-tab tabs label))
 			   (str label))))))
    (:div :class "body"
 	 (render (active-component tabs)))))

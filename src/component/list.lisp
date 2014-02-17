@@ -83,7 +83,7 @@
 					  (length (items list))))))
 	     (htm (:ul
 		    (loop for item in items-page do
-			 (htm (:li (str (prin1-to-string item))))))))
+			 (htm (:li (render-list-item list item)))))))
 	   (multiple-value-bind (pages-number
 				 left-page
 				 right-page
@@ -103,15 +103,19 @@
 		    (:div :class "pages" (str (prin1-to-string pages-number)))
 		    (when previous-page
 		      (htm
-		       (:a :href (action-link list-goto-page list left-page)
+		       (:a :href (action-link (action list-goto-page list left-page))
 			   "<")))
 		    (loop for c from left-page to right-page
 		       do
-			 (htm (:a :href (action-link list-goto-page list c)
+			 (htm (:a :href (action-link (action list-goto-page list c))
 				  (str (prin1-to-string c)))))
 		    (when next-page
-		      (htm (:a :href (action-link list-goto-page list next-page)
+		      (htm (:a :href (action-link (action list-goto-page list next-page))
 			       ">"))))))))
+
+(defmethod render-list-item ((list list-component) item)
+  (with-html
+    (str (prin1-to-string item))))
 
 (define-action list-goto-page (list page)
   (setf (page list) page))

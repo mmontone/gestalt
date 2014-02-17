@@ -25,7 +25,7 @@
 (define-renderer ((self embedded-counter))
   (render (counter self))
   (if (typep (body self) 'empty-component)
-      (htm (:a :href (action-link embed-counter self)
+      (htm (:a :href (action-link (action embed-counter self))
 	       "Embed counter"))
       ;; else
       (render (body self))))

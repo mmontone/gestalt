@@ -8,9 +8,9 @@
 	  :initarg :value))
   (:render (counter)
 	   (htm (:p (str (princ-to-string (value counter))))
-		(:a :href (action-link increment-counter counter)
+		(:a :href (action-link (action increment-counter counter))
 		    "Increment")
-		(:a :href (action-link decrement-counter counter)
+		(:a :href (action-link (action decrement-counter counter))
 		    "Decrement"))))
 
 (define-action increment-counter (counter)

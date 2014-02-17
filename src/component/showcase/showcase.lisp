@@ -41,7 +41,7 @@
 	(:ul :class "demos"
 	    (loop for demo in *demos*
 		 do
-		 (htm (:li (:a :href (action-link switch-to-demo showcase (first demo))
+		 (htm (:li (:a :href (action-link (action switch-to-demo showcase (first demo)))
 			       (str (getf (cdr demo) :label)))))))
        (:div :class "demo"
 	     (render (body showcase)))))

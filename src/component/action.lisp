@@ -26,24 +26,28 @@
 (defmethod serialize-to-uri ((p pathname) path)
   (cons path (princ-to-string p)))
 
-(defun action-link% (action component &rest args)
-  (check-type action symbol)
-  (when (not (get action :action-p))
-    (error "~A is not an action" action))
-  (let ((app-state
-	 (or (get action :toplevel)
-	     (serialize-to-uri *application* nil)))
-	(action-args (cons (component-path component) args)))
-    (let ((uri
-	   (format nil "/~A?_a=~A&_z=~A" action
-		   (encode-string action-args)
-		   (encode-string app-state))))
-      (log-for info "Action link: ~A ~A ~A ~A" action action-args app-state
-	       uri)
-      uri)))	       
+(defun action% (&rest args)
+  args)
 
-(defmacro action-link (action component &rest args)
-  `(action-link% ',action ,component ,@args))
+(defmacro action (action-name component &rest args)
+  `(action% ',action-name ,component ,@args))
+
+(defun action-link (action)
+  (destructuring-bind (action component &rest args) action
+    (check-type action symbol)
+    (when (not (get action :action-p))
+      (error "~A is not an action" action))
+    (let ((app-state
+	   (or (get action :toplevel)
+	       (serialize-to-uri *application* nil)))
+	  (action-args (cons (component-path component) args)))
+      (let ((uri
+	     (format nil "/~A?_a=~A&_z=~A" action
+		     (encode-string action-args)
+		     (encode-string app-state))))
+	(log-for info "Action link: ~A ~A ~A ~A" action action-args app-state
+		 uri)
+	uri))))	       
 
 (defun unserialize-action (action args)
   (log-for info "Unserializaing action component: ~A" (first args))
