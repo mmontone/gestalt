@@ -37,7 +37,8 @@
 
 
 (define-renderer ((showcase showcase))
-  (htm (:ul :class "demos"
+  (:div :class "demos"
+	(:ul :class "demos"
 	    (loop for demo in *demos*
 		 do
 		 (htm (:li (:a :href (action-link switch-to-demo showcase (first demo))

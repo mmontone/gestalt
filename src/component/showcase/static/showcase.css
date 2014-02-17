@@ -1,3 +1,18 @@
-body {
-    background-color: red;
+ul.demos {
+    float:left;
+    padding-right:20px;
+}
+
+div.demo {
+    float:left;
+}
+
+ul.tabs {
+    list-style-type:none;
+    height:10px;
+}
+
+ul.tabs li {
+    float:left;
+    padding-right: 2px;    
 }
