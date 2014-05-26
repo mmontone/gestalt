@@ -14,7 +14,7 @@ It's been said that art is unity in multiplicity. I think software could take th
 
 How could that be achieved?
 
-Stratified design: possibility to solve a problem in different ways. For example, program de control flow of the application using a page-centric design, or as a component tree, or a combination of both. Besides, provide the possibility to generate HTML or XUL by means of strings concatenation, or a domain specific language, or using higher level of abstractions such us widgets with dataflow support.
+Stratified design: possibility to solve a problem in different ways. For example, program the control flow of the application using a page-centric design, or as a component tree, or a combination of both. Besides, provide the possibility to generate HTML or XUL by means of strings concatenation, or a domain specific language, or using higher level of abstractions such us widgets with dataflow support.
 Integrating state-of-the art designs such as component tree and delimited continuations for control flow.
 Extend it with dataflow semantics and syntax for the model, the components and view updates.
 More composability through memory transactions.
