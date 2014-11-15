@@ -20,12 +20,12 @@
 
 #|
 (start-sender 'stm
-  (stream-sender :location *error-output*)  
+  (stream-sender :location *error-output*)
   :category-spec '(stm)
   :output-spec '(message))
 
 (start-sender 'none
-  (stream-sender :location *error-output*)  
+  (stream-sender :location *error-output*)
   :category-spec '(none)
   :output-spec '(message))
 

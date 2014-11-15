@@ -19,7 +19,7 @@ In the current design, this is what happens:
 
 That would get transformed to something like:
 
-(let 
+(let
     ((a (make-cell :value 21))
      (b (make-cell :value 11)))
   (make-cell :lambda
@@ -54,4 +54,3 @@ make-cell builds a cell. Each cell holds the lambda to compute and a weak hash t
 The (setf (value cell) value) could register the changes in the current memory transaction in a transactional dataflow resolving scheme.
 
 The cell computes itself providing its weakly referenced arguments to its lambda.
-			  

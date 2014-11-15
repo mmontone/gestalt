@@ -51,7 +51,7 @@
       (call-next-method)))
 
 
-  
+
 (defmethod will-flush ((tracker xml-node-modifications-tracker))
   (not (is-null (to-flush tracker))))
 
@@ -72,7 +72,7 @@
 (defmethod is-child-modification ((mod child-modifications-xml-node-modification))
   t
   )
-  
+
 (defmethod replace-child ((tracker xml-node-modifications-tracker) &key new-child old-child)
   "We don't want modifications on the new-child to be taken into account by the page renderer"
   (when (registering tracker)
@@ -153,7 +153,7 @@
 
 (defmethod handler ((tracker xml-node-modifications-tracker))
   (get-attribute "handler" tracker))
- 
+
 
 (defclass html-container (xml-node-modifications-tracker)
   ())
@@ -164,7 +164,7 @@
 
 (defmethod render ((container html-container) &optional (stream nil))
   (get-attribute container :tagname :if-absent *default-tag*)
-  
+
   )
 
 (defmethod real-id ((container html-container))
@@ -355,14 +355,14 @@ We could define a volatile-layer to improve the code:
         (call-with-active-layers ,valid-layers           ; we need to implement call-with-active-layers in contextl
 	  (lambda ()
 	    (call-with-inactive-layers ,invalid-layers   ; we need to implement call-with-inactive-layers in contextl
-		(lambda ()		       
+		(lambda ()
 	           ,@body)))))))
-	  
+
 (defun begin-user-session ()
   (with-volatile-layers ('promotions-layer)
     (go-on)))
-  
-	     
+
+
 Finally, it is not clear to me whether the following is correct or not, but we could give more controls to templates throw some calculation, although I think EVERY calculation should be in the controller, so...
 
 We could have some expressions that expand to dataflow cells:

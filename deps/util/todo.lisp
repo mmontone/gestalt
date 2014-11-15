@@ -31,7 +31,7 @@
 
 (defmethod initialize-instance :after ((class walker-generic-function-class) &rest initargs)
   "Ensure walker-generic-function is a super class of class"
-  
+
   )
 
 (defclass standard-code-walker (code-walker)
@@ -195,7 +195,7 @@
 	       when (matches walker-case form)
 	       do (return-from get-code-walker-case walker-case)))
   (error 'non-applicable-code-walker-case-error))
- 							 
+
 (defgeneric walk (walker form)
   (:metaclass :walker-generic-function-class))
 
@@ -255,7 +255,7 @@
 		  :inject-function ,inject-function
 		  :extract-function ,extract-function
 		  :documentation ,documentation))
-    
+
 (define-code-walker-pattern
 	       :name "(let bindings &rest body)"
                :hash-function (lambda (spec)
@@ -343,7 +343,7 @@
 
 (defclass code-walker-class (required-slots-class singleton-class funcallable-standard-class)
   ())
-  
+
 (defclass code-walker ()
   ((name :initarg :name
 	 :accessor name
@@ -406,7 +406,7 @@
     `(defmacro ,with-macro-name (&body body)
        (run-walker (find-singleton ,walker-class-name)
 		   `(progn ,@body)))))
-	   
+
 
 (defmacro def-walkercase (walker-name pattern args &rest body))
 

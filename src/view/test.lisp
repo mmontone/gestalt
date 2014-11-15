@@ -39,7 +39,7 @@
     ;; test error signaling when trying to remove an object that is not in the node
     (signals error
       (remove-child node child1))))
-  
+
 (test insert-child-test
   (let* ((node (make-instance 'xml-container))
 	 (child1 (make-instance 'xml-node))
@@ -125,7 +125,7 @@
     (let ((mods (extract-modifications node :flush t)))
       (gst.view::apply-modifications mods node-copy))
     (is (xml-tree-equal node node-copy))))
-  
+
 (test track-insert-child-test
   (let* ((node (make-instance 'tracked-node))
 	 (node-copy (progn (make-base-tree node)
@@ -194,7 +194,7 @@
 		       (do-children (child tree)
 			 (%repeated-id child)))))))
       (%repeated-id tree))))
-		   
+
 
 (test get-node-with-id-test
   (is nil "WRITE THIS TEST"))

@@ -65,7 +65,7 @@
 
 (defun list-lambda-list-vars (lambda-list)
   "Lists the vars or a lambda function arguments"
-  
+
   (multiple-value-bind (required optional restp rest keyp keys allowp auxp aux
 				 morep more-context more-count)
       (parse-ordinary-lambda-list lambda-list)
@@ -263,7 +263,7 @@
 (defun list-free-vars (body &optional (lexenv nil))
   "Takes a form and returns its free variables without
    taking into account the lexical enviroment the body is in"
-  (let 
+  (let
       ((freevars (make-hash-table :test #'equalp))
        (freevars-list '()))
     (mapcar (lambda (body-form)
@@ -286,7 +286,7 @@
 (defun list-free-vars-non-external (body &optional (lexenv nil))
   "Lists the free vars that were not declared external
 through (declare (external ...))"
-  (let 
+  (let
       ((freevars (make-hash-table :test #'equal))
        (freevars-list '())
        (external-vars
@@ -331,7 +331,7 @@ through (declare (external ...))"
     (values code non-external-declarations externals)))
 
 (defun replace-all (string part replacement &key (test #'char=))
-"Returns a new string in which all the occurences of the part 
+"Returns a new string in which all the occurences of the part
 is replaced with replacement."
     (with-output-to-string (out)
       (loop with part-length = (length part)
@@ -381,7 +381,7 @@ is replaced with replacement."
      (define-symbol-macro ,name (error (format nil "~A is a shared variable. Use with-shared-var to access it" ',name)))
      (defvar ,(intern (concatenate 'string (symbol-name name) "VAR*")) ,value ,doc)
      (defvar ,(intern (concatenate 'string (symbol-name name) "LOCK*")) (hunchentoot-mp:make-lock ,(concatenate 'string (symbol-name name) "LOCK*")))))
-     
+
 (defmacro with-shared-var ((var) &body body)
   "Syntax to use hunchentoot shared variables"
   `(hunchentoot-mp:with-lock (,(intern (concatenate 'string (symbol-name var) "LOCK*")))

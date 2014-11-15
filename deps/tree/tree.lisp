@@ -52,7 +52,7 @@
     (setf (children new-node) (children node)
 	  (parent new-node) (parent node))
     new-node))
-  
+
 (defmethod copy-node :around ((node value-node-mixin))
   (let
       ((new-node (call-next-method)))

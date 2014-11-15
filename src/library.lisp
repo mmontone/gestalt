@@ -24,7 +24,7 @@
   (declare (ignore initargs))
   ;; Register the defined library
   (setf (class-name ))
-  
+
   )
 
 

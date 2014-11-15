@@ -118,11 +118,11 @@
 	(let ((dataflow-slot (get-dataflow-slot (string (slot-definition-name slot-definition)) object)))
 	  (log-for mop "Dataflow slot: ~A~%" dataflow-slot)
 	  (call-next-method)
-	  
+
 	  (when (or (not (slot-boundp object (slot-definition-name slot-definition)))
 		    (let ((old-value (slot-value object (slot-definition-name slot-definition))))
 		      (not (funcall (dataflow-slot-test dataflow-slot) old-value new-value))))
-	    
+
 	    ;; Notify the object changed (no need for the object
 	    ;; to register as a slot dependent)
 	    (trigger-event 'changed

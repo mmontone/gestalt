@@ -7,7 +7,7 @@
   (run 'df-tests))
 
 (in-suite df-tests)
-	  
+
 ; dataflow basic elements
 
 (test value-cell-test
@@ -118,7 +118,7 @@
     (remove-dependent v 'changed f)
     (setf (value v) 10)
     (is (equalp (value f) 44))))
-    
+
 
 ; event handling policies
 

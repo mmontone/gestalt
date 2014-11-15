@@ -60,7 +60,7 @@
 			 (lambda (x) 2))
        '(LAMBDA (X &OPTIONAL (Y 4))
 	 (PRINT X) (PRINT Y))))
-  
+
   (is (equalp
        (replace-freevars '(flet ((my-f () (print x) my-f)
 				 (other-f (x) my-f x))
@@ -88,7 +88,7 @@
 		  X))
 	 MY-F
 	 OTHER-F)))
-       
+
   )
 
 ;; required-slots-class tests
@@ -158,7 +158,7 @@
 		  (setf x 44))
 		x)))
     (is (value expr) 44))
-  
+
   (let-refs ((x 33))
 	    (is (typep x 'ref))
 	    (is (value x) 33)))

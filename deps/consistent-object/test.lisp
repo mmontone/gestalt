@@ -24,7 +24,7 @@
   (ensure (and (stringp (lastname person))
 	       (> (length (lastname person)) 0))
 	  "Provide a lastname for ~A" person))
-  
+
 (test consistent-object-test
       ;; The following fails:
       (signals consistency-error
@@ -51,7 +51,7 @@
 	    (setf (name person) "Mariano")
 	    (setf (lastname person) "Montone")
 	    person)))
-      
+
       ;; Test the result is correct:
       (let (person)
 	(let ((p (suspending-consistency-for (person)

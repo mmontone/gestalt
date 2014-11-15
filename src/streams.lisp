@@ -37,10 +37,10 @@
   (handler-case
       (with-slots (value consumers producers) stream
 	(loop while t do
-	     (loop for producer in producers do 
+	     (loop for producer in producers do
 		  (progn
 		    (setf value (funcall producer))
-		    (loop for consumer in consumers 
+		    (loop for consumer in consumers
 		       do (handler-case
 			      (funcall consumer value)
 			    (quit-process-condition ()
@@ -88,7 +88,7 @@
 
 ;; Now use this code to prototype client-server interaction for lwt
 
-(handler-case 
+(handler-case
     (asdf)
   (undefined-function (c)
     (format t "Name ~A~%" (cell-error-name c))
@@ -236,7 +236,7 @@
       (multiple-value-bind (parsed-lambda-list lambda-list-env) (walk-lambda-list args)
 	(multiple-value-bind )
       (make-instance 'defun-form :name name :args args :body (walk-form body)))) ; Need to build a lex env from args here and pass it to walk-form body
-  
+
 (defgeneric reify-stack (form parent env))
 
 (defmethod reify-stack ((form setf-form) parent env)
@@ -244,7 +244,7 @@
     (case (type-of place)
 	  ('variable-reference
 	   (let ((value (unwalk-form value)))
-	     (walk-form 
+	     (walk-form
 	      (once-only (value)
 		 `(progn
 		    (set-env-var ,(name place) value)
@@ -361,13 +361,13 @@
   (let ((old-handlers (gensym)))
     `(progn
        (sb-thread:wait-on-semaphore *walking-handlers-lock*)
-       (let ((,old-handlers (copy-hash-table *walking-handlers*))) 
+       (let ((,old-handlers (copy-hash-table *walking-handlers*)))
 	 ;; Replace the handlers
 	 ,@body
 	 ;; Restore the handlers
 	 (setf *walking-handlers* ,old-handlers))
        (sb-thread:signal-semaphore *walking-handlers-lock*))))
-       
+
 ;; New thought: we don't need the parent and environment to do the transformation!
 ;; They are needed by code that is not our own, but that was already walked with parent
 ;; and environment. Our code doesn't need them as long as we use *already walked* code to

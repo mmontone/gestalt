@@ -11,7 +11,7 @@
 (defclass a (html-element)
    ((href :accessor href :initform "" :initarg :href))
    (:documentation "HTML link"))
- 
+
 (defclass font (html-element)
    ((face :accessor face)
    (size :accessor size :type number))

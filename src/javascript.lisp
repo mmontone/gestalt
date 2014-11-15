@@ -86,7 +86,7 @@ Now we apply free-variables detection to build a javascript-server comunication 
 				  :action (call-client :session *session* :id 33 :params object)))
 
   Besides, the javascript to create lambdas is dynamically transferred when the component is active
-		
+
   |#
 
 (defclass component ()

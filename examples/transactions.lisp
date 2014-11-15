@@ -9,7 +9,7 @@
 
 (setf hunchentoot:*catch-errors-p* nil)
 
-(setf hunchentoot:*HUNCHENTOOT-DEFAULT-EXTERNAL-FORMAT* 
+(setf hunchentoot:*HUNCHENTOOT-DEFAULT-EXTERNAL-FORMAT*
       (flexi-streams:make-external-format :utf8 :eol-style :lf))
 
 (start (make-instance 'acceptor :port 9090))

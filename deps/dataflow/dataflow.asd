@@ -24,4 +24,3 @@
 		 :log5
 		 :fiveam
 		 :trivial-garbage))
-  

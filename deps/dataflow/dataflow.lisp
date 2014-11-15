@@ -190,7 +190,7 @@
 		     (push-binding binding)))))))
       (ecase if-exists
 	(:error (%add-dependency-binding))
-	(:superseed (handler-bind 
+	(:superseed (handler-bind
 			((dependency-exists (lambda (c)
 					      (declare (ignore c))
 					      (invoke-restart 'superceed))))
@@ -254,7 +254,7 @@
 		(value cell)
 		"#unbound")
 	    (test cell))))
- 
+
 (defgeneric evaluate-dependent (dependent event)
   (:documentation "(Re)evaluates a dependent because an event happened")
   (:method ((dependent formula) event)

@@ -51,7 +51,7 @@
   )
 
 (defparameter *global-view-context* (make-instance 'global-view-context))
- 
+
 ;; (defmethod add-component :after :view
 ;;   ((parent component) slot (child component))
 ;;   (let ((place-holder
@@ -138,7 +138,7 @@
   (call-next-method)
   (setf (slot-value view-node 'xml:content)
 	(slot-value node 'xml:content)))
-  
+
 (defmethod make-template-instance ((node xml-node))
   (let ((view-node
 	 (make-instance
@@ -157,7 +157,7 @@
 (defmethod make-template-instance ((container container))
   (let ((function-name (gensym "UPDATER-FUNCTION-")))
     (compile function-name '(lambda (view controller)
-			     
+
 			     )
     (make-instance 'updater
 		   :updater (symbol-function function-name)))))
@@ -178,14 +178,14 @@
   (setf (encoded-node-id node)
 	(encode-node-id (node-id node))))
 
-  
+
 (defvar *root-view* nil "The view of the system")
 
 (defmethod make-base-tree ((node view-node) &rest args)
   (declare (ignore args))
   (call-next-method)
   (setf *root-view* node))
-  
+
 ;; printing caching
 (defmethod print-object :around ((node view-node) stream)
   (when (not (print-cache node))
@@ -211,7 +211,7 @@
 	     (do-children (child node)
 	       (flush-down child))))
     (flush-down (find-root node))))
-    
+
 (defun flush-print-cache (node &key all)
   (if all
       (flush-all-print-cache node)

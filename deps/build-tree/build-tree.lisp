@@ -115,7 +115,7 @@
 	     (let ((attribute (symbol-name (car form))))
 	       (read-value (cdr form)
 			(lambda (value form)
-			  (multiple-value-bind (attrs formcdr) (read-attribute form)			   
+			  (multiple-value-bind (attrs formcdr) (read-attribute form)
 			      (values (cons (cons attribute value) attrs) formcdr)))
 			(lambda ()
 			  (error "Attribute value missing in ~A for ~A" form attribute))))

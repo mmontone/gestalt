@@ -115,7 +115,7 @@
 (defclass a (html-element)
    ((href :accessor href :initform "" :initarg :href))
    (:documentation "HTML link"))
- 
+
 (defclass font (html-element)
    ((face :accessor face)
    (size :accessor size :type number))
@@ -162,7 +162,7 @@
      <template component-class="person-viewer">
         <p>Chaoooo!!</p>
      </template>
-   </div>  
+   </div>
 </template>)
 |#
 
@@ -170,4 +170,4 @@
 ;;   (declare (ignore initargs))
 ;;   (when (null (component-class template))
 ;;     (error "Provide the component-class")))
-  
+

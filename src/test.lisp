@@ -10,7 +10,7 @@
 
 (defclass cell ()
   ((value :accessor value))
-   
+
    )
 
 (defclass weakref ()
@@ -23,11 +23,11 @@
 (defmacro weak-lambda (args &rest body)
   ())
 
-   
+
 (make-instance 'button :on-click (weak-lambda () (print "This is a great object: ~A" @object)))
 
 
-  
+
 
 (defpsmacro defclass (name superclass slots &rest methods)
   `(defun ,name ()
@@ -51,7 +51,7 @@
 		(declare (ignore defmethod-keyword))
 		(if (string-equal method-name name)
 		    ;; This is the constructor
-		    
+
 		    (progn
 		      (setf (gethash name *make-instance-defs*)
 			    method-args)
@@ -66,7 +66,7 @@
 		  `(setf (slot-value this ',method-name)
 			 (lambda ,method-args
 			   ,@method-body)))))))
-	    
+
 
 (defun js-lib ()
   (ps
@@ -78,7 +78,7 @@
       (defmethod my-class (name test)
 	(print "This is the constructor"))
       )
-    
+
     ))
 
 (defpage page
@@ -87,29 +87,29 @@
   )
 
 (defun yui-bindings ()
-  
-  (setf YAHOO.example.container.simpledialog1 
-	    (new YAHOO.widget.simple-dialog "simpledialog1"  
-	             '(:width "300px" 
-	               :fixedcenter t 
-	               :visible f 
-	               :draggable f 
+
+  (setf YAHOO.example.container.simpledialog1
+	    (new YAHOO.widget.simple-dialog "simpledialog1"
+	             '(:width "300px"
+	               :fixedcenter t
+	               :visible f
+	               :draggable f
 	               :close t
-	               :text "Do you want to continue?" 
+	               :text "Do you want to continue?"
 	               :icon: YAHOO.widget.SimpleDialog.ICON_HELP
 	               :constraintoviewport: t
-	               :buttons: [ { text:"Yes", handler:handleYes, isDefault:true }, 
-	                          { text:"No",  handler:handleNo } ] 
+	               :buttons: [ { text:"Yes", handler:handleYes, isDefault:true },
+	                          { text:"No",  handler:handleNo } ]
 	             } )))
 
-// Define various event handlers for Dialog 
-var handleYes = function() { 
-	    alert("You clicked yes!"); 
-	    this.hide(); 
-	}; 
-	 
-	var handleNo = function() { 
-	    this.hide(); 
+// Define various event handlers for Dialog
+var handleYes = function() {
+	    alert("You clicked yes!");
+	    this.hide();
+	};
+
+	var handleNo = function() {
+	    this.hide();
 	};
 
 (call (make-instance 'yui-dialog
@@ -144,7 +144,7 @@ var handleYes = function() {
 		 collect `(setf (aref ,init-array ,(string key)) ,value))
 	 (new  (,class-name ,init-array))))))
 
-      
+
 (defun message-dialog-call ()
   (ps
     (setf msg-dialog (message-dialog))

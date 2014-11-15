@@ -135,7 +135,7 @@
 	 (declare (ignorable ,parent ,lexical-env))
 	 (declare (ignore ,eql-name))
 	 ,@body))))
-  
+
 ;; The new dispatcher
 ;; Now we just have to call to the defwalker-handler-method on the first symbol
 (defun walk-form* (form &key (parent nil)
@@ -178,7 +178,7 @@
 ;; Example:
 (defwalker-handler* setf :around (form parent lexical-env)
 		     (print "Handling setf after!!"))
- 
+
 (defmacro defwalker-handler (name (form parent lexical-env)
                              &body body)
   (with-gensyms (tslot entry bound)
@@ -201,7 +201,7 @@
        (destructuring-bind (,entry ,bound) ,tslot
 	 (when (not ,bound)
 	   (error (format nil "~A main handler not defined yet") ',name))
-	 (push 
+	 (push
 	  (lambda (,form ,parent ,lexical-env)
 	    (declare (ignorable ,parent ,lexical-env))
 	    ,@body)
@@ -238,7 +238,7 @@
 (defun add-last (elem list)
   (setf (cdr (sb-impl::last1 list)) (cons elem nil))
   list)
-  
+
 (defmacro defwalker-after-handler (name (form parent lexical-env)
 				   &body body)
   (with-gensyms (tslot entry bound)
@@ -247,7 +247,7 @@
        (destructuring-bind (,entry ,bound) ,tslot
 	 (when (not ,bound)
 	   (error (format nil "~A main handler not defined yet") ',name))
-	 (add-last 
+	 (add-last
 	  (lambda (,form ,parent ,lexical-env)
 	    (declare (ignorable ,parent ,lexical-env))
 	    ,@body)
@@ -390,7 +390,7 @@
 	(walk-lambda-list (unwalk args) parent env)
       ;; walk-lambda-list extends (modifies) the env, that's why we need to copy it
       (walk-form
-       `(defun ,name ,args  
+       `(defun ,name ,args
 	  (transforming
 	     `(progn
 		,(loop for arg in
@@ -426,7 +426,7 @@
     (case (type-of place)
 	  ('variable-reference
 	   (let ((value (unwalk-form value)))
-	     (walk-form 
+	     (walk-form
 	      (once-only (value)
 		 `(progn
 		    (set-env-var ,(name place) value)
@@ -466,7 +466,7 @@
 	 (assert (member transformation *transformations*)
 		 nil "Transformer not defined: ~A" transformation)
 	 (funcall
-	  
+
 	  ;; The form is lacking!!
 	  walked-code))
      finally (return result-code))))
@@ -522,7 +522,7 @@
 	     (assert (member transformation *transformations*)
 		     nil "Transformer not defined: ~A" transformation)
 	     (funcall
-	      
+
 	      ;; The form is lacking!!
 	      walked-code))
           finally (return result-code))))
@@ -571,7 +571,7 @@
                     ,@body))))
 
 (defun split-body (body env &key parent (docstring t) (declare t))
-  (let ((documentation nil) 
+  (let ((documentation nil)
 	(newdecls nil)
 	(decls nil))
     (flet ((done ()
@@ -654,7 +654,7 @@
 				   :parent parent
 				   :source (list type ,varname)
 				   :environment (copy-walk-env environment)
-				   ,@rest))		 
+				   ,@rest))
 		 (extend-env ((var list) newdeclare &rest datum)
 		   `(dolist (,var ,list)
 		      (when ,newdeclare (push ,newdeclare declares))
@@ -664,11 +664,11 @@
 	  (case type
 	    (dynamic-extent
 	     (extend-env (var arguments)
-			 (mkdecl var 'dynamic-extent-declaration-form :name var) 
-			 var `(dynamic-extent)))        
+			 (mkdecl var 'dynamic-extent-declaration-form :name var)
+			 var `(dynamic-extent)))
 	    (ftype
 	     (extend-env (function-name (cdr arguments))
-			 (make-instance 'ftype-declaration-form 
+			 (make-instance 'ftype-declaration-form
 					:parent parent
 					:source `(ftype ,(first arguments) function-name)
 					:environment (copy-walk-env environment)
@@ -682,7 +682,7 @@
 			      (mkdecl var 'variable-ignorable-declaration-form :name var))
 			 var `(ignorable)))
 	    (inline
-	      (extend-env (function arguments) 
+	      (extend-env (function arguments)
 			  (mkdecl function 'function-ignorable-declaration-form :name function)
 			  function `(ignorable)))
 	    (notinline
@@ -690,16 +690,16 @@
 			 (mkdecl function 'notinline-declaration-form :name function)
 			 function `(notinline)))
 	    (optimize
-	     (extend-env (optimize-spec arguments) 
+	     (extend-env (optimize-spec arguments)
 			 (mkdecl optimize-spec 'optimize-declaration-form :optimize-spec optimize-spec)
 			 'optimize optimize-spec))
 	    (special
-	     (extend-env (var arguments) 
+	     (extend-env (var arguments)
 			 (mkdecl var 'special-declaration-form :name var)
 			 var `(special)))
 	    (type
 	     (extend-env (var (rest arguments))
-			 (make-instance 'type-declaration-form 
+			 (make-instance 'type-declaration-form
 					:parent parent
 					:source `(type ,(first arguments) ,var)
 					:environment (copy-walk-env environment)
@@ -708,7 +708,7 @@
 			 var `(type ,(first arguments))))
 	    (t
 	     (extend-env (var arguments)
-			 (make-instance 'type-declaration-form 
+			 (make-instance 'type-declaration-form
 					:parent parent
 					:source `(,type ,var)
 					:environment (copy-walk-env envirnoment)
@@ -965,7 +965,7 @@
   (make-instance 'specialized-function-argument-form
                  :name (if (listp form)
                            (first form)
-                           form) 
+                           form)
                  :specializer (if (listp form)
                                   (second form)
                                   'T)
@@ -1331,7 +1331,7 @@
 			   :environment (copy-walk-env env))
     (setf (body progn) (walk-implict-progn progn (cdr form) env))))
 
-;;;; PROGV 
+;;;; PROGV
 
 (defclass progv-form (form implicit-progn-mixin)
   ((vars-form :accessor vars-form :initarg :vars-form)
@@ -1342,7 +1342,7 @@
 			:parent parent
 			:source form
 			:environment (copy-walk-env env))
-    (setf (vars-form progv) (walk-form (cadr form) progv env))    
+    (setf (vars-form progv) (walk-form (cadr form) progv env))
     (setf (values-form progv) (walk-form (caddr form) progv env))
     (setf (body progv) (walk-implict-progn progv (cdddr form) env))
     progv))
@@ -1501,15 +1501,15 @@
   (walk-form (third form) parent env))
 
 ;; Copyright (c) 2005-2006, Edward Marco Baringer
-;; All rights reserved. 
-;; 
+;; All rights reserved.
+;;
 ;; Redistribution and use in source and binary forms, with or without
 ;; modification, are permitted provided that the following conditions are
 ;; met:
-;; 
+;;
 ;;  - Redistributions of source code must retain the above copyright
 ;;    notice, this list of conditions and the following disclaimer.
-;; 
+;;
 ;;  - Redistributions in binary form must reproduce the above copyright
 ;;    notice, this list of conditions and the following disclaimer in the
 ;;    documentation and/or other materials provided with the distribution.
@@ -1517,7 +1517,7 @@
 ;;  - Neither the name of Edward Marco Baringer, nor BESE, nor the names
 ;;    of its contributors may be used to endorse or promote products
 ;;    derived from this software without specific prior written permission.
-;; 
+;;
 ;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 ;; "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 ;; LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR

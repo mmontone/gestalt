@@ -78,7 +78,7 @@
 			 (parent-link reference-child)
 			 child))
     (setf (parent child) node)))
-    
+
 (defgeneric insert-child-after (node child reference-child)
   (:documentation "Inserts a child after the reference-child")
   (:method ((node xml-container) (child xml-node) (reference-child xml-node))
@@ -89,7 +89,7 @@
 			(parent-link reference-child)
 			child))
     (setf (parent child) node)))
- 
+
 (defgeneric insert-child (node child place reference-child)
   (:documentation "Inserts the child :after or :before (place) the reference child")
   (:method ((node xml-container)
@@ -125,7 +125,7 @@
   (:method ((node xml-node) &rest args)
     (declare (ignore args))
     (setf (base-tree-member-p node) t)))
-    
+
 (defgeneric make-base-tree (node &rest args)
   (:documentation "Declares a tree as a base one")
   (:method ((node xml-node) &rest args)

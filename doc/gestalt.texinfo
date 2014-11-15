@@ -303,9 +303,9 @@ Web application programming with Gestalt is like that...
 @cindex gestalt, overview
 
    Gestalt applications follow a MVC architecture. At the model layer, the framework is designed to work with an optimistic object database; that's because implicit saving of objects and long transactions are needed by the rest of the parts of the framework.
-   
+
    At the controller level, we use a component based approach, a lot like the @url{http://seaside.st} Seaside framework; dataflow semantics for view updating.
-   
+
    Finally, at the view level, we use a flexible and conveniente template engine and a set of widgets.
 
 @node MVC in Gestalt
@@ -324,7 +324,7 @@ MVC in Gestalt is like this...
 * Objects validation::             How model validation is done in Gestalt
 * Consistent objects::             What consistent objects are.
 * Objects that require arguments:: How to define objects that require arguments
-* The Elephant object database::   An overview of the Elephant object 
+* The Elephant object database::   An overview of the Elephant object
 @end menu
 
 @node Model overview
@@ -416,7 +416,7 @@ And it is also posible to validate attributes on the client side. For example:
     (email :initarg :email
            :required t
            :type :email)))
-@end example         
+@end example
 
 Both, @emph{:range} and @emph{:email} types have client-side vaidation implementations:
 
@@ -466,7 +466,7 @@ Then, we can specify client side validation in our components:
   (ensure (and (stringp (lastname person))
 	       (> (length (lastname person)) 0))
 	  "Provide a lastname for ~A" person))
-  
+
 (test consistent-object-test
       ;; The following fails:
       (signals consistency-error
@@ -493,7 +493,7 @@ Then, we can specify client side validation in our components:
 	    (setf (name person) "Mariano")
 	    (setf (lastname person) "Montone")
 	    person)))
-      
+
       ;; Test the result is correct:
       (let (person)
 	(let ((p (suspending-consistency-for (person)
@@ -601,7 +601,7 @@ Sketchy implementation:
   "Adds a child-component without 'threading code' complications"
   `(add-child ,component ,slot
 	      (call ,child-component)))
-@end example              
+@end example
 
 child-component-handler may be designed as a subclass of task as it has a :go lambda.
 It is different from a task because we need to redefine the call method on it in order to indicate
@@ -649,7 +649,7 @@ For example, to declare the main component, we could have:
 	    (set-logged-user user)
 	    (call (make-instance 'main-component))
 	    (unlog-user))))
-@end example            
+@end example
 
 Other example, is the semantics of call when adding child components.
 
@@ -731,7 +731,7 @@ Another example is a simple item selection:
 
 @example
 (defcomponent select-component ()
-   ((source :initarg :source    
+   ((source :initarg :source
             :documentation "A list")
     (model :initarg :model
            :documentation "Contains the selected element of the list"))
@@ -810,7 +810,7 @@ We can use component-wrappers to build complex objects editors. In general, an o
    (lastname :type :input :model (lastname model))
    (accept :type :button :on-click (accept-edition self))      <-- The accept button should not belong to the editor
    (cancel :type :button :on-click (cancel-edition self))))    <-- The cancel button should not belong to the editor
-@end example   
+@end example
 
 The problem with this design is that it is difficult to build more complex editors from existent ones.
 
@@ -838,7 +838,7 @@ A possible solution is to use component-wrappers:
   ; We wrap the editor call
   (with-transaction
       (call (component wrapper))))
-@end example      
+@end example
 
 And with transaction should expand to something similar to:
 
@@ -913,7 +913,7 @@ Now we apply free-variables detection to build a javascript-server comunication 
 				  :action (call-client :session *session* :id 33 :params object)))
 
   Besides, the javascript to create lambdas is dynamically transferred when the component is active
-		
+
   |#
 
 (defclass component ()
@@ -1100,7 +1100,7 @@ Problema con esta version de add-action-link: es estrictamente necesario hacer u
   (declare (ignore initargs))
   ;; Register the defined library
   (setf (class-name ))
-  
+
   )
 
 
@@ -1161,21 +1161,21 @@ From the component itself (subclasses, mixins, class definition).
   (:bookmarking (offset :accessor bm-offset) ;; bm-offset is used to extract the offset in bookmarking format. (setf bm-offset) is used to set the component offset from a bookmarking parameter)
 		(segment :accessor bm-segment))
   (:bookmark :all))
-@end example  
+@end example
 
 From the outside.
 @example
 (with (make-instance 'collection-navigator :on my-collection)
       (disable-bookmarking-of 'segment it)
       (call it))
-@end example      
+@end example
 
 From the outside, dynamically. It may be useful if we don't want to bookmark certain embedded subcomponent nor any of its components.
 @example
 (with (make-instance 'my-complex-component)
       (disabling-bookmarking
        (call it)))
-@end example       
+@end example
 @end enumerate
 
 @node URL format
@@ -1309,7 +1309,7 @@ So, for example:
 	    (set-logged-user user)
 	    (call (make-instance 'main-component)) ; **
 	    (unlog-user))))
-@end example            
+@end example
 
 When the user hits the logout button of the main-component, the main-component child threads are aborted before proceeding. Note that aborting a child component may lead to some behaviour. For example, if the child component is an editor that is configured to ask for cancellation in case the user leaves the component. Then, trying to logout, will raise the cancelling exception and a dialog box asking for cancellation will appear; the user will not be able to logout without asking. Now, that's ok, but it would be interesting to think how we can control that. For example, we may want the editor to avoid asking the question in case we hit the logout button, but ask it otherwise. It's not clear how to achieve that with a "threading" semantics. Possible solution??: the logout button activates a layer. That layer should deactivate the abort-condition catch up that shows the dialog, and provide some that just proceeds with the editor abortion. Not trivial anyway...but interesting.
 
@@ -1323,7 +1323,7 @@ Suppose we have A as the parent of B. B calls C for performing some operation.
 @example
 (defmethod initialize-instance :after ((comp A) &rest initargs)
   (add-child comp
-	...     
+	...
    (call comp 'B)
      ...
    ))
@@ -1378,7 +1378,7 @@ Suppose we have A as the parent of B. B calls C for performing some operation.
 (defmethod initialize-instance :after ()
     (print (dynamic parent-var)) ;; This prints 45!! (component thread variable!)
     (print (dynamic my-var))) ;; This prints 55
-@end example    
+@end example
 
 @emph{An example of thread semantics:}
 
@@ -1393,7 +1393,7 @@ Queremos mostrar una lista y cada vez que hacemos click sobre uno de sus element
 		 (add-child comp 'element-editor
 			    (with-transaction
 				(call (make-instance 'element-editor :on element)))))))))
-@end example                                
+@end example
 
 Entonces, cada vez que el usuario hace click en un elemento, se corre el thread para agregar el editor de elementos. Si hay un editor mostrandose, entonces se aborta el thread. La forma de abortar el thread es recuperando el contexto dinámico asociado a la continuación del thread y hacer un (signal 'abort-thread) (no se ejecuta la continuación) bajo ese contexto. En este ejemplo, se estaŕia ejecutando el unwind-protect de with-transaction. En otro caso, se podría interrumpir la cancelación del thread, y preguntar por la cancelación de la edición, por ejemplo así:
 
@@ -1405,13 +1405,13 @@ Entonces, cada vez que el usuario hace click en un elemento, se corre el thread 
 	       (lambda (element)
 		 (add-child comp 'element-editor
 			    (with-transaction
-				(handler-case 
+				(handler-case
 				    (call (make-instance 'element-editor :on element))
 				  (abort-thread (e)
 				    (when (call (make-instance 'message-box :text "Cancelar edición del elemento?"))
 				      (signal e))))))))
      (call list-component)))) ;; re-signal the condition  ;; we do nothing other wise (the component remains in place)
-@end example     
+@end example
 
 Problema: cómo tratar a with-transaction bajo extensión dinámica??: No queremos ejecutar with-transaction cada vez; queremos reutilizar la transacción bindeada en rucksack:*transaction*!! We should redefine it something like:
 
@@ -1475,7 +1475,7 @@ If we have dynamic-extent reexecution semantics, then we can add a check for the
 	(call 'main-component)
 	;; else, we want the dialog to appear under the dynamic-extent
 	(call-component 'message-dialog :text "You have to login to do that!"))))
-@end example        
+@end example
 
 Maybe we should design our own operators to introduce dynamic-environments:
 
@@ -1489,7 +1489,7 @@ Maybe we should design our own operators to introduce dynamic-environments:
 				(,proceed expr)
 			      ,cases))))
 	 (setf (dynamic-environment (component)) new-env)))))
-@end example         
+@end example
 
 De esta forma, tenemos que todo se ejecuta una sola vez, solo determinadas partes. Además, deberíamos tener un component-dynamic-wind mejor:
 
@@ -1499,7 +1499,7 @@ De esta forma, tenemos que todo se ejecuta una sola vez, solo determinadas parte
      (let ((,new-env
 	    (dynamic-wind ,@@body)))
        (setf (dynamic-environment (component)) new-env))))
-@end example       
+@end example
 
 Y así nos queda:
 
@@ -1510,7 +1510,7 @@ Y así nos queda:
 			     (handler-case
 				 (,proceed expr)
 			       ,cases))))
-@end example                               
+@end example
 
 Y el login queda:
 
@@ -1551,8 +1551,8 @@ Top level expansion handler:
 	(call-next-method))
       ; else
       (call-next-method)))
-@end example      
-  
+@end example
+
 Setting up expansion limits when initializing parent component (adding subcomponents):
 
 @example
@@ -1615,7 +1615,7 @@ We can layer the controller behaviour:
 
 (def-layered-method :layer listing-layer initialize ((viewer person-viewer))
 		    ...)
-@end example                    
+@end example
 
 After that we can do:
 
@@ -1623,7 +1623,7 @@ After that we can do:
 (add-child
  (with-active-layers (listing-layer)
    (call (make-instance 'persons-component))))
-@end example   
+@end example
 
 It is also possible, and may make sense, to make the template engine context aware:
 
@@ -1655,7 +1655,7 @@ For example, let's consider the "promotions" problem. A product promotion is ava
 
 (contextl:deflayer promotion-layer ()
   ())
-@end example  
+@end example
 
 In the promotion-layer, the main-page displays the promotion-widget:
 
@@ -1695,7 +1695,7 @@ And the code sketch for activating the layers:
 	(contextl:ensure-inactive-layer 'promotions-layer))
     (proceed
      (go-on))))
-@end example     
+@end example
 
 We could define a volatile-layer to improve the code:
 
@@ -1734,9 +1734,9 @@ We could define a volatile-layer to improve the code:
         (call-with-active-layers ,valid-layers           ; we need to implement call-with-active-layers in contextl
 	  (lambda ()
 	    (call-with-inactive-layers ,invalid-layers   ; we need to implement call-with-inactive-layers in contextl
-		(lambda ()		       
+		(lambda ()
 	           ,@@body)))))))
-	  
+
 (defun begin-user-session ()
   (with-volatile-layers ('promotions-layer)
     (go-on)))
@@ -1775,7 +1775,7 @@ To define a template, we use the xml template element syntax:
 @emph{Syntax:}
 @example
 <template component-class="[component-class-name]"
-          [qualifiers="@{qualifier@}*"] 
+          [qualifiers="@{qualifier@}*"]
           [template-metaclass="template-metaclass-name"]
           [options="@{option@}*"]>
    @{xml-element@}*
@@ -1801,7 +1801,7 @@ The template xml element defines a template for a certain component class.
 @emph{Examples:}
 @example
 <template class="person">
-  <p>Name: </p> <container slot="name" 
+  <p>Name: </p> <container slot="name"
                            class="label"/>
   <p> Lastname: </p> <container slot="lastname"
                                 class="label"/>
@@ -1812,7 +1812,7 @@ It is also possible to use non-xml syntax:
 
 @example
 (template (:class "person")
-  (:p Name:) (:label (:slot "name")) 
+  (:p Name:) (:label (:slot "name"))
   (:p Lastname) (:label (:slot "lastname"))
   (next-template))
 @end example
@@ -1838,7 +1838,7 @@ Container elements refer to a model slot. The component slot is supposed to refe
 @itemize
 @emph{Syntax:}
 @example
-<container slot="[slot-name]" 
+<container slot="[slot-name]"
                  [class="container-class"]
        @{attributes@}*/>
 @end example
@@ -1878,7 +1878,7 @@ When we use a container element to embed a component, the described algorithm is
 </template>
 @end example
         In this example, we are saying we want the name and lastname of the person embedded, but we are not saying how. Let's suppose we have two Label wslotgets on them, as we are only interested in reading them, not writing the attributes. But we may want to represent that with a read-only text input instead of that. So we may use a container-class read-only-text-input to control that.
-@example        
+@example
 <template class="person">
    <p>Name:</p><container slot="name"
                           class="read-only-text-input"/>
@@ -1907,7 +1907,7 @@ When we use a container element to embed a component, the described algorithm is
 
 @emph{slots} -- The list of the container class slots
 
-@emph{compatibility-list} -- The list of the other container-classes this container-class is compatible with. 
+@emph{compatibility-list} -- The list of the other container-classes this container-class is compatible with.
 @end itemize
 
 @emph{Description:}
@@ -2057,7 +2057,7 @@ Examples:
       <p>Lastname:</p><label slot="lastname"/>
       <container slot="friend"/>
     </template>
-    
+
     <template class="person">
          <p>Name</p><text-input slot="name" style="read-only;"/>
          <p>Lastname</p><text-input slot="lastname" style="read-only;"/>
@@ -2089,7 +2089,7 @@ Implementation: XML elements that introduce new scopes are inherited from the sc
 @subsubsection Template combinations overview
 
 In order to improve templates composition we provide template combinations. Template combinations are a lot like Common Lisp method combinations and are inspired by them, but for templates. The default template combination in standard-template-combination.
-    
+
     Template combinations use the qualifiers of the template definition for instantiating the view to the component.
 
 @node Standard template combination
@@ -2108,7 +2108,7 @@ In order to improve templates composition we provide template combinations. Temp
         <next-template/>
             </div>
         </template>
-      @end example  
+      @end example
       This makes the person to be displayed inside a red coloured box.
 
 @emph{ABOVE combination}
@@ -2129,7 +2129,7 @@ ABOVE templates are displayed above the PRIMARY template.
            qualifiers="below">
             <p>There's a person above this message</p>
         </template>
-  @end example      
+  @end example
 @end itemize
 
 
@@ -2145,9 +2145,9 @@ The algorithm to change the way views are assigned to component can be changed c
 @subsection Built-in templates classes
 @cindex built-in template classes
 
-+ Standard templates 
++ Standard templates
     standard-template-class
-+ Context oriented templates 
++ Context oriented templates
     cop-template-class
 
 @node Template backends
@@ -2243,7 +2243,7 @@ There are different template backends (or engines). There's an SEXPressions base
 * First-class URLs::       Library that provides first-class URLs management
 * Consistent object library::     consistent-object library reference
 * Dataflow::               Dataflow library reference
-* Utilities::              Utilities library (copying objects, doubly-linked 
+* Utilities::              Utilities library (copying objects, doubly-linked
 @end menu
 
 @node Elephant
@@ -2295,7 +2295,7 @@ We can represent URLs with CLOS objects:
 
 (defun read-url (str)
   "Create a url from a string (used by reader-syntax)")
-@end example  
+@end example
 
 We can also define some protocols:
 
@@ -2481,7 +2481,7 @@ Example:
         (:http-server "HTTP server"
             (one-of (:apache "Apache" (:configuration 'apache-configuration))
                     (:hunchentoot "Hunchentoot" (:configuration 'hunchentoot-configuration))))
-        (:host "Host" :text :default "localhost")))                    
+        (:host "Host" :text :default "localhost")))
 
 (define-configuration logging-configuration ()
     (:title "Logging configuration")
@@ -2510,7 +2510,7 @@ Example:
                         (webapp-configuration database-configuration)
       (:documentation "Standard configuration for a Gestalt application")
       (:page-title "Page title" :type :text :default "Gestalt application"))
-      
+
 @end example
 
 The typical attributes types are, :text, where the user fill text in; :one-of options*, where the user chooses one of the options in options*; :list list*, where the user selects one or more of the items of the list *list; :bool, a boolean, :maybe option, where the user can disable or enable option, etc.
@@ -2652,7 +2652,7 @@ And then we attach the desired configuration to the application:
 @cindex reference
 
  [Common Lisp Directory]
-  
+
   [Smalltalk Seaside Web Framework]
 
   [Common Lisp Wiki]
@@ -2687,12 +2687,12 @@ And then we attach the desired configuration to the application:
 
 @node Function / Macro Index
 @section Function / Macro Index
-     
+
 @printindex fn
 
 @node Variable Index
 @section Variable Index
-     
+
 @printindex vr
 
 @bye

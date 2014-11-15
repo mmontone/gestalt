@@ -158,7 +158,7 @@
   (let ((class-name (class-name (class-of object)))
 	(creation-function (object-creation-function object)))
     (funcall creation-function class-name)))
-	   
+
 (defmethod deep-copy ((object standard-object) &key discard-slots use-object)
   (let ((new-object (or use-object (uninitialized-copy object))))
     (unless (eq new-object object)
@@ -166,7 +166,7 @@
       (copy-slots object new-object :discard-slots discard-slots)
       (after-initialization object new-object))
     new-object))
-	   
+
 (defmethod shallow-copy ((object standard-object)
 			 &key discard-slots use-object)
   (let ((new-object (or use-object (uninitialized-copy object))))
@@ -174,7 +174,7 @@
       (dolist (slot (delete-all discard-slots (instance-slot-names object)))
 	(copy-slot object new-object slot #'identity)))
     new-object))
-	   
+
 (defmethod copy ((object standard-object) &key discard-slots use-object)
   (deep-copy object :discard-slots discard-slots
 	            :use-object use-object))

@@ -92,7 +92,7 @@
     (y 27)
     (tries 0))
    (block try
-     (handler-bind 
+     (handler-bind
        ((some-condition (lambda (c)
 			  (declare (ignore c))
 			  (using-refs (tries)
@@ -123,7 +123,7 @@
      ((x 22)
       (y 27))
      (let ((result
-	    (handler-bind 
+	    (handler-bind
 	      ((some-condition (lambda (c)
 				 (declare (ignore c))
 				 (invoke-restart 'abort-transaction))))

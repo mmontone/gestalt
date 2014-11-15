@@ -13,7 +13,7 @@ Algorithm:
 +---------------+--------------+----------------+----------------+---------------+
 | insert-before |    error     |       x        |       x        |       x       |
 +---------------+--------------+----------------+----------------+---------------+
-      
+
 |#
 
 
@@ -166,7 +166,7 @@ Algorithm:
 	     (do-children (child node)
 	       (flush-down child))))
     (flush-down node)))
-    
+
 (defun flush-modifications (node &key recurse)
   (if recurse
       (flush-modifications-down node)
@@ -272,7 +272,7 @@ Algorithm:
 	   (setf (parent-modification replacement) modification)
 	   (add-modification modification node))))
     (remove-from-base-tree child)))
- 
+
 (defmethod set-attribute :after ((node tracked-xml-node) attribute value)
   (when (and *register-modifications* (base-tree-member-p node))
     (add-modification (make-instance 'set-attribute-modification
@@ -388,7 +388,7 @@ Algorithm:
 (defmethod encode-json ((modification append-child-modification) stream)
   ;; Idea: define a special pamarenscript scaping form lisp* that scapes
   ;; its body like the lisp form, but calls encode-json to the result ;)
-  (write 
+  (write
    (ps
      (get-node-with-id (lisp (node-id (target modification)))))
    stream))

@@ -5,12 +5,12 @@
 
 #|
 (start-sender 'ref
-  (stream-sender :location *error-output*)  
+  (stream-sender :location *error-output*)
   :category-spec '(ref)
   :output-spec '(message))
 
 (start-sender 'none
-  (stream-sender :location *error-output*)  
+  (stream-sender :location *error-output*)
   :category-spec '(none)
   :output-spec '(message))
 
@@ -39,7 +39,7 @@
 		  `(make-instance 'ref
 				  :name ,(symbol-name binding)
 				  :value ,value)))
-(make-with refs)		  
+(make-with refs)
 
 (defmacro rdefun (name args &body body)
   `(defun ,name ,args
